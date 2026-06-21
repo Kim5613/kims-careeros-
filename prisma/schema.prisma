@@ -1,0 +1,341 @@
+// HR 个人职业中台 - 数据库模型
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// 基础数据层（中台核心）- 所有模块共享
+// ========================================
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  industry    String?
+  scale       String?
+  city        String?
+  website     String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  applications    JobApplication[]
+  candidates      Candidate[]
+  promotions      Promotion[]
+  salaryChanges   SalaryChange[]
+  contactLinks    ContactCompany[]
+  positionKnowledge PositionKnowledge[]
+
+  @@map("companies")
+}
+
+model Contact {
+  id           String   @id @default(cuid())
+  name         String
+  relationType String   // 猎头/HR同行/前同事/面试官/用人部门/候选人
+  phone        String?
+  email        String?
+  wechat       String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关联
+  companies     ContactCompany[]
+
+  @@map("contacts")
+}
+
+model ContactCompany {
+  id        String  @id @default(cuid())
+  contactId String
+  companyId String
+
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, companyId])
+  @@map("contact_companies")
+}
+
+model Tag {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  category String? // skill/industry/knowledge/status
+
+  @@map("tags")
+}
+
+// ========================================
+// 模块一：我的求职管理
+// ========================================
+
+model JobApplication {
+  id             String   @id @default(cuid())
+  companyId      String
+  positionName   String
+  salaryMin      Int?
+  salaryMax      Int?
+  offerSalary    Int?
+  status         String   @default("投递中") // 投递中/筛选中/笔试/一面/二面/终面/offer/入职/拒绝
+  source         String?  // 招聘网站/猎头/内推/官网
+  appliedDate    DateTime?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company        Company              @relation(fields: [companyId], references: [id])
+  interviews     InterviewRecord[]
+  negotiations   SalaryNegotiation[]
+
+  @@map("job_applications")
+}
+
+model InterviewRecord {
+  id              String   @id @default(cuid())
+  applicationId   String
+  round           Int
+  interviewDate   DateTime
+  interviewer     String?
+  feedback        String?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("interview_records")
+}
+
+model SalaryNegotiation {
+  id              String   @id @default(cuid())
+  applicationId   String
+  expectedSalary  Int?
+  offeredSalary   Int?
+  finalSalary     Int?
+  leverage        String?  // 谈判筹码
+  strategy        String?  // 使用策略
+  outcome         String?  // 结果
+  notes           String?  // 复盘
+  createdAt       DateTime @default(now())
+
+  application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("salary_negotiations")
+}
+
+// ========================================
+// 模块二：我的薪酬与晋升
+// ========================================
+
+model Promotion {
+  id              String   @id @default(cuid())
+  date            DateTime
+  previousLevel   String?
+  newLevel        String?
+  companyId       String
+  reason          String?
+  summary         String?
+  createdAt       DateTime @default(now())
+
+  company         Company @relation(fields: [companyId], references: [id])
+
+  @@map("promotions")
+}
+
+model SalaryChange {
+  id              String   @id @default(cuid())
+  date            DateTime
+  amount          Int
+  changeType      String   // 晋升调薪/年度调薪/跳槽/其他
+  companyId       String
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  company         Company @relation(fields: [companyId], references: [id])
+
+  @@map("salary_changes")
+}
+
+model Milestone {
+  id              String   @id @default(cuid())
+  date            DateTime
+  title           String
+  description     String?
+  tags            String[]
+  createdAt       DateTime @default(now())
+
+  @@map("milestones")
+}
+
+model Achievement {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  date            DateTime
+  project         String?
+  impact          String?
+  createdAt       DateTime @default(now())
+
+  @@map("achievements")
+}
+
+model AnnualReview {
+  id              String   @id @default(cuid())
+  year            Int      @unique
+  highlights      String?
+  improvements    String?
+  goals           String?
+  nextYearPlan    String?
+  createdAt       DateTime @default(now())
+
+  @@map("annual_reviews")
+}
+
+model GoalOKR {
+  id              String   @id @default(cuid())
+  objective       String
+  keyResults      String?
+  status          String   @default("进行中") // 进行中/已完成/已放弃
+  startDate       DateTime?
+  endDate         DateTime?
+  progress        Int      @default(0) // 百分比
+  createdAt       DateTime @default(now())
+
+  @@map("goal_okrs")
+}
+
+// ========================================
+// 模块三：我的简历与求职信
+// ========================================
+
+model Resume {
+  id              String   @id @default(cuid())
+  title           String
+  content         String
+  targetPosition  String?
+  targetCompany   String?
+  version         Int      @default(1)
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("resumes")
+}
+
+model CoverLetter {
+  id              String   @id @default(cuid())
+  title           String
+  content         String
+  targetCompany   String?
+  targetPosition  String?
+  resumeId        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("cover_letters")
+}
+
+model SelfIntroduction {
+  id              String   @id @default(cuid())
+  title           String
+  content         String
+  scenario        String   // 面试/电话/社交场合
+  duration        String?  // 30秒/1分钟/3分钟
+  tags            String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("self_introductions")
+}
+
+// ========================================
+// HR工作台：候选人简历库
+// ========================================
+
+model Candidate {
+  id              String   @id @default(cuid())
+  name            String
+  phone           String?
+  email           String?
+  companyId       String?
+  position        String?
+  skills          String[]
+  experienceYears Int?
+  source          String?  // 来源渠道
+  resumeSnapshot  String?  // 简历快照（Markdown或JSON）
+  status          String   @default("待筛选") // 待筛选/面试中/已录用/已拒绝/暂缓/放弃
+  offerSalary     Int?
+  followUpStatus  String?
+  talentPoolTag   Boolean  @default(false) // 是否标记为人才储备
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company         Company? @relation(fields: [companyId], references: [id])
+  interviews      CandidateInterview[]
+
+  @@map("candidates")
+}
+
+model CandidateInterview {
+  id              String   @id @default(cuid())
+  candidateId     String
+  round           Int
+  interviewDate   DateTime
+  interviewer     String?
+  evaluation      String?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("candidate_interviews")
+}
+
+// ========================================
+// HR工作台：招聘知识库
+// ========================================
+
+model PositionKnowledge {
+  id              String   @id @default(cuid())
+  companyId       String?
+  positionCategory String  // 岗位分类：算法/产品/财务/销售/技术/运营等
+  terminology     String?  // 技术术语 & 业务背景
+  jdTemplate      String?  // JD 模板
+  evaluationCriteria String? // 评估标准
+  salaryRangeMin  Int?
+  salaryRangeMax  Int?
+  marketInfo      String?  // 市场行情参考
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company         Company? @relation(fields: [companyId], references: [id])
+
+  @@map("position_knowledge")
+}
+
+// ========================================
+// HR工作台：市场洞察
+// ========================================
+
+model MarketInsight {
+  id              String   @id @default(cuid())
+  title           String
+  content         String
+  category        String   // 薪酬对标/人才趋势/行业动态
+  industry        String?
+  position        String?
+  dataPoints      String?  // JSON 格式的数据点
+  source          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("market_insights")
+}
