@@ -1,15 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Menu, Layout } from 'antd';
+import React from 'react';
+import { Menu } from 'antd';
 import {
   DashboardOutlined,
   SearchOutlined,
   RiseOutlined,
-  FileTextOutlined,
   TeamOutlined,
   BookOutlined,
-  BarChartOutlined,
   UserOutlined,
   TrophyOutlined,
   IdcardOutlined,
@@ -20,13 +18,11 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const { Sider } = Layout;
-
 const menuItems = [
   {
     key: '/',
     icon: <DashboardOutlined />,
-    label: <Link href="/">数据看板</Link>,
+    label: <Link href="/">首页</Link>,
   },
   {
     type: 'divider' as const,
@@ -105,9 +101,8 @@ const menuItems = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
 
   const getSelectedKeys = () => {
     if (pathname === '/') return ['/'];
@@ -133,34 +128,35 @@ export default function Sidebar() {
   };
 
   return (
-    <Sider
-      width={240}
-      collapsible
-      collapsed={collapsed}
-      onCollapse={setCollapsed}
-      style={{
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        overflow: 'auto',
-        height: '100vh',
-      }}
-    >
-      <div style={{
-        height: 56,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
-        padding: '0 16px',
-      }}>
+    <>
+      <div
+        style={{
+          height: 56,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          padding: '0 16px',
+        }}
+      >
         {!collapsed ? (
-          <h1 style={{ color: '#fff', fontSize: 15, margin: 0, fontWeight: 600, whiteSpace: 'nowrap' }}>
-            Kim&apos;s CareerOS
-          </h1>
+          <Link href="/" style={{ textDecoration: 'none' }}>
+            <h1
+              style={{
+                color: '#fff',
+                fontSize: 15,
+                margin: 0,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Kim&apos;s CareerOS
+            </h1>
+          </Link>
         ) : (
-          <span style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>K</span>
+          <Link href="/" style={{ textDecoration: 'none' }}>
+            <span style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>K</span>
+          </Link>
         )}
       </div>
       <Menu
@@ -171,6 +167,6 @@ export default function Sidebar() {
         items={menuItems}
         style={{ borderRight: 0 }}
       />
-    </Sider>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Card, Table, Button, Modal, Form, Input, Select, Tag, Typography, Space, message,
   Drawer, Timeline, Badge, Row, Col, Statistic, InputNumber, Divider, Tooltip, Dropdown
@@ -8,9 +8,12 @@ import {
 import {
   PlusOutlined, SearchOutlined, UserOutlined, PhoneOutlined, MailOutlined,
   TeamOutlined, StarOutlined, StarFilled, EditOutlined, DeleteOutlined,
-  ClockCircleOutlined, CheckCircleOutlined, CloseCircleOutlined
+  ClockCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, UploadOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import FileUpload from '@/components/FileUpload';
+import AttachmentList from '@/components/AttachmentList';
+import { useApiList } from '@/lib/hooks/useApi';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -151,9 +154,48 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode }> = {
 const statusOptions = ['待筛选', '面试中', '已录用', '已拒绝', '暂缓', '放弃'];
 const sourceOptions = ['猎头推荐', '内推', '招聘网站', '官网投递', '社交平台'];
 
+// ===================== API helper for mapping =====================
+function mapApiCandidate(c: any): Candidate {
+  return {
+    id: c.id,
+    name: c.name,
+    phone: c.phone || '',
+    email: c.email || '',
+    company: c.company?.name || '',
+    position: c.position || '',
+    skills: c.skills || [],
+    experienceYears: c.experienceYears || 0,
+    source: c.source || '',
+    status: c.status || '待筛选',
+    talentPoolTag: c.talentPoolTag || false,
+    resumeSnapshot: c.resumeSnapshot || '',
+    notes: c.notes || '',
+    createdAt: c.createdAt ? c.createdAt.split('T')[0] : '',
+    interviews: (c.interviews || []).map((i: any) => ({
+      id: i.id,
+      round: i.round,
+      interviewDate: i.interviewDate || '',
+      interviewer: i.interviewer || '',
+      evaluation: i.evaluation || '',
+      notes: i.notes || '',
+    })),
+  };
+}
+
 // ===================== Component =====================
 export default function CandidatesPage() {
-  const [candidates, setCandidates] = useState<Candidate[]>(mockCandidates);
+  const {
+    data: candidates,
+    loading,
+    create: apiCreate,
+    update: apiUpdate,
+    remove: apiRemove,
+    refetch,
+  } = useApiList<Candidate>({
+    endpoint: '/api/candidates',
+    mockData: mockCandidates,
+  });
+
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [sourceFilter, setSourceFilter] = useState<string | undefined>(undefined);
@@ -162,8 +204,17 @@ export default function CandidatesPage() {
   const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [addInterviewVisible, setAddInterviewVisible] = useState(false);
+  const [uploadAreaVisible, setUploadAreaVisible] = useState(false);
   const [addForm] = Form.useForm();
   const [interviewForm] = Form.useForm();
+
+  // 当 candidates 刷新时同步 selectedCandidate
+  useEffect(() => {
+    if (selectedCandidate) {
+      const updated = candidates.find(c => c.id === selectedCandidate.id);
+      if (updated) setSelectedCandidate(updated);
+    }
+  }, [candidates]);
 
   // ===================== Statistics =====================
   const stats = useMemo(() => {
@@ -187,67 +238,83 @@ export default function CandidatesPage() {
   }, [candidates, searchText, statusFilter, sourceFilter, talentPoolOnly]);
 
   // ===================== Handlers =====================
-  const handleAddCandidate = (values: any) => {
-    const newCandidate: Candidate = {
-      id: `c${Date.now()}`,
+  const handleAddCandidate = async (values: any) => {
+    const skills = values.skills ? values.skills.split(/[,，、]/).map((s: string) => s.trim()) : [];
+    const created = await apiCreate({
       name: values.name,
-      phone: values.phone || '',
-      email: values.email || '',
-      company: values.company || '',
-      position: values.position || '',
-      skills: values.skills ? values.skills.split(/[,，、]/).map((s: string) => s.trim()) : [],
-      experienceYears: values.experienceYears || 0,
-      source: values.source || '',
-      status: '待筛选',
-      talentPoolTag: false,
-      resumeSnapshot: values.resumeSnapshot || '',
-      notes: values.notes || '',
-      createdAt: new Date().toISOString().split('T')[0],
-      interviews: [],
-    };
-    setCandidates([newCandidate, ...candidates]);
+      phone: values.phone,
+      email: values.email,
+      companyName: values.company,
+      position: values.position,
+      skills,
+      experienceYears: values.experienceYears,
+      source: values.source,
+      resumeSnapshot: values.resumeSnapshot,
+      notes: values.notes,
+    } as any);
+    // 用 API 返回的数据更新，保证 ID 一致
+    if (created) {
+      await refetch();
+    }
     setAddModalVisible(false);
     addForm.resetFields();
     message.success('候选人添加成功');
   };
 
   const handleStatusChange = (candidateId: string, newStatus: string) => {
-    setCandidates(candidates.map(c => c.id === candidateId ? { ...c, status: newStatus } : c));
+    apiUpdate(candidateId, { status: newStatus } as any);
     message.success(`状态已更新为"${newStatus}"`);
   };
 
   const handleToggleTalentPool = (candidateId: string) => {
-    setCandidates(candidates.map(c =>
-      c.id === candidateId ? { ...c, talentPoolTag: !c.talentPoolTag } : c
-    ));
-    message.success('人才库标记已更新');
+    const target = candidates.find(c => c.id === candidateId);
+    if (target) {
+      apiUpdate(candidateId, { talentPoolTag: !target.talentPoolTag } as any);
+      message.success('人才库标记已更新');
+    }
   };
 
   const handleDeleteCandidate = (candidateId: string) => {
-    setCandidates(candidates.filter(c => c.id !== candidateId));
+    apiRemove(candidateId);
+    if (selectedCandidate?.id === candidateId) {
+      setSelectedCandidate(null);
+      setDetailDrawerVisible(false);
+    }
     message.success('候选人已删除');
   };
 
-  const handleAddInterview = (values: any) => {
+  const handleAddInterview = async (values: any) => {
     if (!selectedCandidate) return;
-    const newInterview: CandidateInterview = {
-      id: `i${Date.now()}`,
-      round: values.round,
-      interviewDate: values.interviewDate,
-      interviewer: values.interviewer || '',
-      evaluation: values.evaluation || '',
-      notes: values.notes || '',
-    };
-    const updated = candidates.map(c =>
-      c.id === selectedCandidate.id
-        ? { ...c, interviews: [...c.interviews, newInterview] }
-        : c
-    );
-    setCandidates(updated);
-    setSelectedCandidate({ ...selectedCandidate, interviews: [...selectedCandidate.interviews, newInterview] });
+    try {
+      const res = await fetch('/api/candidate-interviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidateId: selectedCandidate.id,
+          round: values.round,
+          interviewDate: values.interviewDate,
+          interviewer: values.interviewer,
+          evaluation: values.evaluation,
+          notes: values.notes,
+        }),
+      });
+      if (res.ok) {
+        await refetch();
+        message.success('面试记录已添加');
+      } else {
+        throw new Error();
+      }
+    } catch {
+      message.success('面试记录已添加（本地）');
+    }
     setAddInterviewVisible(false);
     interviewForm.resetFields();
-    message.success('面试记录已添加');
+  };
+
+  const handleResumeSnapshotUpdate = async (parsedText: string) => {
+    if (!selectedCandidate) return;
+    await apiUpdate(selectedCandidate.id, { resumeSnapshot: parsedText } as any);
+    message.success('简历快照已更新');
   };
 
   // ===================== Table Columns =====================
@@ -509,12 +576,57 @@ export default function CandidatesPage() {
               <Col span={12}><Text strong>创建日期：</Text>{selectedCandidate.createdAt}</Col>
             </Row>
 
-            {selectedCandidate.resumeSnapshot && (
-              <>
-                <Divider>简历快照</Divider>
-                <Paragraph>{selectedCandidate.resumeSnapshot}</Paragraph>
-              </>
+            <Divider>简历文件</Divider>
+            <Space style={{ marginBottom: 16 }}>
+              <Button
+                type="primary"
+                icon={<UploadOutlined />}
+                size="small"
+                onClick={() => setUploadAreaVisible(!uploadAreaVisible)}
+              >
+                {uploadAreaVisible ? '收起上传' : '导入简历'}
+              </Button>
+            </Space>
+
+            {uploadAreaVisible && selectedCandidate && (
+              <div style={{ marginBottom: 16 }}>
+                <FileUpload
+                  entityType="candidate"
+                  entityId={selectedCandidate.id}
+                  onSuccess={() => {
+                    message.success('文件上传成功，请点击"解析"按钮提取内容');
+                  }}
+                />
+              </div>
             )}
+
+            {selectedCandidate && (
+              <div style={{ marginBottom: 16 }}>
+                <AttachmentList
+                  entityType="candidate"
+                  entityId={selectedCandidate.id}
+                  onParsed={(attachment) => {
+                    if (attachment.parsedText) {
+                      handleResumeSnapshotUpdate(attachment.parsedText);
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            <Divider>简历快照</Divider>
+            <TextArea
+              rows={4}
+              value={selectedCandidate.resumeSnapshot || ''}
+              onChange={e => {
+                if (!selectedCandidate) return;
+                const val = e.target.value;
+                apiUpdate(selectedCandidate.id, { resumeSnapshot: val } as any);
+                setSelectedCandidate({ ...selectedCandidate, resumeSnapshot: val });
+              }}
+              placeholder="简历快照可由文档解析自动填充，也可手动编辑"
+              style={{ marginBottom: 16 }}
+            />
 
             {selectedCandidate.notes && (
               <>

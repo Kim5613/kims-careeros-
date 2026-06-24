@@ -33,7 +33,11 @@ import {
   PhoneOutlined,
   SmileOutlined,
   VideoCameraOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
+import FileUpload from '@/components/FileUpload';
+import AttachmentList from '@/components/AttachmentList';
+import { useApiList } from '@/lib/hooks/useApi';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -208,94 +212,51 @@ const MOCK_SELF_INTROS: SelfIntroductionItem[] = [
 export default function ResumesPage() {
   const [activeTab, setActiveTab] = useState('resumes');
 
-  // Resume state
-  const [resumes, setResumes] = useState<ResumeItem[]>([]);
-  const [resumeLoading, setResumeLoading] = useState(true);
+  // Resume state — API-first
+  const {
+    data: resumes,
+    loading: resumeLoading,
+    create: resumeCreate,
+    update: resumeUpdate,
+    remove: resumeRemove,
+    refetch: refetchResumes,
+  } = useApiList<ResumeItem>({ endpoint: '/api/resumes', mockData: MOCK_RESUMES });
+
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [resumeModalLoading, setResumeModalLoading] = useState(false);
   const [editingResume, setEditingResume] = useState<ResumeItem | null>(null);
   const [previewResume, setPreviewResume] = useState<ResumeItem | null>(null);
   const [resumeForm] = Form.useForm();
+  const [uploadAreaVisible, setUploadAreaVisible] = useState(false);
 
-  // Cover letter state
-  const [coverLetters, setCoverLetters] = useState<CoverLetterItem[]>([]);
-  const [clLoading, setClLoading] = useState(true);
+  // Cover letter state — API-first
+  const {
+    data: coverLetters,
+    loading: clLoading,
+    create: clCreate,
+    update: clUpdate,
+    remove: clRemove,
+  } = useApiList<CoverLetterItem>({ endpoint: '/api/cover-letters', mockData: MOCK_COVER_LETTERS });
+
   const [clModalOpen, setClModalOpen] = useState(false);
   const [clModalLoading, setClModalLoading] = useState(false);
   const [editingCl, setEditingCl] = useState<CoverLetterItem | null>(null);
   const [previewCl, setPreviewCl] = useState<CoverLetterItem | null>(null);
   const [clForm] = Form.useForm();
 
-  // Self-introduction state
-  const [selfIntros, setSelfIntros] = useState<SelfIntroductionItem[]>([]);
-  const [siLoading, setSiLoading] = useState(true);
+  // Self-introduction state — API-first
+  const {
+    data: selfIntros,
+    loading: siLoading,
+    create: siCreate,
+    update: siUpdate,
+    remove: siRemove,
+  } = useApiList<SelfIntroductionItem>({ endpoint: '/api/self-introductions', mockData: MOCK_SELF_INTROS });
+
   const [siModalOpen, setSiModalOpen] = useState(false);
   const [siModalLoading, setSiModalLoading] = useState(false);
   const [editingSi, setEditingSi] = useState<SelfIntroductionItem | null>(null);
   const [siForm] = Form.useForm();
-
-  // ── Fetch resumes ──
-  const fetchResumes = useCallback(async () => {
-    setResumeLoading(true);
-    try {
-      const res = await fetch('/api/resumes');
-      if (!res.ok) throw new Error('API failed');
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setResumes(data);
-      } else {
-        setResumes(MOCK_RESUMES);
-      }
-    } catch {
-      setResumes(MOCK_RESUMES);
-    } finally {
-      setResumeLoading(false);
-    }
-  }, []);
-
-  // ── Fetch cover letters ──
-  const fetchCoverLetters = useCallback(async () => {
-    setClLoading(true);
-    try {
-      const res = await fetch('/api/cover-letters');
-      if (!res.ok) throw new Error('API failed');
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setCoverLetters(data);
-      } else {
-        setCoverLetters(MOCK_COVER_LETTERS);
-      }
-    } catch {
-      setCoverLetters(MOCK_COVER_LETTERS);
-    } finally {
-      setClLoading(false);
-    }
-  }, []);
-
-  // ── Fetch self introductions ──
-  const fetchSelfIntros = useCallback(async () => {
-    setSiLoading(true);
-    try {
-      const res = await fetch('/api/self-introductions');
-      if (!res.ok) throw new Error('API failed');
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setSelfIntros(data);
-      } else {
-        setSelfIntros(MOCK_SELF_INTROS);
-      }
-    } catch {
-      setSelfIntros(MOCK_SELF_INTROS);
-    } finally {
-      setSiLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchResumes();
-    fetchCoverLetters();
-    fetchSelfIntros();
-  }, [fetchResumes, fetchCoverLetters, fetchSelfIntros]);
 
   // ════════════════════════════════════════════
   // Resume handlers
@@ -303,6 +264,7 @@ export default function ResumesPage() {
 
   const openCreateResume = () => {
     setEditingResume(null);
+    setUploadAreaVisible(false);
     resumeForm.resetFields();
     resumeForm.setFieldsValue({ version: 1, isDefault: false });
     setResumeModalOpen(true);
@@ -310,6 +272,7 @@ export default function ResumesPage() {
 
   const openEditResume = (item: ResumeItem) => {
     setEditingResume(item);
+    setUploadAreaVisible(false);
     resumeForm.setFieldsValue({
       title: item.title,
       content: item.content,
@@ -335,38 +298,12 @@ export default function ResumesPage() {
         isDefault: values.isDefault ?? false,
       };
 
-      try {
-        const res = await fetch('/api/resumes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          message.success(editingResume ? '简历已更新' : '简历已创建');
-          setResumeModalOpen(false);
-          fetchResumes();
-          return;
-        }
-      } catch {
-        // API unavailable
-      }
-
-      // Local fallback
       if (editingResume) {
-        setResumes((prev) =>
-          prev.map((r) =>
-            r.id === editingResume.id ? { ...r, ...payload } : r
-          )
-        );
-        message.success('简历已更新（本地）');
+        await resumeUpdate(editingResume.id, payload);
+        message.success('简历已更新');
       } else {
-        const newItem: ResumeItem = {
-          id: `local-${Date.now()}`,
-          ...payload,
-          createdAt: new Date().toISOString(),
-        };
-        setResumes((prev) => [newItem, ...prev]);
-        message.success('简历已创建（本地）');
+        await resumeCreate(payload);
+        message.success('简历已创建');
       }
       setResumeModalOpen(false);
     } catch {
@@ -377,31 +314,33 @@ export default function ResumesPage() {
   };
 
   const handleDeleteResume = (item: ResumeItem) => {
-    setResumes((prev) => prev.filter((r) => r.id !== item.id));
+    resumeRemove(item.id);
     message.success('简历已删除');
   };
 
   const handleToggleDefault = (item: ResumeItem) => {
-    setResumes((prev) =>
-      prev.map((r) => ({
-        ...r,
-        isDefault: r.id === item.id ? !r.isDefault : false,
-      }))
-    );
+    resumeUpdate(item.id, { isDefault: !item.isDefault } as any);
     message.success(item.isDefault ? '已取消默认' : '已设为默认简历');
   };
 
   const handleCopyResume = (item: ResumeItem) => {
-    const copied: ResumeItem = {
-      ...item,
-      id: `local-${Date.now()}`,
+    resumeCreate({
       title: `${item.title}（副本）`,
+      content: item.content,
+      targetPosition: item.targetPosition,
+      targetCompany: item.targetCompany,
       version: 1,
       isDefault: false,
-      createdAt: new Date().toISOString(),
-    };
-    setResumes((prev) => [copied, ...prev]);
+    });
     message.success('已复制简历');
+  };
+
+  // 文档解析后自动填充内容到编辑器
+  const handleResumeParsed = (attachment: any) => {
+    if (attachment.parsedText) {
+      resumeForm.setFieldsValue({ content: attachment.parsedText });
+      message.success('文档内容已填充到编辑器，请检查并调整');
+    }
   };
 
   // ════════════════════════════════════════════
@@ -437,38 +376,12 @@ export default function ResumesPage() {
         targetPosition: values.targetPosition ?? null,
       };
 
-      try {
-        const res = await fetch('/api/cover-letters', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          message.success(editingCl ? '求职信已更新' : '求职信已创建');
-          setClModalOpen(false);
-          fetchCoverLetters();
-          return;
-        }
-      } catch {
-        // API unavailable
-      }
-
-      // Local fallback
       if (editingCl) {
-        setCoverLetters((prev) =>
-          prev.map((c) =>
-            c.id === editingCl.id ? { ...c, ...payload } : c
-          )
-        );
-        message.success('求职信已更新（本地）');
+        await clUpdate(editingCl.id, payload);
+        message.success('求职信已更新');
       } else {
-        const newItem: CoverLetterItem = {
-          id: `local-${Date.now()}`,
-          ...payload,
-          createdAt: new Date().toISOString(),
-        };
-        setCoverLetters((prev) => [newItem, ...prev]);
-        message.success('求职信已创建（本地）');
+        await clCreate(payload);
+        message.success('求职信已创建');
       }
       setClModalOpen(false);
     } catch {
@@ -479,18 +392,12 @@ export default function ResumesPage() {
   };
 
   const handleDeleteCl = (item: CoverLetterItem) => {
-    setCoverLetters((prev) => prev.filter((c) => c.id !== item.id));
+    clRemove(item.id);
     message.success('求职信已删除');
   };
 
   const handleCopyCl = (item: CoverLetterItem) => {
-    const copied: CoverLetterItem = {
-      ...item,
-      id: `local-${Date.now()}`,
-      title: `${item.title}（副本）`,
-      createdAt: new Date().toISOString(),
-    };
-    setCoverLetters((prev) => [copied, ...prev]);
+    clCreate({ title: `${item.title}（副本）`, content: item.content, targetCompany: item.targetCompany, targetPosition: item.targetPosition });
     message.success('已复制求职信');
   };
 
@@ -530,38 +437,12 @@ export default function ResumesPage() {
         tags: values.tags ?? [],
       };
 
-      try {
-        const res = await fetch('/api/self-introductions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          message.success(editingSi ? '话术已更新' : '话术已创建');
-          setSiModalOpen(false);
-          fetchSelfIntros();
-          return;
-        }
-      } catch {
-        // API unavailable
-      }
-
-      // Local fallback
       if (editingSi) {
-        setSelfIntros((prev) =>
-          prev.map((s) =>
-            s.id === editingSi.id ? { ...s, ...payload } : s
-          )
-        );
-        message.success('话术已更新（本地）');
+        await siUpdate(editingSi.id, payload);
+        message.success('话术已更新');
       } else {
-        const newItem: SelfIntroductionItem = {
-          id: `local-${Date.now()}`,
-          ...payload,
-          createdAt: new Date().toISOString(),
-        };
-        setSelfIntros((prev) => [newItem, ...prev]);
-        message.success('话术已创建（本地）');
+        await siCreate(payload);
+        message.success('话术已创建');
       }
       setSiModalOpen(false);
     } catch {
@@ -572,7 +453,7 @@ export default function ResumesPage() {
   };
 
   const handleDeleteSi = (item: SelfIntroductionItem) => {
-    setSelfIntros((prev) => prev.filter((s) => s.id !== item.id));
+    siRemove(item.id);
     message.success('话术已删除');
   };
 
@@ -1026,6 +907,38 @@ export default function ResumesPage() {
             />
           </Form.Item>
         </Form>
+
+        {editingResume && (
+          <>
+            <Divider orientation="left" style={{ margin: '16px 0 12px' }}>
+              简历文件
+            </Divider>
+            <div style={{ marginBottom: 12 }}>
+              <Button
+                icon={<UploadOutlined />}
+                onClick={() => setUploadAreaVisible((v) => !v)}
+                size="small"
+              >
+                {uploadAreaVisible ? '收起上传' : '上传简历文件'}
+              </Button>
+            </div>
+            {uploadAreaVisible && (
+              <FileUpload
+                entityType="resume"
+                entityId={editingResume.id}
+                onSuccess={() => {
+                  message.success('文件上传成功，请点击"解析文档"提取内容');
+                }}
+                accept=".pdf,.jpg,.jpeg,.png,.md"
+              />
+            )}
+            <AttachmentList
+              entityType="resume"
+              entityId={editingResume.id}
+              onParsed={handleResumeParsed}
+            />
+          </>
+        )}
       </Modal>
 
       {/* ── Resume Preview Modal ── */}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useApiList } from '@/lib/hooks/useApi';
 import {
   Card, Row, Col, Button, Modal, Form, Input, Select, Tag, Typography,
   Space, message, Empty, Collapse, Divider, Badge
@@ -90,7 +91,7 @@ const mockInsights: MarketInsight[] = [
 
 // ===================== Component =====================
 export default function MarketInsightsPage() {
-  const [insights, setInsights] = useState<MarketInsight[]>(mockInsights);
+  const { data: insights, create: apiCreate } = useApiList<MarketInsight>({ endpoint: '/api/market-insights', mockData: mockInsights });
   const [searchText, setSearchText] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
   const [industryFilter, setIndustryFilter] = useState<string | undefined>(undefined);
@@ -112,19 +113,16 @@ export default function MarketInsightsPage() {
   }, [insights, searchText, categoryFilter, industryFilter]);
 
   // ===================== Handlers =====================
-  const handleAdd = (values: any) => {
-    const newInsight: MarketInsight = {
-      id: `m${Date.now()}`,
+  const handleAdd = async (values: any) => {
+    await apiCreate({
       title: values.title,
       content: values.content,
       category: values.category,
-      industry: values.industry || '',
-      position: values.position || '',
-      dataPoints: values.dataPoints || '',
-      source: values.source || '',
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setInsights([newInsight, ...insights]);
+      industry: values.industry,
+      position: values.position,
+      dataPoints: values.dataPoints,
+      source: values.source,
+    } as any);
     setAddModalVisible(false);
     form.resetFields();
     message.success('洞察已添加');

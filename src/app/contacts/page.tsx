@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useApiList } from '@/lib/hooks/useApi';
 import {
   Card,
   Table,
@@ -145,8 +146,13 @@ const MOCK_CONTACTS: ContactItem[] = [
 // ────────────────────────────────────────────
 
 export default function ContactsPage() {
-  const [contacts, setContacts] = useState<ContactItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: contacts,
+    loading,
+    create: apiCreate,
+    update: apiUpdate,
+    remove: apiRemove,
+  } = useApiList<ContactItem>({ endpoint: '/api/contacts', mockData: MOCK_CONTACTS });
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
 
   // Filters
@@ -158,41 +164,6 @@ export default function ContactsPage() {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingContact, setEditingContact] = useState<ContactItem | null>(null);
   const [form] = Form.useForm();
-
-  // ── Fetch data ──
-  const fetchContacts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/contacts');
-      if (!res.ok) throw new Error('API failed');
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setContacts(
-          data.map((item: Record<string, unknown>) => ({
-            id: item.id as string,
-            name: item.name as string,
-            relationType: item.relationType as RelationType,
-            company: ((item.companies as Record<string, unknown>[])?.[0]?.name as string) ?? null,
-            phone: item.phone as string | null,
-            email: item.email as string | null,
-            wechat: item.wechat as string | null,
-            notes: item.notes as string | null,
-            createdAt: item.createdAt as string,
-          }))
-        );
-      } else {
-        setContacts(MOCK_CONTACTS);
-      }
-    } catch {
-      setContacts(MOCK_CONTACTS);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
 
   // ── Filtered contacts ──
   const filteredContacts = useMemo(() => {
@@ -261,55 +232,12 @@ export default function ContactsPage() {
         notes: values.notes ?? null,
       };
 
-      try {
-        const res = await fetch('/api/contacts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          message.success(editingContact ? '联系人已更新' : '联系人已创建');
-          setModalOpen(false);
-          fetchContacts();
-          return;
-        }
-      } catch {
-        // API unavailable
-      }
-
-      // Local fallback
       if (editingContact) {
-        setContacts((prev) =>
-          prev.map((c) =>
-            c.id === editingContact.id
-              ? {
-                  ...c,
-                  name: payload.name,
-                  relationType: payload.relationType,
-                  company: payload.companyName,
-                  phone: payload.phone,
-                  email: payload.email,
-                  wechat: payload.wechat,
-                  notes: payload.notes,
-                }
-              : c
-          )
-        );
-        message.success('联系人已更新（本地）');
+        await apiUpdate(editingContact.id, payload as any);
+        message.success('联系人已更新');
       } else {
-        const newItem: ContactItem = {
-          id: `local-${Date.now()}`,
-          name: payload.name,
-          relationType: payload.relationType,
-          company: payload.companyName,
-          phone: payload.phone,
-          email: payload.email,
-          wechat: payload.wechat,
-          notes: payload.notes,
-          createdAt: new Date().toISOString(),
-        };
-        setContacts((prev) => [newItem, ...prev]);
-        message.success('联系人已创建（本地）');
+        await apiCreate(payload as any);
+        message.success('联系人已创建');
       }
       setModalOpen(false);
     } catch {
@@ -327,7 +255,7 @@ export default function ContactsPage() {
       okType: 'danger',
       cancelText: '取消',
       onOk: () => {
-        setContacts((prev) => prev.filter((c) => c.id !== item.id));
+        apiRemove(item.id);
         message.success('联系人已删除');
       },
     });

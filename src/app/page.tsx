@@ -1,18 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Row,
   Col,
-  Statistic,
   Timeline,
   Typography,
   Space,
   Tag,
+  Modal,
+  Button,
+  Input,
+  Badge,
+  Calendar,
 } from 'antd';
+import type { Dayjs } from 'dayjs';
 import {
-  SendOutlined,
   CalendarOutlined,
   TeamOutlined,
   BookOutlined,
@@ -24,23 +28,17 @@ import {
   FileTextOutlined,
   StarOutlined,
   ArrowRightOutlined,
-  DashboardOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
+import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
 // ────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────
-
-interface StatCard {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  color: string;
-  bgColor: string;
-}
 
 interface ActivityItem {
   time: string;
@@ -64,40 +62,15 @@ interface ModuleLink {
   description: string;
 }
 
+interface TodoItem {
+  id: string;
+  date: string; // YYYY-MM-DD
+  content: string;
+}
+
 // ────────────────────────────────────────────
 // Mock Data
 // ────────────────────────────────────────────
-
-const statsData: StatCard[] = [
-  {
-    title: '求职进行中',
-    value: 12,
-    icon: <SendOutlined style={{ fontSize: 28, color: '#1677ff' }} />,
-    color: '#1677ff',
-    bgColor: '#e6f4ff',
-  },
-  {
-    title: '本月面试',
-    value: 5,
-    icon: <CalendarOutlined style={{ fontSize: 28, color: '#52c41a' }} />,
-    color: '#52c41a',
-    bgColor: '#f6ffed',
-  },
-  {
-    title: '候选人总数',
-    value: 86,
-    icon: <TeamOutlined style={{ fontSize: 28, color: '#722ed1' }} />,
-    color: '#722ed1',
-    bgColor: '#f9f0ff',
-  },
-  {
-    title: '知识条目',
-    value: 234,
-    icon: <BookOutlined style={{ fontSize: 28, color: '#fa8c16' }} />,
-    color: '#fa8c16',
-    bgColor: '#fff7e6',
-  },
-];
 
 const recentActivities: ActivityItem[] = [
   {
@@ -234,48 +207,6 @@ const hrModules: ModuleLink[] = [
 // Sub-components
 // ────────────────────────────────────────────
 
-function StatCardItem({ card }: { card: StatCard }) {
-  return (
-    <Card
-      hoverable
-      style={{ borderRadius: 12, height: '100%' }}
-      styles={{ body: { padding: '24px 24px 20px' } }}
-    >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 12,
-            backgroundColor: card.bgColor,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          {card.icon}
-        </div>
-        <div style={{ flex: 1 }}>
-          <Text type="secondary" style={{ fontSize: 14 }}>
-            {card.title}
-          </Text>
-          <Statistic
-            value={card.value}
-            valueStyle={{
-              fontSize: 32,
-              fontWeight: 700,
-              color: card.color,
-              lineHeight: 1.2,
-              marginTop: 4,
-            }}
-          />
-        </div>
-      </div>
-    </Card>
-  );
-}
-
 function QuickActionCard({ action }: { action: QuickAction }) {
   return (
     <Link href={action.href} style={{ textDecoration: 'none' }}>
@@ -317,6 +248,40 @@ function QuickActionCard({ action }: { action: QuickAction }) {
   );
 }
 
+function ModuleCard({ mod }: { mod: ModuleLink }) {
+  return (
+    <Link href={mod.href} style={{ textDecoration: 'none' }}>
+      <Card
+        hoverable
+        size="small"
+        style={{ borderRadius: 10 }}
+        styles={{ body: { padding: '14px 18px' } }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <Text strong style={{ fontSize: 14 }}>
+              {mod.name}
+            </Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {mod.description}
+            </Text>
+          </div>
+          <ArrowRightOutlined
+            style={{ color: '#bbb', fontSize: 14, flexShrink: 0 }}
+          />
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
 function ModuleSection({
   title,
   modules,
@@ -327,7 +292,7 @@ function ModuleSection({
   accentColor: string;
 }) {
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div>
       <div
         style={{
           display: 'flex',
@@ -351,35 +316,7 @@ function ModuleSection({
       <Row gutter={[12, 12]}>
         {modules.map((mod) => (
           <Col xs={24} sm={12} key={mod.name}>
-            <Link href={mod.href} style={{ textDecoration: 'none' }}>
-              <Card
-                hoverable
-                size="small"
-                style={{ borderRadius: 10 }}
-                styles={{ body: { padding: '14px 18px' } }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <Text strong style={{ fontSize: 14 }}>
-                      {mod.name}
-                    </Text>
-                    <br />
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {mod.description}
-                    </Text>
-                  </div>
-                  <ArrowRightOutlined
-                    style={{ color: '#bbb', fontSize: 14, flexShrink: 0 }}
-                  />
-                </div>
-              </Card>
-            </Link>
+            <ModuleCard mod={mod} />
           </Col>
         ))}
       </Row>
@@ -392,18 +329,86 @@ function ModuleSection({
 // ────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const [stats] = useState<StatCard[]>(statsData);
-  const [activities] = useState<ActivityItem[]>(recentActivities);
+  const [activities, setActivities] = useState<ActivityItem[]>(recentActivities);
   const [actions] = useState<QuickAction[]>(quickActions);
 
+  useEffect(() => {
+    fetch('/api/dashboard/activity')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setActivities(data);
+        }
+      })
+      .catch(() => {
+        // keep mock data
+      });
+  }, []);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [todoModalOpen, setTodoModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [todoText, setTodoText] = useState('');
+
+  const handleDateSelect = (date: Dayjs) => {
+    setSelectedDate(date.format('YYYY-MM-DD'));
+    setTodoText('');
+    setTodoModalOpen(true);
+  };
+
+  const handleAddTodo = () => {
+    if (!todoText.trim()) return;
+    const newTodo: TodoItem = {
+      id: Date.now().toString(),
+      date: selectedDate,
+      content: todoText.trim(),
+    };
+    setTodos((prev) => [...prev, newTodo]);
+    setTodoModalOpen(false);
+    setTodoText('');
+  };
+
+  const handleDeleteTodo = (id: string) => {
+    setTodos((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const getTodosForDate = (date: Dayjs) => {
+    const key = date.format('YYYY-MM-DD');
+    return todos.filter((t) => t.date === key);
+  };
+
+  const dateCellRender = (date: Dayjs) => {
+    const dayTodos = getTodosForDate(date);
+    if (dayTodos.length === 0) return null;
+    return (
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        {dayTodos.map((t) => (
+          <li key={t.id}>
+            <Badge
+              status="processing"
+              text={
+                <Text
+                  style={{ fontSize: 11, maxWidth: 80 }}
+                  ellipsis={{ tooltip: t.content }}
+                >
+                  {t.content}
+                </Text>
+              }
+            />
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  // ── Render ──
   return (
     <div style={{ padding: '0 4px' }}>
       {/* Page Header */}
       <div style={{ marginBottom: 28 }}>
         <Space align="center" size={10}>
-          <DashboardOutlined style={{ fontSize: 24, color: '#1677ff' }} />
+          <HomeOutlined style={{ fontSize: 24, color: '#1677ff' }} />
           <Title level={3} style={{ margin: 0 }}>
-            数据看板
+            首页
           </Title>
         </Space>
         <Paragraph type="secondary" style={{ marginTop: 6, marginBottom: 0 }}>
@@ -411,16 +416,16 @@ export default function DashboardPage() {
         </Paragraph>
       </div>
 
-      {/* ── Section 1: Top Stats Cards ── */}
+      {/* ── Section 1: Quick Actions (replaces old stat cards) ── */}
       <Row gutter={[16, 16]} style={{ marginBottom: 28 }}>
-        {stats.map((card) => (
-          <Col xs={24} sm={12} lg={6} key={card.title}>
-            <StatCardItem card={card} />
+        {actions.map((action) => (
+          <Col xs={24} sm={12} lg={6} key={action.title}>
+            <QuickActionCard action={action} />
           </Col>
         ))}
       </Row>
 
-      {/* ── Section 2 + 3: Activity Timeline & Quick Actions ── */}
+      {/* ── Section 2: Activity Timeline & Calendar ── */}
       <Row gutter={[20, 20]} style={{ marginBottom: 28 }}>
         {/* Recent Activity */}
         <Col xs={24} lg={14}>
@@ -465,30 +470,28 @@ export default function DashboardPage() {
           </Card>
         </Col>
 
-        {/* Quick Actions */}
+        {/* Calendar */}
         <Col xs={24} lg={10}>
           <Card
             title={
               <Space>
-                <StarOutlined />
-                <span>快捷入口</span>
+                <CalendarOutlined />
+                <span>待办日历</span>
               </Space>
             }
             style={{ borderRadius: 12 }}
-            styles={{ body: { padding: '20px 24px' } }}
+            styles={{ body: { padding: '12px 16px' } }}
           >
-            <Row gutter={[12, 12]}>
-              {actions.map((action) => (
-                <Col xs={12} key={action.title}>
-                  <QuickActionCard action={action} />
-                </Col>
-              ))}
-            </Row>
+            <Calendar
+              fullscreen={false}
+              onSelect={handleDateSelect}
+              cellRender={dateCellRender}
+            />
           </Card>
         </Col>
       </Row>
 
-      {/* ── Section 4: Module Overview ── */}
+      {/* ── Section 3: Module Overview (left/right split) ── */}
       <Card
         title={
           <Space>
@@ -499,17 +502,74 @@ export default function DashboardPage() {
         style={{ borderRadius: 12 }}
         styles={{ body: { padding: '24px 24px 8px' } }}
       >
-        <ModuleSection
-          title="我的职业发展"
-          modules={myCareerModules}
-          accentColor="#1677ff"
-        />
-        <ModuleSection
-          title="HR工作台"
-          modules={hrModules}
-          accentColor="#722ed1"
-        />
+        <Row gutter={[32, 24]}>
+          <Col xs={24} lg={12}>
+            <ModuleSection
+              title="个人板块"
+              modules={myCareerModules}
+              accentColor="#1677ff"
+            />
+          </Col>
+          <Col xs={24} lg={12}>
+            <ModuleSection
+              title="HR工作台板块"
+              modules={hrModules}
+              accentColor="#722ed1"
+            />
+          </Col>
+        </Row>
       </Card>
+
+      {/* ── Todo Creation Modal ── */}
+      <Modal
+        title={`添加待办 — ${selectedDate}`}
+        open={todoModalOpen}
+        onOk={handleAddTodo}
+        onCancel={() => setTodoModalOpen(false)}
+        okText="添加"
+        cancelText="取消"
+        okButtonProps={{ disabled: !todoText.trim() }}
+      >
+        <div style={{ marginBottom: 12 }}>
+          <Text type="secondary">日期：{selectedDate}</Text>
+        </div>
+        <TextArea
+          placeholder="输入待办事项..."
+          value={todoText}
+          onChange={(e) => setTodoText(e.target.value)}
+          rows={3}
+          autoFocus
+        />
+        {/* Existing todos for this date */}
+        {selectedDate && getTodosForDate(dayjs(selectedDate)).length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
+              已有待办：
+            </Text>
+            {getTodosForDate(dayjs(selectedDate)).map((t) => (
+              <div
+                key={t.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '4px 0',
+                }}
+              >
+                <Text style={{ fontSize: 13 }}>{t.content}</Text>
+                <Button
+                  type="link"
+                  danger
+                  size="small"
+                  onClick={() => handleDeleteTodo(t.id)}
+                >
+                  删除
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useApiList } from '@/lib/hooks/useApi';
 import {
   Card,
   Row,
@@ -353,8 +354,13 @@ function KanbanColumn({
 // ────────────────────────────────────────────
 
 export default function JobSeekingPage() {
-  const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: applications,
+    loading,
+    create: apiCreate,
+    update: apiUpdate,
+    remove: apiRemove,
+  } = useApiList<JobApplication>({ endpoint: '/api/applications', mockData: MOCK_APPLICATIONS });
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
 
   // Filters
@@ -367,45 +373,6 @@ export default function JobSeekingPage() {
   const [modalLoading, setModalLoading] = useState(false);
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
   const [form] = Form.useForm<ApplicationFormData>();
-
-  // ── Fetch data (with fallback to mock) ──
-
-  const fetchApplications = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/applications');
-      if (!res.ok) throw new Error('API request failed');
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setApplications(
-          data.map((item: Record<string, unknown>) => ({
-            id: item.id as string,
-            companyName: (item.company as Record<string, unknown>)?.name as string ?? '未知公司',
-            positionName: item.positionName as string,
-            salaryMin: (item.salaryMin as number) ?? null,
-            salaryMax: (item.salaryMax as number) ?? null,
-            status: item.status as ApplicationStatus,
-            source: item.source as ApplicationSource | null,
-            appliedDate: item.appliedDate as string | null,
-            notes: item.notes as string | null,
-            createdAt: item.createdAt as string,
-          }))
-        );
-      } else {
-        // Fallback to mock data if API returns empty
-        setApplications(MOCK_APPLICATIONS);
-      }
-    } catch {
-      // API unavailable, use mock data
-      setApplications(MOCK_APPLICATIONS);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchApplications();
-  }, [fetchApplications]);
 
   // ── Filtered applications ──
 
@@ -481,61 +448,16 @@ export default function JobSeekingPage() {
         notes: values.notes ?? null,
       };
 
-      try {
-        const res = await fetch('/api/applications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          message.success(editingApp ? '更新成功' : '新增成功');
-          setModalOpen(false);
-          fetchApplications();
-          return;
-        }
-      } catch {
-        // API unavailable, fall through to local update
-      }
-
-      // Local fallback: update state directly
       if (editingApp) {
-        setApplications((prev) =>
-          prev.map((app) =>
-            app.id === editingApp.id
-              ? {
-                  ...app,
-                  companyName: payload.companyName,
-                  positionName: payload.positionName,
-                  salaryMin: payload.salaryMin,
-                  salaryMax: payload.salaryMax,
-                  status: payload.status,
-                  source: payload.source,
-                  appliedDate: payload.appliedDate,
-                  notes: payload.notes,
-                }
-              : app
-          )
-        );
-        message.success('更新成功（本地）');
+        await apiUpdate(editingApp.id, payload as any);
+        message.success('更新成功');
       } else {
-        const newApp: JobApplication = {
-          id: `local-${Date.now()}`,
-          companyName: payload.companyName,
-          positionName: payload.positionName,
-          salaryMin: payload.salaryMin,
-          salaryMax: payload.salaryMax,
-          status: payload.status,
-          source: payload.source,
-          appliedDate: payload.appliedDate,
-          notes: payload.notes,
-          createdAt: new Date().toISOString(),
-        };
-        setApplications((prev) => [newApp, ...prev]);
-        message.success('新增成功（本地）');
+        await apiCreate(payload as any);
+        message.success('新增成功');
       }
       setModalOpen(false);
     } catch {
-      // Form validation failed — Ant Design shows inline errors
+      // Form validation failed
     } finally {
       setModalLoading(false);
     }
@@ -549,7 +471,7 @@ export default function JobSeekingPage() {
       okType: 'danger',
       cancelText: '取消',
       onOk: () => {
-        setApplications((prev) => prev.filter((a) => a.id !== app.id));
+        apiRemove(app.id);
         message.success('已删除');
       },
     });

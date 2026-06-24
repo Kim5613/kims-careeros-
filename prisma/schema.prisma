@@ -217,13 +217,16 @@ model GoalOKR {
 model Resume {
   id              String   @id @default(cuid())
   title           String
-  content         String
+  content         String   @db.Text
   targetPosition  String?
   targetCompany   String?
   version         Int      @default(1)
   isDefault       Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  attachments     Attachment[]
+  coverLetters    CoverLetter[]
 
   @@map("resumes")
 }
@@ -237,6 +240,8 @@ model CoverLetter {
   resumeId        String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  resume          Resume?  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
 
   @@map("cover_letters")
 }
@@ -279,6 +284,7 @@ model Candidate {
 
   company         Company? @relation(fields: [companyId], references: [id])
   interviews      CandidateInterview[]
+  attachments     Attachment[]
 
   @@map("candidates")
 }
@@ -338,4 +344,28 @@ model MarketInsight {
   updatedAt       DateTime @updatedAt
 
   @@map("market_insights")
+}
+
+// ========================================
+// 文件附件 - 简历/候选人文件上传
+// ========================================
+
+model Attachment {
+  id          String    @id @default(cuid())
+  filename    String               // 原始文件名，如 "张三简历.pdf"
+  storedPath  String               // 存储路径，如 "candidates/abc123/uuid.pdf"
+  mimeType    String               // 如 "application/pdf"
+  size        Int                  // 文件大小（字节）
+  entityType  String               // "resume" 或 "candidate"
+  resumeId    String?
+  candidateId String?
+  parsedText  String?  @db.Text    // 解析出的文本内容
+  createdAt   DateTime @default(now())
+
+  resume       Resume?   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  candidate    Candidate? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, resumeId])
+  @@index([entityType, candidateId])
+  @@map("attachments")
 }

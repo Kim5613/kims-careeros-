@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useApiList } from '@/lib/hooks/useApi';
 import {
   Card, Row, Col, Button, Modal, Form, Input, Select, InputNumber, Tag, Typography,
   Space, message, Empty, Collapse, Badge, Divider, Tooltip
@@ -120,7 +121,12 @@ const mockKnowledge: KnowledgeEntry[] = [
 
 // ===================== Component =====================
 export default function KnowledgePage() {
-  const [knowledge, setKnowledge] = useState<KnowledgeEntry[]>(mockKnowledge);
+  const {
+    data: knowledge,
+    create: apiCreate,
+    update: apiUpdate,
+    remove: apiRemove,
+  } = useApiList<KnowledgeEntry>({ endpoint: '/api/knowledge', mockData: mockKnowledge });
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [addModalVisible, setAddModalVisible] = useState(false);
@@ -159,25 +165,23 @@ export default function KnowledgePage() {
   }, [knowledge, selectedCategory, searchText]);
 
   // ===================== Handlers =====================
-  const handleSubmit = (values: any) => {
-    const entry: KnowledgeEntry = {
-      id: editEntry ? editEntry.id : `k${Date.now()}`,
+  const handleSubmit = async (values: any) => {
+    const entry = {
+      companyId: values.companyId,
       positionCategory: values.positionCategory,
-      company: values.company || '通用',
-      terminology: values.terminology || '',
-      jdTemplate: values.jdTemplate || '',
-      evaluationCriteria: values.evaluationCriteria || '',
-      salaryRangeMin: values.salaryRangeMin || 0,
-      salaryRangeMax: values.salaryRangeMax || 0,
-      marketInfo: values.marketInfo || '',
-      notes: values.notes || '',
-      updatedAt: new Date().toISOString().split('T')[0],
+      terminology: values.terminology,
+      jdTemplate: values.jdTemplate,
+      evaluationCriteria: values.evaluationCriteria,
+      salaryRangeMin: values.salaryRangeMin,
+      salaryRangeMax: values.salaryRangeMax,
+      marketInfo: values.marketInfo,
+      notes: values.notes,
     };
     if (editEntry) {
-      setKnowledge(knowledge.map(k => k.id === editEntry.id ? entry : k));
+      await apiUpdate(editEntry.id, entry as any);
       message.success('知识条目已更新');
     } else {
-      setKnowledge([entry, ...knowledge]);
+      await apiCreate(entry as any);
       message.success('知识条目已创建');
     }
     setAddModalVisible(false);
@@ -192,7 +196,7 @@ export default function KnowledgePage() {
   };
 
   const handleDelete = (id: string) => {
-    setKnowledge(knowledge.filter(k => k.id !== id));
+    apiRemove(id);
     message.success('知识条目已删除');
   };
 

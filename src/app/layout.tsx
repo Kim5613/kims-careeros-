@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import 'antd/dist/reset.css';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
-import Sidebar from '@/components/layout/Sidebar';
+import AppLayout from '@/components/layout/AppLayout';
 
 export const metadata: Metadata = {
   title: "Kim's CareerOS",
@@ -17,14 +18,7 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body>
         <AntdRegistry>
-          <div style={{ display: 'flex', minHeight: '100vh' }}>
-            <Sidebar />
-            <main style={{ flex: 1, marginLeft: 240, background: '#f5f5f5' }}>
-              <div style={{ padding: 24 }}>
-                {children}
-              </div>
-            </main>
-          </div>
+          <AppLayout>{children}</AppLayout>
         </AntdRegistry>
       </body>
     </html>

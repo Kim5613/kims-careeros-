@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useApiList } from '@/lib/hooks/useApi';
 import {
   Card,
   Row,
@@ -233,10 +234,13 @@ const MOCK_LINKED_CANDIDATES: LinkedCandidate[] = [
 // ────────────────────────────────────────────
 
 export default function CompaniesPage() {
-  const [companies, setCompanies] = useState<CompanyItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Filters
+  const {
+    data: companies,
+    loading,
+    create: apiCreate,
+    update: apiUpdate,
+    remove: apiRemove,
+  } = useApiList<CompanyItem>({ endpoint: '/api/companies', mockData: MOCK_COMPANIES });
   const [searchText, setSearchText] = useState('');
   const [filterIndustry, setFilterIndustry] = useState<string | undefined>(undefined);
   const [filterCity, setFilterCity] = useState<string | undefined>(undefined);
@@ -250,42 +254,6 @@ export default function CompaniesPage() {
   // Drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<CompanyItem | null>(null);
-
-  // ── Fetch data ──
-  const fetchCompanies = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/companies');
-      if (!res.ok) throw new Error('API failed');
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setCompanies(
-          data.map((item: Record<string, unknown>) => ({
-            id: item.id as string,
-            name: item.name as string,
-            industry: item.industry as string | null,
-            scale: item.scale as string | null,
-            city: item.city as string | null,
-            website: item.website as string | null,
-            description: item.description as string | null,
-            applicationCount: (item.applicationCount as number) ?? 0,
-            candidateCount: (item.candidateCount as number) ?? 0,
-            createdAt: item.createdAt as string,
-          }))
-        );
-      } else {
-        setCompanies(MOCK_COMPANIES);
-      }
-    } catch {
-      setCompanies(MOCK_COMPANIES);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchCompanies();
-  }, [fetchCompanies]);
 
   // ── Filtered companies ──
   const filteredCompanies = useMemo(() => {
@@ -356,40 +324,12 @@ export default function CompaniesPage() {
         description: values.description ?? null,
       };
 
-      try {
-        const res = await fetch('/api/companies', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          message.success(editingCompany ? '公司信息已更新' : '公司已创建');
-          setModalOpen(false);
-          fetchCompanies();
-          return;
-        }
-      } catch {
-        // API unavailable
-      }
-
-      // Local fallback
       if (editingCompany) {
-        setCompanies((prev) =>
-          prev.map((c) =>
-            c.id === editingCompany.id ? { ...c, ...payload } : c
-          )
-        );
-        message.success('公司信息已更新（本地）');
+        await apiUpdate(editingCompany.id, payload as any);
+        message.success('公司信息已更新');
       } else {
-        const newItem: CompanyItem = {
-          id: `local-${Date.now()}`,
-          ...payload,
-          applicationCount: 0,
-          candidateCount: 0,
-          createdAt: new Date().toISOString(),
-        };
-        setCompanies((prev) => [newItem, ...prev]);
-        message.success('公司已创建（本地）');
+        await apiCreate(payload as any);
+        message.success('公司已创建');
       }
       setModalOpen(false);
     } catch {
@@ -407,7 +347,7 @@ export default function CompaniesPage() {
       okType: 'danger',
       cancelText: '取消',
       onOk: () => {
-        setCompanies((prev) => prev.filter((c) => c.id !== item.id));
+        apiRemove(item.id);
         message.success('公司已删除');
       },
     });
