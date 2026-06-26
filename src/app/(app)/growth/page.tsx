@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useApiList } from '@/lib/hooks/useApi';
 import {
   Card,
   Row,
@@ -512,88 +513,21 @@ function AnnualReviewCard({ review }: { review: AnnualReview }) {
 // ────────────────────────────────────────────
 
 export default function GrowthPage() {
-  // State
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [goals, setGoals] = useState<GoalOKR[]>([]);
-  const [annualReviews, setAnnualReviews] = useState<AnnualReview[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: milestones, loading: msLoading, create: msCreate } = useApiList<Milestone>({ endpoint: '/api/milestones', mockData: MOCK_MILESTONES });
+  const { data: achievements, loading: achLoading, create: achCreate } = useApiList<Achievement>({ endpoint: '/api/achievements', mockData: MOCK_ACHIEVEMENTS });
+  const { data: goals, loading: goalLoading, create: goalCreate } = useApiList<GoalOKR>({ endpoint: '/api/goals', mockData: MOCK_GOALS });
+  const [annualReviews, setAnnualReviews] = useState<AnnualReview[]>(MOCK_ANNUAL_REVIEWS);
+  const loading = msLoading || achLoading || goalLoading;
 
-  // Modals
   const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
   const [achievementModalOpen, setAchievementModalOpen] = useState(false);
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
-
-  // Forms
   const [milestoneForm] = Form.useForm();
   const [achievementForm] = Form.useForm();
   const [goalForm] = Form.useForm();
   const [reviewForm] = Form.useForm();
-
-  // ── Fetch data (with fallback to mock) ──
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [msRes, achRes, goalRes] = await Promise.all([
-        fetch('/api/milestones'),
-        fetch('/api/achievements'),
-        fetch('/api/goals'),
-      ]);
-
-      // Milestones
-      if (msRes.ok) {
-        const msData = await msRes.json();
-        if (Array.isArray(msData) && msData.length > 0) {
-          setMilestones(msData);
-        } else {
-          setMilestones(MOCK_MILESTONES);
-        }
-      } else {
-        setMilestones(MOCK_MILESTONES);
-      }
-
-      // Achievements
-      if (achRes.ok) {
-        const achData = await achRes.json();
-        if (Array.isArray(achData) && achData.length > 0) {
-          setAchievements(achData);
-        } else {
-          setAchievements(MOCK_ACHIEVEMENTS);
-        }
-      } else {
-        setAchievements(MOCK_ACHIEVEMENTS);
-      }
-
-      // Goals
-      if (goalRes.ok) {
-        const goalData = await goalRes.json();
-        if (Array.isArray(goalData) && goalData.length > 0) {
-          setGoals(goalData);
-        } else {
-          setGoals(MOCK_GOALS);
-        }
-      } else {
-        setGoals(MOCK_GOALS);
-      }
-
-      // Annual reviews (always use mock for now since no dedicated API)
-      setAnnualReviews(MOCK_ANNUAL_REVIEWS);
-    } catch {
-      setMilestones(MOCK_MILESTONES);
-      setAchievements(MOCK_ACHIEVEMENTS);
-      setGoals(MOCK_GOALS);
-      setAnnualReviews(MOCK_ANNUAL_REVIEWS);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   // ── Modal submit handlers ──
 
@@ -624,7 +558,7 @@ export default function GrowthPage() {
           message.success('里程碑新增成功');
           setMilestoneModalOpen(false);
           milestoneForm.resetFields();
-          fetchData();
+          // API handled by useApiList
           return;
         }
       } catch {
@@ -640,8 +574,8 @@ export default function GrowthPage() {
         tags: payload.tags,
         createdAt: new Date().toISOString(),
       };
-      setMilestones((prev) => [newMilestone, ...prev]);
-      message.success('里程碑新增成功（本地）');
+      msCreate(payload as any);
+      message.success('里程碑已添加');
       setMilestoneModalOpen(false);
       milestoneForm.resetFields();
     } catch {
@@ -674,7 +608,7 @@ export default function GrowthPage() {
           message.success('成就新增成功');
           setAchievementModalOpen(false);
           achievementForm.resetFields();
-          fetchData();
+          // API handled by useApiList
           return;
         }
       } catch {
@@ -691,8 +625,8 @@ export default function GrowthPage() {
         impact: payload.impact,
         createdAt: new Date().toISOString(),
       };
-      setAchievements((prev) => [newAchievement, ...prev]);
-      message.success('成就新增成功（本地）');
+      achCreate(payload as any);
+      message.success('成就已添加');
       setAchievementModalOpen(false);
       achievementForm.resetFields();
     } catch {
@@ -726,7 +660,7 @@ export default function GrowthPage() {
           message.success('OKR 新增成功');
           setGoalModalOpen(false);
           goalForm.resetFields();
-          fetchData();
+          // API handled by useApiList
           return;
         }
       } catch {
@@ -744,8 +678,8 @@ export default function GrowthPage() {
         progress: payload.progress,
         createdAt: new Date().toISOString(),
       };
-      setGoals((prev) => [newGoal, ...prev]);
-      message.success('OKR 新增成功（本地）');
+      goalCreate(payload as any);
+      message.success('OKR 已添加');
       setGoalModalOpen(false);
       goalForm.resetFields();
     } catch {

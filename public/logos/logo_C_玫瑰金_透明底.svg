@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8B4B8"/><stop offset="1" stop-color="#C08080"/></linearGradient>
+  </defs>
+  
+    <text x="600" y="210" font-family="Georgia,'Times New Roman',serif" font-size="125" font-style="italic" font-weight="bold" text-anchor="middle" dominant-baseline="central" fill="url(#g)" stroke="#A06060" stroke-width="1.5">Kim's CareerOS</text>
+</svg>

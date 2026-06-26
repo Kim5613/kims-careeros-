@@ -11,18 +11,11 @@ export async function GET() {
     const applications = await prisma.jobApplication.findMany({
       include: {
         company: {
-          select: {
-            id: true,
-            name: true,
-            industry: true,
-            scale: true,
-            city: true,
-          },
+          select: { id: true, name: true, industry: true, scale: true, city: true },
         },
+        interviews: { orderBy: { interviewDate: 'desc' } },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
     return NextResponse.json(applications, { status: 200 });
@@ -44,9 +37,11 @@ export async function GET() {
 interface CreateApplicationBody {
   companyName: string;
   positionName: string;
+  industry?: string;
   salaryMin?: number | null;
   salaryMax?: number | null;
-  status?: string;
+  currentStage?: string;
+  stageDetail?: string | null;
   source?: string | null;
   appliedDate?: string | null;
   notes?: string | null;
@@ -89,9 +84,11 @@ export async function POST(request: NextRequest) {
       data: {
         companyId: company.id,
         positionName: body.positionName.trim(),
+        industry: body.industry ?? null,
         salaryMin: body.salaryMin ?? null,
         salaryMax: body.salaryMax ?? null,
-        status: body.status ?? '投递中',
+        currentStage: body.currentStage ?? '已投递',
+        stageDetail: body.stageDetail ?? null,
         source: body.source ?? null,
         appliedDate: body.appliedDate ? new Date(body.appliedDate) : null,
         notes: body.notes ?? null,

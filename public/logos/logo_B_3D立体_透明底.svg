@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+<filter id="f" x="-10%" y="-10%" w="130%" h="150%"><feDropShadow dx="6" dy="6" stdDeviation="0" flood-color="#202030" flood-opacity=".6"/><feDropShadow dx="4" dy="4" stdDeviation="0" flood-color="#303040" flood-opacity=".4"/><feDropShadow dx="2" dy="2" stdDeviation="0" flood-color="#404050" flood-opacity=".3"/></filter>
+  </defs>
+  
+    <text x="600" y="210" font-family="Arial,sans-serif" font-size="130" font-style="italic" font-weight="bold" text-anchor="middle" dominant-baseline="central" fill="#202035" filter="url(#f)">Kim's CareerOS</text>
+</svg>

@@ -7,14 +7,19 @@ import { randomUUID } from 'crypto';
 // 允许的文件类型
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
   'image/jpeg',
   'image/png',
   'image/jpg',
   'text/markdown',
   'text/plain',
+  'text/html',
 ];
 
-const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.md', '.txt'];
+const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.jpg', '.jpeg', '.png', '.md', '.txt', '.html', '.htm'];
 
 // 最大文件大小：20MB
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -54,11 +59,17 @@ export async function POST(request: NextRequest) {
     // 推断 MIME 类型（以扩展名为准，更可靠）
     const mimeMap: Record<string, string> = {
       '.pdf': 'application/pdf',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.doc': 'application/msword',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.xls': 'application/vnd.ms-excel',
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
       '.png': 'image/png',
       '.md': 'text/markdown',
       '.txt': 'text/plain',
+      '.html': 'text/html',
+      '.htm': 'text/html',
     };
     const mimeType = mimeMap[ext] || file.type;
 

@@ -36,20 +36,35 @@ model Company {
 }
 
 model Contact {
-  id           String   @id @default(cuid())
-  name         String
-  relationType String   // 猎头/HR同行/前同事/面试官/用人部门/候选人
-  phone        String?
-  email        String?
-  wechat       String?
-  notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  name                String
+  relationType        String   // 猎头/HR同行/前同事/面试官/用人部门/候选人
+  phone               String?
+  email               String?
+  wechat              String?
+  tags                String[]               // 自定义标签：行业/职能/靠谱度/内推意愿等
+  lastInteractionDate DateTime?              // 上次互动时间
+  interactionFrequency String?               // 建议联系频率：monthly/quarterly/halfYearly
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  // 关联
-  companies     ContactCompany[]
+  companies           ContactCompany[]
+  interactions        InteractionRecord[]
 
   @@map("contacts")
+}
+
+model InteractionRecord {
+  id          String   @id @default(cuid())
+  contactId   String
+  date        DateTime @default(now())
+  content     String                   // 一句话记录聊了什么
+  createdAt   DateTime @default(now())
+
+  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@map("interaction_records")
 }
 
 model ContactCompany {
@@ -80,11 +95,13 @@ model JobApplication {
   id             String   @id @default(cuid())
   companyId      String
   positionName   String
+  industry       String?  // 行业
   salaryMin      Int?
   salaryMax      Int?
   offerSalary    Int?
-  status         String   @default("投递中") // 投递中/筛选中/笔试/一面/二面/终面/offer/入职/拒绝
-  source         String?  // 招聘网站/猎头/内推/官网
+  currentStage   String   @default("已投递")  // 一级：已投递/面试/offer/已入职/已结束
+  stageDetail    String?                      // 二级：已沟通/一面/二面/三面/终面/已谈薪/接offer/拒offer
+  source         String?                      // 招聘网站/猎头/内推/官网
   appliedDate    DateTime?
   notes          String?
   createdAt      DateTime @default(now())
@@ -100,11 +117,15 @@ model JobApplication {
 model InterviewRecord {
   id              String   @id @default(cuid())
   applicationId   String
-  round           Int
   interviewDate   DateTime
+  interviewType   String   @default("现场")  // 电话/视频/现场
   interviewer     String?
-  feedback        String?
+  position        String?                   // 面试岗位
+  title           String?                   // 面试官 title
+  content         String?                   // 沟通内容
+  result          String?                   // 面试结果
   notes           String?
+  reviewNotes     String?  @db.Text         // 复盘笔记：面试官风格/关键问题/回答反思/团队判断
   createdAt       DateTime @default(now())
 
   application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
@@ -368,4 +389,26 @@ model Attachment {
   @@index([entityType, resumeId])
   @@index([entityType, candidateId])
   @@map("attachments")
+}
+
+// ========================================
+// 待办事项
+// ========================================
+
+model Todo {
+  id          String   @id @default(cuid())
+  date        String                   // YYYY-MM-DD
+  title       String                   // 标题
+  time        String?                  // HH:mm
+  color       String   @default("#1677ff")  // 背景色
+  location    String?                  // 地点
+  description String?                  // 描述
+  reminder    String?                  // 15min / 30min / 1hour
+  repeat      String?                  // none / daily / weekly / monthly
+  isTodo      Boolean  @default(true)  // 是否同步到待办面板
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@map("todos")
 }

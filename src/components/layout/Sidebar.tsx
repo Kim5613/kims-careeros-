@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu } from 'antd';
 import {
   DashboardOutlined,
@@ -13,10 +13,13 @@ import {
   IdcardOutlined,
   FundOutlined,
   GlobalOutlined,
-  DatabaseOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { Theme, getStoredTheme, getRandomTheme, themes } from '@/lib/themes';
 
 const menuItems = [
   {
@@ -30,27 +33,27 @@ const menuItems = [
   {
     key: 'personal',
     icon: <UserOutlined />,
-    label: '我的职业发展',
+    label: '个人',
     children: [
       {
         key: '/job-seeking',
         icon: <SearchOutlined />,
-        label: <Link href="/job-seeking">求职管理</Link>,
+        label: <Link href="/job-seeking">求职</Link>,
       },
       {
         key: '/salary-growth',
         icon: <RiseOutlined />,
-        label: <Link href="/salary-growth">薪酬与晋升</Link>,
-      },
-      {
-        key: '/growth',
-        icon: <TrophyOutlined />,
-        label: <Link href="/growth">成长档案</Link>,
+        label: <Link href="/salary-growth">薪酬</Link>,
       },
       {
         key: '/resumes',
         icon: <IdcardOutlined />,
-        label: <Link href="/resumes">简历与求职信</Link>,
+        label: <Link href="/resumes">简历</Link>,
+      },
+      {
+        key: '/growth',
+        icon: <TrophyOutlined />,
+        label: <Link href="/growth">档案</Link>,
       },
     ],
   },
@@ -60,17 +63,17 @@ const menuItems = [
   {
     key: 'workbench',
     icon: <TeamOutlined />,
-    label: 'HR 工作台',
+    label: 'HR工作台',
     children: [
       {
-        key: '/candidates',
-        icon: <TeamOutlined />,
-        label: <Link href="/candidates">候选人库</Link>,
+        key: '/companies',
+        icon: <FundOutlined />,
+        label: <Link href="/companies">公司库</Link>,
       },
       {
-        key: '/knowledge',
-        icon: <BookOutlined />,
-        label: <Link href="/knowledge">招聘知识库</Link>,
+        key: '/contacts',
+        icon: <TeamOutlined />,
+        label: <Link href="/contacts">人脉库</Link>,
       },
       {
         key: '/market',
@@ -83,26 +86,39 @@ const menuItems = [
     type: 'divider' as const,
   },
   {
-    key: 'foundation',
-    icon: <DatabaseOutlined />,
-    label: '基础数据',
-    children: [
-      {
-        key: '/companies',
-        icon: <FundOutlined />,
-        label: <Link href="/companies">公司库</Link>,
-      },
-      {
-        key: '/contacts',
-        icon: <UserOutlined />,
-        label: <Link href="/contacts">人脉库</Link>,
-      },
-    ],
+    key: '/knowledge',
+    icon: <BookOutlined />,
+    label: <Link href="/knowledge">知识库</Link>,
+  },
+  {
+    type: 'divider' as const,
+  },
+  {
+    key: '/settings',
+    icon: <SettingOutlined />,
+    label: <Link href="/settings">设置</Link>,
   },
 ];
 
 export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [theme, setTheme] = useState<Theme>(themes[0]);
+
+  useEffect(() => {
+    setTheme(getStoredTheme());
+  }, []);
+
+  const handleRandomTheme = () => {
+    const newTheme = getRandomTheme();
+    localStorage.setItem('careeros-theme', newTheme.id);
+    setTheme(newTheme);
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+  };
 
   const getSelectedKeys = () => {
     if (pathname === '/') return ['/'];
@@ -118,11 +134,8 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
     if (['/job-seeking', '/salary-growth', '/growth', '/resumes'].includes(route)) {
       return ['personal'];
     }
-    if (['/candidates', '/knowledge', '/market'].includes(route)) {
+    if (['/companies', '/contacts', '/market', '/candidates'].includes(route)) {
       return ['workbench'];
-    }
-    if (['/companies', '/contacts'].includes(route)) {
-      return ['foundation'];
     }
     return [];
   };
@@ -131,32 +144,44 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
     <>
       <div
         style={{
-          height: 56,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          padding: collapsed ? '16px 8px' : '16px 16px 12px',
           borderBottom: '1px solid rgba(255,255,255,0.1)',
-          padding: '0 16px',
+          gap: 8,
         }}
       >
-        {!collapsed ? (
-          <Link href="/" style={{ textDecoration: 'none' }}>
-            <h1
-              style={{
-                color: '#fff',
-                fontSize: 15,
-                margin: 0,
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Kim&apos;s CareerOS
-            </h1>
-          </Link>
-        ) : (
-          <Link href="/" style={{ textDecoration: 'none' }}>
-            <span style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>K</span>
-          </Link>
+        <Link href="/" style={{ textDecoration: 'none', lineHeight: 0 }}>
+          <img
+            src={theme.logo}
+            alt="CareerOS"
+            style={{
+              height: collapsed ? 28 : 36,
+              maxWidth: collapsed ? 28 : 140,
+              objectFit: 'contain',
+            }}
+          />
+        </Link>
+        {!collapsed && (
+          <div
+            onClick={handleRandomTheme}
+            title="换一个主题"
+            style={{
+              cursor: 'pointer',
+              color: 'rgba(255,255,255,0.4)',
+              fontSize: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              transition: 'color 0.2s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+          >
+            <ReloadOutlined style={{ fontSize: 11 }} />
+            {theme.name}
+          </div>
         )}
       </div>
       <Menu
@@ -167,6 +192,41 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
         items={menuItems}
         style={{ borderRight: 0 }}
       />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 16,
+          left: 0,
+          right: 0,
+          padding: '0 16px',
+        }}
+      >
+        <div
+          onClick={handleLogout}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 12px',
+            borderRadius: 6,
+            cursor: 'pointer',
+            color: 'rgba(255,255,255,0.65)',
+            fontSize: 14,
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#fff';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'rgba(255,255,255,0.65)';
+            e.currentTarget.style.background = 'transparent';
+          }}
+        >
+          <LogoutOutlined />
+          {!collapsed && <span>退出登录</span>}
+        </div>
+      </div>
     </>
   );
 }

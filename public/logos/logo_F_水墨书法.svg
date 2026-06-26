@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+<filter id="f" x="-10%" y="-10%" w="120%" h="130%"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="5" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter>
+  </defs>
+  
+    <text x="600" y="210" font-family="'Times New Roman',Georgia,serif" font-size="150" font-style="italic" font-weight="bold" text-anchor="middle" dominant-baseline="central" fill="#1A1410" filter="url(#f)" opacity=".9">Kim's CareerOS</text>
+</svg>

@@ -13,6 +13,8 @@ import {
   Tag,
   Typography,
   Space,
+  Tabs,
+  Empty,
   message,
   Segmented,
   Row,
@@ -43,15 +45,11 @@ const { TextArea } = Input;
 type RelationType = '猎头' | 'HR同行' | '前同事' | '面试官' | '用人部门';
 
 interface ContactItem {
-  id: string;
-  name: string;
-  relationType: RelationType;
-  company: string | null;
-  phone: string | null;
-  email: string | null;
-  wechat: string | null;
-  notes: string | null;
-  createdAt: string;
+  id: string; name: string; relationType: RelationType;
+  company: string | null; phone: string | null; email: string | null; wechat: string | null;
+  tags?: string[]; lastInteractionDate?: string | null; interactionFrequency?: string | null;
+  notes: string | null; createdAt: string;
+  interactions?: { id: string; date: string; content: string }[];
 }
 
 // ────────────────────────────────────────────
@@ -78,10 +76,9 @@ const MOCK_CONTACTS: ContactItem[] = [
     name: '李婷',
     relationType: '猎头',
     company: '罗伯特·沃尔特斯',
-    phone: '138-0000-1234',
-    email: 'liting@robertwalters.com',
-    wechat: 'lt_headhunter',
-    notes: '专注互联网行业高级岗位，手里有很多大厂机会。每月会主动推荐3-5个岗位。',
+    phone: '138-0000-1234', email: 'liting@robertwalters.com', wechat: 'lt_headhunter',
+    tags: ['技术方向', '大厂机会', '靠谱'], lastInteractionDate: '2026-06-20', interactionFrequency: 'monthly',
+    notes: '专注互联网行业高级岗位，手里有很多大厂机会。',
     createdAt: '2026-01-15T10:00:00.000Z',
   },
   {
@@ -145,14 +142,17 @@ const MOCK_CONTACTS: ContactItem[] = [
 // Main Page Component
 // ────────────────────────────────────────────
 
+interface CandidateItem {
+  id: string; name: string; position: string; company: string;
+  status: string; talentPoolTag: boolean; createdAt: string;
+}
+
 export default function ContactsPage() {
+  const [activeTab, setActiveTab] = useState<string>('contacts');
   const {
-    data: contacts,
-    loading,
-    create: apiCreate,
-    update: apiUpdate,
-    remove: apiRemove,
+    data: contacts, loading, create: apiCreate, update: apiUpdate, remove: apiRemove,
   } = useApiList<ContactItem>({ endpoint: '/api/contacts', mockData: MOCK_CONTACTS });
+  const { data: candidates } = useApiList<CandidateItem>({ endpoint: '/api/candidates', mockData: [] });
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
 
   // Filters
@@ -223,13 +223,11 @@ export default function ContactsPage() {
       setModalLoading(true);
 
       const payload = {
-        name: values.name,
-        relationType: values.relationType,
+        name: values.name, relationType: values.relationType,
         companyName: values.company ?? null,
-        phone: values.phone ?? null,
-        email: values.email ?? null,
-        wechat: values.wechat ?? null,
-        notes: values.notes ?? null,
+        phone: values.phone ?? null, email: values.email ?? null, wechat: values.wechat ?? null,
+        tags: values.tags || [], lastInteractionDate: values.lastInteractionDate || null,
+        interactionFrequency: values.interactionFrequency || null, notes: values.notes ?? null,
       };
 
       if (editingContact) {
@@ -319,6 +317,24 @@ export default function ContactsPage() {
           )}
         </Space>
       ),
+    },
+    {
+      title: '标签',
+      dataIndex: 'tags',
+      key: 'tags',
+      width: 160,
+      render: (tags: string[]) => tags && tags.length > 0 ? <Space size={2} wrap>{tags.map((t: string) => <Tag key={t} style={{ fontSize: 11 }}>{t}</Tag>)}</Space> : '-',
+    },
+    {
+      title: '上次互动',
+      dataIndex: 'lastInteractionDate',
+      key: 'lastInteractionDate',
+      width: 100,
+      render: (d: string | null) => {
+        if (!d) return <Text type="secondary">-</Text>;
+        const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+        return <Tag color={days > 180 ? 'red' : days > 90 ? 'orange' : 'green'}>{d}</Tag>;
+      },
     },
     {
       title: '备注',
@@ -469,6 +485,12 @@ export default function ContactsPage() {
         </Button>
       </div>
 
+      <Tabs activeKey={activeTab} onChange={setActiveTab} items={[
+        { key: 'contacts', label: '联系人' },
+        { key: 'candidates', label: '候选人' },
+      ]} style={{ marginBottom: 8 }} />
+
+      {activeTab === 'contacts' && (<>
       {/* Stats */}
       <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
         <Col xs={12} sm={8} md={4}>
@@ -612,6 +634,26 @@ export default function ContactsPage() {
           />
         </Card>
       )}
+      </>)}
+
+      {activeTab === 'candidates' && (
+        <Card style={{ borderRadius: 12 }} styles={{ body: { padding: 0 } }}>
+          <Table
+            dataSource={candidates}
+            rowKey="id"
+            pagination={{ pageSize: 10, showTotal: (t: number) => `共 ${t} 位候选人` }}
+            columns={[
+              { title: '姓名', dataIndex: 'name', key: 'name', width: 100, render: (n: string) => <Text strong>{n}</Text> },
+              { title: '职位', dataIndex: 'position', key: 'position', width: 140, render: (p: string) => p || '-' },
+              { title: '公司', dataIndex: 'company', key: 'company', width: 140, render: (c: any) => typeof c === 'string' ? c : c?.name || '-' },
+              { title: '状态', dataIndex: 'status', key: 'status', width: 100, render: (s: string) => <Tag color={s === '已发Offer' ? 'green' : s === '面试中' ? 'orange' : s === '待筛选' ? 'blue' : 'default'}>{s || '-'}</Tag> },
+              { title: '人才库', dataIndex: 'talentPoolTag', key: 'talentPoolTag', width: 80, render: (t: boolean) => t ? <Tag color="gold">★ 人才库</Tag> : null },
+              { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 110, render: (d: string) => d ? new Date(d).toLocaleDateString('zh-CN') : '-' },
+            ]}
+            locale={{ emptyText: <Empty description="暂无候选人" /> }}
+          />
+        </Card>
+      )}
 
       {/* Create / Edit Modal */}
       <Modal
@@ -688,13 +730,27 @@ export default function ContactsPage() {
             </Col>
           </Row>
 
+          <Form.Item name="tags" label="标签">
+            <Select mode="tags" placeholder="输入后回车添加，如：技术方向、高潜、可内推" />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="lastInteractionDate" label="上次互动">
+                <Input placeholder="2026-06-01" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="interactionFrequency" label="联系频率">
+                <Select allowClear placeholder="选填" options={[
+                  { label: '每月', value: 'monthly' },
+                  { label: '每季度', value: 'quarterly' },
+                  { label: '每半年', value: 'halfYearly' },
+                ]} />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item name="notes" label="备注">
-            <TextArea
-              rows={3}
-              placeholder="记录与该联系人的关系背景、合作情况或其他备注..."
-              maxLength={500}
-              showCount
-            />
+            <TextArea rows={2} placeholder="备注信息..." maxLength={500} showCount />
           </Form.Item>
         </Form>
       </Modal>

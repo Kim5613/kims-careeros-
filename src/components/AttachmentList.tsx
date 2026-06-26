@@ -47,7 +47,10 @@ interface AttachmentListProps {
 function getFileIcon(mimeType: string) {
   if (mimeType === 'application/pdf') return <FilePdfOutlined style={{ color: '#e74c3c', fontSize: 20 }} />;
   if (mimeType.startsWith('image/')) return <FileImageOutlined style={{ color: '#3498db', fontSize: 20 }} />;
+  if (mimeType.includes('word')) return <FileTextOutlined style={{ color: '#2b579a', fontSize: 20 }} />;
+  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return <FileTextOutlined style={{ color: '#217346', fontSize: 20 }} />;
   if (mimeType === 'text/markdown') return <FileMarkdownOutlined style={{ color: '#2ecc71', fontSize: 20 }} />;
+  if (mimeType === 'text/html') return <FileTextOutlined style={{ color: '#e44d26', fontSize: 20 }} />;
   return <FileTextOutlined style={{ fontSize: 20 }} />;
 }
 
@@ -62,11 +65,16 @@ function formatFileSize(bytes: number): string {
 function getTypeLabel(mimeType: string): string {
   const map: Record<string, string> = {
     'application/pdf': 'PDF',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word',
+    'application/msword': 'Word',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel',
+    'application/vnd.ms-excel': 'Excel',
     'image/jpeg': 'JPG',
     'image/jpg': 'JPG',
     'image/png': 'PNG',
-    'text/markdown': 'Markdown',
+    'text/markdown': 'MD',
     'text/plain': '文本',
+    'text/html': 'HTML',
   };
   return map[mimeType] || '文件';
 }

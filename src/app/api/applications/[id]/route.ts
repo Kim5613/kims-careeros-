@@ -9,7 +9,7 @@ export async function GET(
   try {
     const app = await prisma.jobApplication.findUnique({
       where: { id: params.id },
-      include: { company: true, interviews: { orderBy: { round: 'asc' } }, negotiations: true },
+      include: { company: true, interviews: { orderBy: { interviewDate: 'desc' } }, negotiations: true },
     });
     if (!app) return NextResponse.json({ error: '求职记录不存在' }, { status: 404 });
     return NextResponse.json(app);
@@ -39,7 +39,7 @@ export async function PATCH(
     const app = await prisma.jobApplication.update({
       where: { id: params.id },
       data,
-      include: { company: true, interviews: { orderBy: { round: 'asc' } } },
+      include: { company: true, interviews: { orderBy: { interviewDate: 'desc' } } },
     });
     return NextResponse.json(app);
   } catch (error) {

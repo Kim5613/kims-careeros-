@@ -13,6 +13,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import FileUpload from '@/components/FileUpload';
 import AttachmentList from '@/components/AttachmentList';
+import ResumeParseModal from '@/components/ResumeParseModal';
 import { useApiList } from '@/lib/hooks/useApi';
 
 const { Title, Text, Paragraph } = Typography;
@@ -205,6 +206,8 @@ export default function CandidatesPage() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [addInterviewVisible, setAddInterviewVisible] = useState(false);
   const [uploadAreaVisible, setUploadAreaVisible] = useState(false);
+  const [parseModalOpen, setParseModalOpen] = useState(false);
+  const [parsingAttachmentId, setParsingAttachmentId] = useState<string | null>(null);
   const [addForm] = Form.useForm();
   const [interviewForm] = Form.useForm();
 
@@ -593,8 +596,10 @@ export default function CandidatesPage() {
                 <FileUpload
                   entityType="candidate"
                   entityId={selectedCandidate.id}
-                  onSuccess={() => {
-                    message.success('文件上传成功，请点击"解析"按钮提取内容');
+                  onSuccess={(attachment: any) => {
+                    message.success('文件上传成功，正在解析...');
+                    setParsingAttachmentId(attachment.id);
+                    setParseModalOpen(true);
                   }}
                 />
               </div>
@@ -671,6 +676,31 @@ export default function CandidatesPage() {
           </div>
         )}
       </Drawer>
+
+      {/* Resume Parse Confirm Modal */}
+      <ResumeParseModal
+        open={parseModalOpen}
+        attachmentId={parsingAttachmentId}
+        onCancel={() => {
+          setParseModalOpen(false);
+          setParsingAttachmentId(null);
+        }}
+        onConfirm={async (parsedText: string) => {
+          if (selectedCandidate) {
+            // 保存解析文本到候选人
+            await apiUpdate(selectedCandidate.id, { resumeSnapshot: parsedText } as any);
+            // 同时保存到附件记录
+            if (parsingAttachmentId) {
+              await fetch('/api/parse', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attachmentId: parsingAttachmentId }),
+              });
+            }
+            await refetch();
+          }
+        }}
+      />
 
       {/* Add Interview Modal */}
       <Modal

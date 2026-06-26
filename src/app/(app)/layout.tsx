@@ -1,6 +1,5 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 const AppLayout = dynamic(() => import('@/components/layout/AppLayout'), {
@@ -20,13 +19,6 @@ const AppLayout = dynamic(() => import('@/components/layout/AppLayout'), {
   ),
 });
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  // 登录页不需要侧边栏
-  if (pathname === '/login') {
-    return <>{children}</>;
-  }
-
+export default function AppGroupLayout({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }

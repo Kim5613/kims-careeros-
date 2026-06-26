@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useApiList } from '@/lib/hooks/useApi';
 import {
   Card,
   Row,
@@ -379,85 +380,15 @@ function SalaryTrendChart({ salaryChanges }: { salaryChanges: SalaryChange[] }) 
 // ────────────────────────────────────────────
 
 export default function SalaryGrowthPage() {
-  // State
-  const [promotions, setPromotions] = useState<Promotion[]>([]);
-  const [salaryChanges, setSalaryChanges] = useState<SalaryChange[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: promotions, loading: promoLoading, create: promoCreate } = useApiList<Promotion>({ endpoint: '/api/promotions', mockData: MOCK_PROMOTIONS });
+  const { data: salaryChanges, loading: salaryLoading, create: salaryCreate } = useApiList<SalaryChange>({ endpoint: '/api/salary-changes', mockData: MOCK_SALARY_CHANGES });
+  const loading = promoLoading || salaryLoading;
 
-  // Modals
   const [promoModalOpen, setPromoModalOpen] = useState(false);
   const [salaryModalOpen, setSalaryModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
-
-  // Forms
   const [promoForm] = Form.useForm<PromotionFormData>();
   const [salaryForm] = Form.useForm<SalaryChangeFormData>();
-
-  // ── Fetch data (with fallback to mock) ──
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [promoRes, salaryRes] = await Promise.all([
-        fetch('/api/promotions'),
-        fetch('/api/salary-changes'),
-      ]);
-
-      if (promoRes.ok) {
-        const promoData = await promoRes.json();
-        if (Array.isArray(promoData) && promoData.length > 0) {
-          setPromotions(
-            promoData.map((item: Record<string, unknown>) => ({
-              id: item.id as string,
-              date: item.date as string,
-              previousLevel: (item.previousLevel as string) ?? null,
-              newLevel: (item.newLevel as string) ?? null,
-              companyName:
-                (item.company as Record<string, unknown>)?.name as string ?? '未知公司',
-              reason: (item.reason as string) ?? null,
-              summary: (item.summary as string) ?? null,
-              createdAt: item.createdAt as string,
-            }))
-          );
-        } else {
-          setPromotions(MOCK_PROMOTIONS);
-        }
-      } else {
-        setPromotions(MOCK_PROMOTIONS);
-      }
-
-      if (salaryRes.ok) {
-        const salaryData = await salaryRes.json();
-        if (Array.isArray(salaryData) && salaryData.length > 0) {
-          setSalaryChanges(
-            salaryData.map((item: Record<string, unknown>) => ({
-              id: item.id as string,
-              date: item.date as string,
-              amount: item.amount as number,
-              changeType: item.changeType as string,
-              companyName:
-                (item.company as Record<string, unknown>)?.name as string ?? '未知公司',
-              notes: (item.notes as string) ?? null,
-              createdAt: item.createdAt as string,
-            }))
-          );
-        } else {
-          setSalaryChanges(MOCK_SALARY_CHANGES);
-        }
-      } else {
-        setSalaryChanges(MOCK_SALARY_CHANGES);
-      }
-    } catch {
-      setPromotions(MOCK_PROMOTIONS);
-      setSalaryChanges(MOCK_SALARY_CHANGES);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   // ── Statistics ──
 
@@ -498,104 +429,26 @@ export default function SalaryGrowthPage() {
     try {
       const values = await promoForm.validateFields();
       setModalLoading(true);
-
-      const payload = {
-        date: values.date.toISOString(),
-        previousLevel: values.previousLevel,
-        newLevel: values.newLevel,
-        companyName: values.companyName,
-        reason: values.reason,
-        summary: values.summary,
-      };
-
-      try {
-        const res = await fetch('/api/promotions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          message.success('晋升记录新增成功');
-          setPromoModalOpen(false);
-          promoForm.resetFields();
-          fetchData();
-          return;
-        }
-      } catch {
-        // API unavailable, fall through to local update
-      }
-
-      // Local fallback
-      const newPromo: Promotion = {
-        id: `local-promo-${Date.now()}`,
-        date: payload.date,
-        previousLevel: payload.previousLevel,
-        newLevel: payload.newLevel,
-        companyName: payload.companyName,
-        reason: payload.reason,
-        summary: payload.summary,
-        createdAt: new Date().toISOString(),
-      };
-      setPromotions((prev) => [newPromo, ...prev]);
-      message.success('晋升记录新增成功（本地）');
+      const payload = { date: values.date.toISOString(), previousLevel: values.previousLevel, newLevel: values.newLevel, companyName: values.companyName, reason: values.reason, summary: values.summary };
+      await promoCreate(payload as any);
+      message.success('晋升记录已添加');
       setPromoModalOpen(false);
       promoForm.resetFields();
-    } catch {
-      // Form validation failed
-    } finally {
-      setModalLoading(false);
-    }
+    } catch { /* validation */ }
+    finally { setModalLoading(false); }
   };
 
   const handleSalarySubmit = async () => {
     try {
       const values = await salaryForm.validateFields();
       setModalLoading(true);
-
-      const payload = {
-        date: values.date.toISOString(),
-        amount: values.amount,
-        changeType: values.changeType,
-        companyName: values.companyName,
-        notes: values.notes,
-      };
-
-      try {
-        const res = await fetch('/api/salary-changes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          message.success('涨薪记录新增成功');
-          setSalaryModalOpen(false);
-          salaryForm.resetFields();
-          fetchData();
-          return;
-        }
-      } catch {
-        // API unavailable, fall through to local update
-      }
-
-      // Local fallback
-      const newSalary: SalaryChange = {
-        id: `local-sal-${Date.now()}`,
-        date: payload.date,
-        amount: payload.amount,
-        changeType: payload.changeType,
-        companyName: payload.companyName,
-        notes: payload.notes,
-        createdAt: new Date().toISOString(),
-      };
-      setSalaryChanges((prev) => [newSalary, ...prev]);
-      message.success('涨薪记录新增成功（本地）');
+      const payload = { date: values.date.toISOString(), amount: values.amount, changeType: values.changeType, companyName: values.companyName, notes: values.notes };
+      await salaryCreate(payload as any);
+      message.success('涨薪记录已添加');
       setSalaryModalOpen(false);
       salaryForm.resetFields();
-    } catch {
-      // Form validation failed
-    } finally {
-      setModalLoading(false);
-    }
+    } catch { /* validation */ }
+    finally { setModalLoading(false); }
   };
 
   // ── Table columns ──

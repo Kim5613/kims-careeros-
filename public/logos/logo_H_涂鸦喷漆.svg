@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+<filter id="f" x="-20%" y="-20%" w="140%" h="150%"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="5" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="8" xChannelSelector="R" yChannelSelector="G" result="d"/><feGaussianBlur stdDeviation=".8" in="d"/></filter>
+  </defs>
+  
+    <text x="600" y="210" font-family="Arial,sans-serif" font-size="145" font-style="italic" font-weight="bold" text-anchor="middle" dominant-baseline="central" fill="#FFE028" stroke="#FF2878" stroke-width="5" stroke-linejoin="round">Kim's CareerOS</text>
+    <text x="600" y="210" font-family="Arial,sans-serif" font-size="145" font-style="italic" font-weight="bold" text-anchor="middle" dominant-baseline="central" fill="#FFE028" filter="url(#f)" opacity=".7">Kim's CareerOS</text>
+    <text x="600" y="208" font-family="Arial,sans-serif" font-size="145" font-style="italic" font-weight="bold" text-anchor="middle" dominant-baseline="central" fill="white" opacity=".15">Kim's CareerOS</text>
+</svg>

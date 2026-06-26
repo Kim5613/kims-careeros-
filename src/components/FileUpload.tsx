@@ -23,7 +23,7 @@ export default function FileUpload({
   entityType,
   entityId,
   onSuccess,
-  accept = '.pdf,.jpg,.jpeg,.png,.md,.txt',
+  accept = '.pdf,.docx,.doc,.xlsx,.xls,.jpg,.jpeg,.png,.md,.txt,.html,.htm',
   maxCount = 10,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
@@ -45,9 +45,9 @@ export default function FileUpload({
 
       // 验证文件类型
       const ext = file.name.split('.').pop()?.toLowerCase();
-      const allowedExts = ['pdf', 'jpg', 'jpeg', 'png', 'md', 'txt'];
+      const allowedExts = ['pdf', 'docx', 'doc', 'xlsx', 'xls', 'jpg', 'jpeg', 'png', 'md', 'txt', 'html', 'htm'];
       if (!ext || !allowedExts.includes(ext)) {
-        message.error('仅支持 PDF、JPG、PNG、Markdown 格式');
+        message.error('仅支持 PDF、Word、Excel、图片、Markdown、HTML 格式');
         return Upload.LIST_IGNORE;
       }
 
@@ -104,7 +104,7 @@ export default function FileUpload({
         </p>
         <p className="ant-upload-text">点击或拖拽文件到此处上传</p>
         <p className="ant-upload-hint">
-          支持 PDF、JPG、PNG、Markdown 格式，单文件不超过 20MB
+          支持 PDF、Word、Excel、图片、Markdown、HTML，单文件不超过 20MB
         </p>
       </Dragger>
       {uploading && (
