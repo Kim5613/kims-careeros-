@@ -178,9 +178,36 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
   2. 去掉 `(app)/layout.tsx` 里不必要的 `dynamic(() => import(...), {ssr: false})` 包装——AppLayout 本身已经是 `'use client'`，再包一层 `ssr: false` 只是多了一个 Loading 闪烁
 - **以后遇到速度问题先跑生产构建对比，不要直接在 dev 模式下优化**
 
+**2026-07-02 | [部署] GitHub 私有仓库导致克隆失败**
+- 问题：`git clone` 弹用户名密码
+- 解法：仓库改为公开（个人工具没必要私有）
+
+**2026-07-02 | [部署] Workbench 终端 heredoc 频繁卡死**
+- 问题：`cat > file << 'EOF'` 粘贴后无反应
+- 根因：Workbench 浏览器终端对多行 heredoc 支持有 bug，长命令还会被换行截断
+- 解法：用 `nano` 编辑器或 `echo` 逐行写入替代；base64 编码可避免截断但要注意换行
+
+**2026-07-02 | [部署] Next.js standalone 模式导致静态资源 404**
+- 问题：Logo 不显示、页面异常
+- 根因：`output: 'standalone'` + `next start` 找不到 `.next/static` 和 `public/`
+- 解法：去掉 standalone，改用标准模式
+
+**2026-07-02 | [部署] Cookie Secure 标志导致 HTTP 登录失败**
+- 问题：输入正确密码后无法登录
+- 根因：`secure: NODE_ENV === 'production'` 在 HTTP 下浏览器拒绝保存 cookie
+- 解法：临时改为 `secure: false`，HTTPS 配好后恢复
+
+**2026-07-02 | [部署] Nginx 80 端口被占用**
+- 问题：`nginx -t` 报 `Address already in use`
+- 解法：`fuser -k 80/tcp` 释放端口后重启
+
+**2026-07-02 | [部署] 本地 GitHub 连接不稳定**
+- 问题：`git push` 偶尔超时
+- 解法：服务器能连 GitHub，文件通过服务器 `git pull` 同步；服务器修改文件后先 `git checkout` 再 pull 避免冲突
+
 ## 待办与优先级
 
-1. 验证项目可构建运行（`npm run dev`）
-2. 接入真实数据库，替换 Mock 数据
-3. AI 功能集成
-4. 部署上线
+1. 域名备案通过 → 配置 HTTPS
+2. JWT_SECRET 改为强随机值
+3. v1.1 需求确认（26 条 AI 建议逐条筛选）
+4. AI 功能集成
