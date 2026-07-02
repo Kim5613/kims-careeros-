@@ -84,7 +84,7 @@ export default function DashboardPage() {
   const [qaTime, setQaTime] = useState<string | null>(null);
   const [qaColor, setQaColor] = useState('#1677ff');
   const [qaIsTodo, setQaIsTodo] = useState(true);
-  const [qaCategory, setQaCategory] = useState<string | null>(null);
+  const [qaCategory, setQaCategory] = useState<string>('work');
   const qaInputRef = useRef<InputRef>(null);
   const [focusKey, setFocusKey] = useState(0);
   // 置顶
@@ -526,9 +526,9 @@ export default function DashboardPage() {
             placeholder={qaIsTodo ? '输入待办，回车添加…' : '输入日程标题，回车添加…'}
             autoFocus
             style={{ flex: 1, minWidth: 140 }}
-            prefix={<span onClick={() => setQaCategory(qaCategory === 'work' ? 'personal' : qaCategory === 'personal' ? null : 'work')}
+            prefix={<span onClick={() => setQaCategory(qaCategory === 'work' ? 'personal' : 'work')}
               style={{ cursor: 'pointer', userSelect: 'none' }}>
-              {qaCategory === 'work' ? '💼' : qaCategory === 'personal' ? '🐱' : <span style={{ opacity: 0.25, fontSize: 13 }}>☐</span>}
+              {qaCategory === 'work' ? '💼' : '🐱'}
             </span>}
           />
           {!qaIsTodo && (

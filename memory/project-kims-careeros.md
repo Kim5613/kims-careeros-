@@ -204,10 +204,12 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 **2026-07-02 | [部署] 本地 GitHub 连接不稳定**
 - 问题：`git push` 偶尔超时
 - 解法：服务器能连 GitHub，文件通过服务器 `git pull` 同步；服务器修改文件后先 `git checkout` 再 pull 避免冲突
+- **注意：本地 push 前需先告诉 Kim，Kim 需要开代理才能连 GitHub**
 
 ## 待办与优先级
 
 1. 域名备案通过 → 配置 HTTPS
-2. JWT_SECRET 改为强随机值
-3. v1.1 需求确认（26 条 AI 建议逐条筛选）
-4. AI 功能集成
+2. 数据库定时备份（pg_dump + cron）
+3. JWT_SECRET 改为强随机值
+4. v1.1 需求确认（26 条 AI 建议逐条筛选）
+5. AI 功能集成
