@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // output: 'standalone',
   transpilePackages: ['antd', '@ant-design/icons', '@ant-design/nextjs-registry', '@ant-design/cssinjs'],
   experimental: {
     serverActions: {
