@@ -90,7 +90,7 @@ const CHANGE_TYPE_OPTIONS = [
 
 const CHANGE_TYPE_COLOR: Record<string, string> = {
   晋升调薪: 'green',
-  年度调薪: 'blue',
+  年度调薪: '#8b7cf0',
   跳槽: 'purple',
   其他: 'default',
 };
@@ -284,11 +284,11 @@ function SalaryTrendChart({ salaryChanges }: { salaryChanges: SalaryChange[] }) 
             const barHeight = (heightPct / 100) * 168;
             const colors: Record<string, string> = {
               晋升调薪: '#52c41a',
-              年度调薪: '#1677ff',
+              年度调薪: '#8b7cf0',
               跳槽: '#722ed1',
               其他: '#fa8c16',
             };
-            const color = colors[item.changeType] || '#1677ff';
+            const color = colors[item.changeType] || '#8b7cf0';
 
             return (
               <div
@@ -351,7 +351,7 @@ function SalaryTrendChart({ salaryChanges }: { salaryChanges: SalaryChange[] }) 
       <div style={{ marginTop: 40, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
         {Object.entries({
           晋升调薪: '#52c41a',
-          年度调薪: '#1677ff',
+          年度调薪: '#8b7cf0',
           跳槽: '#722ed1',
           其他: '#fa8c16',
         }).map(([label, color]) => (
@@ -477,7 +477,7 @@ export default function SalaryGrowthPage() {
       width: 140,
       render: (val: string | null) =>
         val ? (
-          <Tag color="green" style={{ fontSize: 13 }}>
+          <Tag color="green" style={{ fontSize: 13, borderRadius: 14 }}>
             {val}
           </Tag>
         ) : (
@@ -535,7 +535,7 @@ export default function SalaryGrowthPage() {
       key: 'changeType',
       width: 110,
       render: (type: string) => (
-        <Tag color={CHANGE_TYPE_COLOR[type] || 'default'}>{type}</Tag>
+        <Tag color={CHANGE_TYPE_COLOR[type] || 'default'} style={{ borderRadius: 14 }}>{type}</Tag>
       ),
       filters: CHANGE_TYPE_OPTIONS.map((o) => ({ text: o.label, value: o.value })),
       onFilter: (value, record) => record.changeType === value,
@@ -559,10 +559,10 @@ export default function SalaryGrowthPage() {
   // ── Render ──
 
   return (
-    <div style={{ padding: '0 4px' }}>
+    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
       {/* ── Header ── */}
       <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0 }}>
+        <Title level={3} style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>
           薪酬与晋升
         </Title>
         <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 0 }}>
@@ -574,7 +574,7 @@ export default function SalaryGrowthPage() {
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card
-            style={{ borderRadius: 12, borderTop: '3px solid #52c41a' }}
+            style={{ borderRadius: 20, borderTop: '3px solid #52c41a', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             styles={{ body: { padding: '20px 24px' } }}
           >
             <Statistic
@@ -588,21 +588,21 @@ export default function SalaryGrowthPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card
-            style={{ borderRadius: 12, borderTop: '3px solid #1677ff' }}
+            style={{ borderRadius: 20, borderTop: '3px solid #8b7cf0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             styles={{ body: { padding: '20px 24px' } }}
           >
             <Statistic
               title="涨薪次数"
               value={stats.totalRaises}
-              prefix={<RiseOutlined style={{ color: '#1677ff' }} />}
+              prefix={<RiseOutlined style={{ color: '#8b7cf0' }} />}
               suffix="次"
-              valueStyle={{ color: '#1677ff', fontSize: 28, fontWeight: 700 }}
+              valueStyle={{ color: '#8b7cf0', fontSize: 28, fontWeight: 700 }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card
-            style={{ borderRadius: 12, borderTop: '3px solid #722ed1' }}
+            style={{ borderRadius: 20, borderTop: '3px solid #722ed1', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             styles={{ body: { padding: '20px 24px' } }}
           >
             <Statistic
@@ -616,7 +616,7 @@ export default function SalaryGrowthPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card
-            style={{ borderRadius: 12, borderTop: '3px solid #fa8c16' }}
+            style={{ borderRadius: 20, borderTop: '3px solid #fa8c16', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             styles={{ body: { padding: '20px 24px' } }}
           >
             <Statistic
@@ -639,7 +639,7 @@ export default function SalaryGrowthPage() {
             <span>薪资趋势图</span>
           </Space>
         }
-        style={{ borderRadius: 12, marginBottom: 24 }}
+        style={{ borderRadius: 20, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         styles={{ body: { padding: '20px 24px' } }}
       >
         <SalaryTrendChart salaryChanges={salaryChanges} />
@@ -657,6 +657,7 @@ export default function SalaryGrowthPage() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
+            style={{ borderRadius: 20 }}
             onClick={() => {
               promoForm.resetFields();
               setPromoModalOpen(true);
@@ -665,7 +666,7 @@ export default function SalaryGrowthPage() {
             新增晋升记录
           </Button>
         }
-        style={{ borderRadius: 12, marginBottom: 24 }}
+        style={{ borderRadius: 20, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         styles={{ body: { padding: 0 } }}
       >
         <Table<Promotion>
@@ -693,6 +694,7 @@ export default function SalaryGrowthPage() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
+            style={{ borderRadius: 20 }}
             onClick={() => {
               salaryForm.resetFields();
               salaryForm.setFieldsValue({ changeType: '年度调薪' });
@@ -702,7 +704,7 @@ export default function SalaryGrowthPage() {
             记录涨薪
           </Button>
         }
-        style={{ borderRadius: 12, marginBottom: 24 }}
+        style={{ borderRadius: 20, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         styles={{ body: { padding: 0 } }}
       >
         <Table<SalaryChange>
@@ -726,7 +728,7 @@ export default function SalaryGrowthPage() {
             <span>职业轨迹</span>
           </Space>
         }
-        style={{ borderRadius: 12 }}
+        style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         styles={{ body: { padding: '20px 24px' } }}
       >
         <Timeline
@@ -740,7 +742,7 @@ export default function SalaryGrowthPage() {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <Text strong>{promo.newLevel}</Text>
-                    <Tag color="purple">{promo.companyName}</Tag>
+                    <Tag color="purple" style={{ borderRadius: 14 }}>{promo.companyName}</Tag>
                   </div>
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {dayjs(promo.date).format('YYYY-MM-DD')}
@@ -787,7 +789,7 @@ export default function SalaryGrowthPage() {
             label="晋升日期"
             rules={[{ required: true, message: '请选择晋升日期' }]}
           >
-            <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
+            <DatePicker style={{ width: '100%', borderRadius: 14 }} placeholder="选择日期" />
           </Form.Item>
 
           <Row gutter={16}>
@@ -797,7 +799,7 @@ export default function SalaryGrowthPage() {
                 label="原职级"
                 rules={[{ required: true, message: '请输入原职级' }]}
               >
-                <Input placeholder="如：P6 高级工程师" />
+                <Input placeholder="如：P6 高级工程师" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -806,7 +808,7 @@ export default function SalaryGrowthPage() {
                 label="新职级"
                 rules={[{ required: true, message: '请输入新职级' }]}
               >
-                <Input placeholder="如：P7 技术专家" />
+                <Input placeholder="如：P7 技术专家" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
           </Row>
@@ -816,7 +818,7 @@ export default function SalaryGrowthPage() {
             label="公司名称"
             rules={[{ required: true, message: '请输入公司名称' }]}
           >
-            <Input placeholder="如：字节跳动" />
+            <Input placeholder="如：字节跳动" style={{ borderRadius: 14 }} />
           </Form.Item>
 
           <Form.Item<PromotionFormData>
@@ -873,7 +875,7 @@ export default function SalaryGrowthPage() {
             label="生效日期"
             rules={[{ required: true, message: '请选择生效日期' }]}
           >
-            <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
+            <DatePicker style={{ width: '100%', borderRadius: 14 }} placeholder="选择日期" />
           </Form.Item>
 
           <Row gutter={16}>
@@ -886,7 +888,7 @@ export default function SalaryGrowthPage() {
                 <InputNumber
                   placeholder="月薪金额"
                   min={0}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', borderRadius: 14 }}
                   addonAfter="元"
                 />
               </Form.Item>
@@ -897,7 +899,7 @@ export default function SalaryGrowthPage() {
                 label="调薪类型"
                 rules={[{ required: true, message: '请选择调薪类型' }]}
               >
-                <Select options={CHANGE_TYPE_OPTIONS} />
+                <Select options={CHANGE_TYPE_OPTIONS} style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
           </Row>
@@ -907,7 +909,7 @@ export default function SalaryGrowthPage() {
             label="公司名称"
             rules={[{ required: true, message: '请输入公司名称' }]}
           >
-            <Input placeholder="如：字节跳动" />
+            <Input placeholder="如：字节跳动" style={{ borderRadius: 14 }} />
           </Form.Item>
 
           <Form.Item<SalaryChangeFormData>

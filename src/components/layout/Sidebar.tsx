@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Menu } from 'antd';
 import {
   DashboardOutlined,
@@ -21,83 +21,30 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Theme, getStoredTheme, getRandomTheme, themes } from '@/lib/themes';
 
+// 路由路径集合（用于判断点击时是否需要导航）
+const ROUTE_KEYS = new Set(['/', '/job-seeking', '/salary-growth', '/resumes', '/growth', '/companies', '/contacts', '/market', '/knowledge', '/settings']);
+
 const menuItems = [
+  { key: '/', icon: <DashboardOutlined />, label: '首页' },
   {
-    key: '/',
-    icon: <DashboardOutlined />,
-    label: <Link href="/">首页</Link>,
-  },
-  {
-    type: 'divider' as const,
-  },
-  {
-    key: 'personal',
-    icon: <UserOutlined />,
-    label: '个人',
+    key: 'personal', icon: <UserOutlined />, label: '个人',
     children: [
-      {
-        key: '/job-seeking',
-        icon: <SearchOutlined />,
-        label: <Link href="/job-seeking">求职</Link>,
-      },
-      {
-        key: '/salary-growth',
-        icon: <RiseOutlined />,
-        label: <Link href="/salary-growth">薪酬</Link>,
-      },
-      {
-        key: '/resumes',
-        icon: <IdcardOutlined />,
-        label: <Link href="/resumes">简历</Link>,
-      },
-      {
-        key: '/growth',
-        icon: <TrophyOutlined />,
-        label: <Link href="/growth">档案</Link>,
-      },
+      { key: '/job-seeking', icon: <SearchOutlined />, label: '求职' },
+      { key: '/salary-growth', icon: <RiseOutlined />, label: '薪酬' },
+      { key: '/resumes', icon: <IdcardOutlined />, label: '简历' },
+      { key: '/growth', icon: <TrophyOutlined />, label: '档案' },
     ],
   },
   {
-    type: 'divider' as const,
-  },
-  {
-    key: 'workbench',
-    icon: <TeamOutlined />,
-    label: 'HR工作台',
+    key: 'workbench', icon: <TeamOutlined />, label: 'HR工作台',
     children: [
-      {
-        key: '/companies',
-        icon: <FundOutlined />,
-        label: <Link href="/companies">公司库</Link>,
-      },
-      {
-        key: '/contacts',
-        icon: <TeamOutlined />,
-        label: <Link href="/contacts">人脉库</Link>,
-      },
-      {
-        key: '/market',
-        icon: <GlobalOutlined />,
-        label: <Link href="/market">市场洞察</Link>,
-      },
+      { key: '/companies', icon: <FundOutlined />, label: '公司库' },
+      { key: '/contacts', icon: <TeamOutlined />, label: '人脉库' },
+      { key: '/market', icon: <GlobalOutlined />, label: '市场洞察' },
     ],
   },
-  {
-    type: 'divider' as const,
-  },
-  {
-    key: '/knowledge',
-    icon: <BookOutlined />,
-    label: <Link href="/knowledge">知识库</Link>,
-  },
-  {
-    type: 'divider' as const,
-  },
-  {
-    key: '/settings',
-    icon: <SettingOutlined />,
-    label: <Link href="/settings">设置</Link>,
-  },
+  { key: '/knowledge', icon: <BookOutlined />, label: '知识库' },
+  { key: '/settings', icon: <SettingOutlined />, label: '设置' },
 ];
 
 export default function Sidebar({ collapsed }: { collapsed: boolean }) {
@@ -120,6 +67,12 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
     router.push('/login');
   };
 
+  const handleMenuClick = useCallback((e: { key: string }) => {
+    if (ROUTE_KEYS.has(e.key)) {
+      router.push(e.key);
+    }
+  }, [router]);
+
   const getSelectedKeys = () => {
     if (pathname === '/') return ['/'];
     const segments = pathname.split('/').filter(Boolean);
@@ -128,30 +81,19 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
 
   const getOpenKeys = () => {
     if (pathname === '/') return [];
-    const segments = pathname.split('/').filter(Boolean);
-    const route = '/' + segments[0];
-
-    if (['/job-seeking', '/salary-growth', '/growth', '/resumes'].includes(route)) {
-      return ['personal'];
-    }
-    if (['/companies', '/contacts', '/market', '/candidates'].includes(route)) {
-      return ['workbench'];
-    }
+    const route = '/' + (pathname.split('/').filter(Boolean)[0] || '');
+    if (['/job-seeking', '/salary-growth', '/growth', '/resumes'].includes(route)) return ['personal'];
+    if (['/companies', '/contacts', '/market', '/candidates'].includes(route)) return ['workbench'];
     return [];
   };
 
   return (
-    <>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: collapsed ? '16px 8px' : '16px 16px 12px',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-          gap: 8,
-        }}
-      >
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Logo */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        padding: collapsed ? '20px 8px' : '20px 16px 14px',
+      }}>
         <Link href="/" style={{ textDecoration: 'none', lineHeight: 0 }}>
           <img
             src={theme.logo}
@@ -164,62 +106,51 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
           />
         </Link>
         {!collapsed && (
-          <div
-            onClick={handleRandomTheme}
-            title="换一个主题"
+          <div onClick={handleRandomTheme} title="换主题"
             style={{
-              cursor: 'pointer',
-              color: 'rgba(255,255,255,0.4)',
-              fontSize: 12,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              transition: 'color 0.2s',
+              cursor: 'pointer', color: '#bbb', fontSize: 12,
+              display: 'flex', alignItems: 'center', gap: 4,
+              marginTop: 8, transition: 'color 0.2s',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#888'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#bbb'; }}
           >
             <ReloadOutlined style={{ fontSize: 11 }} />
             {theme.name}
           </div>
         )}
       </div>
+
+      {/* Menu */}
       <Menu
-        theme="dark"
         mode="inline"
         selectedKeys={getSelectedKeys()}
         defaultOpenKeys={getOpenKeys()}
         items={menuItems}
-        style={{ borderRight: 0 }}
-      />
-      <div
+        onClick={handleMenuClick}
         style={{
-          position: 'absolute',
-          bottom: 16,
-          left: 0,
-          right: 0,
-          padding: '0 16px',
+          borderRight: 0,
+          background: 'transparent',
+          padding: '0 8px',
+          fontSize: 14,
         }}
-      >
-        <div
-          onClick={handleLogout}
+      />
+
+      {/* Logout */}
+      <div style={{ marginTop: 'auto', padding: '8px 12px 16px' }}>
+        <div onClick={handleLogout}
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '10px 12px',
-            borderRadius: 6,
-            cursor: 'pointer',
-            color: 'rgba(255,255,255,0.65)',
-            fontSize: 14,
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '10px 14px', borderRadius: 14,
+            cursor: 'pointer', color: '#999', fontSize: 14,
             transition: 'all 0.2s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#fff';
-            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.color = '#666';
+            e.currentTarget.style.background = '#f3f1ee';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'rgba(255,255,255,0.65)';
+            e.currentTarget.style.color = '#999';
             e.currentTarget.style.background = 'transparent';
           }}
         >
@@ -227,6 +158,6 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
           {!collapsed && <span>退出登录</span>}
         </div>
       </div>
-    </>
+    </div>
   );
 }

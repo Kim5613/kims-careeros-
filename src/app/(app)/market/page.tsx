@@ -130,11 +130,11 @@ export default function MarketInsightsPage() {
 
   // ===================== Render =====================
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
       <Title level={2}>市场洞察</Title>
 
       {/* Filter Bar */}
-      <Card style={{ marginBottom: 24 }}>
+      <Card style={{ marginBottom: 24, borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <Space wrap>
           <Input
             placeholder="搜索洞察标题或内容"
@@ -142,14 +142,14 @@ export default function MarketInsightsPage() {
             value={searchText}
             onChange={e => setSearchText(e.target.value)}
             allowClear
-            style={{ width: 260 }}
+            style={{ width: 260, borderRadius: 14 }}
           />
           <Select
             placeholder="按分类筛选"
             value={categoryFilter}
             onChange={v => setCategoryFilter(v)}
             allowClear
-            style={{ width: 150 }}
+            style={{ width: 150, borderRadius: 14 }}
             options={categoryOptions.map(c => ({ label: c, value: c }))}
           />
           <Select
@@ -157,10 +157,10 @@ export default function MarketInsightsPage() {
             value={industryFilter}
             onChange={v => setIndustryFilter(v)}
             allowClear
-            style={{ width: 150 }}
+            style={{ width: 150, borderRadius: 14 }}
             options={industryOptions.map(i => ({ label: i, value: i }))}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalVisible(true)}>
+          <Button type="primary" icon={<PlusOutlined />} style={{ borderRadius: 20 }} onClick={() => setAddModalVisible(true)}>
             新增洞察
           </Button>
         </Space>
@@ -168,7 +168,7 @@ export default function MarketInsightsPage() {
 
       {/* Insights List */}
       {filteredInsights.length === 0 ? (
-        <Card><Empty description="暂无洞察数据" /></Card>
+        <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Empty description="暂无洞察数据" /></Card>
       ) : (
         <Row gutter={[16, 16]}>
           {filteredInsights.map(insight => {
@@ -178,7 +178,7 @@ export default function MarketInsightsPage() {
               <Col xs={24} sm={24} md={12} lg={8} key={insight.id}>
                 <Card
                   hoverable
-                  style={{ height: '100%' }}
+                  style={{ height: '100%', borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
                   onClick={() => setExpandedKey(isExpanded ? null : insight.id)}
                   actions={[
                     <Button type="link" size="small" onClick={e => e.stopPropagation()}>
@@ -187,13 +187,13 @@ export default function MarketInsightsPage() {
                   ]}
                 >
                   <Card.Meta
-                    avatar={<span style={{ fontSize: 28, color: config.color === 'green' ? '#52c41a' : config.color === 'blue' ? '#1890ff' : '#fa8c16' }}>{config.icon}</span>}
+                    avatar={<span style={{ fontSize: 28, color: config.color === 'green' ? '#52c41a' : config.color === 'blue' ? '#8b7cf0' : '#fa8c16' }}>{config.icon}</span>}
                     title={
                       <Space direction="vertical" size={0}>
                         <Text strong style={{ fontSize: 15 }}>{insight.title}</Text>
                         <Space size={4} style={{ marginTop: 4 }}>
-                          <Tag color={config.color}>{insight.category}</Tag>
-                          {insight.industry && <Tag>{insight.industry}</Tag>}
+                          <Tag color={config.color} style={{ borderRadius: 14 }}>{insight.category}</Tag>
+                          {insight.industry && <Tag style={{ borderRadius: 14 }}>{insight.industry}</Tag>}
                         </Space>
                       </Space>
                     }
@@ -239,33 +239,33 @@ export default function MarketInsightsPage() {
       >
         <Form form={form} layout="vertical" onFinish={handleAdd}>
           <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
-            <Input placeholder="洞察标题" />
+            <Input placeholder="洞察标题" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入内容' }]}>
-            <TextArea rows={6} placeholder="洞察详细内容" />
+            <TextArea rows={6} placeholder="洞察详细内容" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="category" label="分类" rules={[{ required: true, message: '请选择分类' }]}>
-                <Select placeholder="请选择" options={categoryOptions.map(c => ({ label: c, value: c }))} />
+                <Select placeholder="请选择" style={{ borderRadius: 14 }} options={categoryOptions.map(c => ({ label: c, value: c }))} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="industry" label="行业">
-                <Select placeholder="请选择" allowClear options={industryOptions.map(i => ({ label: i, value: i }))} />
+                <Select placeholder="请选择" allowClear style={{ borderRadius: 14 }} options={industryOptions.map(i => ({ label: i, value: i }))} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="position" label="岗位">
-                <Input placeholder="相关岗位" />
+                <Input placeholder="相关岗位" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item name="source" label="数据来源">
-            <Input placeholder="数据或信息的来源" />
+            <Input placeholder="数据或信息的来源" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="dataPoints" label="数据点 (JSON格式)">
-            <TextArea rows={3} placeholder='{"key1":"value1","key2":"value2"}' />
+            <TextArea rows={3} placeholder='{"key1":"value1","key2":"value2"}' style={{ borderRadius: 14 }} />
           </Form.Item>
         </Form>
       </Modal>

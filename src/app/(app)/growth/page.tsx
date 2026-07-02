@@ -98,7 +98,7 @@ const OKR_STATUS_COLOR: Record<string, string> = {
 };
 
 const MILESTONE_COLORS = [
-  '#1677ff',
+  '#8b7cf0',
   '#52c41a',
   '#722ed1',
   '#fa8c16',
@@ -275,14 +275,14 @@ function OKRCard({ goal }: { goal: GoalOKR }) {
       : goal.status === '已放弃'
         ? '#d9d9d9'
         : goal.progress >= 70
-          ? '#1677ff'
+          ? '#8b7cf0'
           : goal.progress >= 40
             ? '#fa8c16'
             : '#ff4d4f';
 
   return (
     <Card
-      style={{ borderRadius: 12, height: '100%' }}
+      style={{ borderRadius: 20, height: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
       styles={{ body: { padding: '20px 24px' } }}
     >
       <div
@@ -365,7 +365,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
   return (
     <Card
       hoverable
-      style={{ borderRadius: 12, height: '100%', borderTop: '3px solid #fa8c16' }}
+      style={{ borderRadius: 20, height: '100%', borderTop: '3px solid #fa8c16', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
       styles={{ body: { padding: '20px 24px' } }}
     >
       <Space direction="vertical" size={8} style={{ width: '100%' }}>
@@ -393,7 +393,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
 
         {achievement.project && (
           <div>
-            <Tag color="blue">{achievement.project}</Tag>
+            <Tag color="blue" style={{ borderRadius: 14 }}>{achievement.project}</Tag>
           </div>
         )}
 
@@ -469,7 +469,7 @@ function AnnualReviewCard({ review }: { review: AnnualReview }) {
                 <div style={{ marginBottom: 16 }}>
                   <Text
                     strong
-                    style={{ fontSize: 13, color: '#1677ff', display: 'block', marginBottom: 6 }}
+                    style={{ fontSize: 13, color: '#8b7cf0', display: 'block', marginBottom: 6 }}
                   >
                     <FlagOutlined style={{ marginRight: 6 }} />
                     核心目标
@@ -712,10 +712,10 @@ export default function GrowthPage() {
   // ── Render ──
 
   return (
-    <div style={{ padding: '0 4px' }}>
+    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
       {/* ── Header ── */}
       <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0 }}>
+        <Title level={3} style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>
           成长档案
         </Title>
         <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 0 }}>
@@ -735,6 +735,7 @@ export default function GrowthPage() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
+            style={{ borderRadius: 20 }}
             onClick={() => {
               milestoneForm.resetFields();
               setMilestoneModalOpen(true);
@@ -743,7 +744,7 @@ export default function GrowthPage() {
             新增里程碑
           </Button>
         }
-        style={{ borderRadius: 12, marginBottom: 24 }}
+        style={{ borderRadius: 20, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         styles={{ body: { padding: '20px 24px' } }}
       >
         {milestones.length === 0 ? (
@@ -786,7 +787,7 @@ export default function GrowthPage() {
                           <Tag
                             key={tag}
                             color={MILESTONE_COLORS[idx % MILESTONE_COLORS.length]}
-                            style={{ fontSize: 11 }}
+                            style={{ fontSize: 11, borderRadius: 14 }}
                           >
                             {tag}
                           </Tag>
@@ -812,6 +813,7 @@ export default function GrowthPage() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
+            style={{ borderRadius: 20 }}
             onClick={() => {
               achievementForm.resetFields();
               setAchievementModalOpen(true);
@@ -820,7 +822,7 @@ export default function GrowthPage() {
             新增成就
           </Button>
         }
-        style={{ borderRadius: 12, marginBottom: 24 }}
+        style={{ borderRadius: 20, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         styles={{ body: { padding: '20px 24px' } }}
       >
         {achievements.length === 0 ? (
@@ -848,6 +850,7 @@ export default function GrowthPage() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
+            style={{ borderRadius: 20 }}
             onClick={() => {
               goalForm.resetFields();
               goalForm.setFieldsValue({ status: '进行中', progress: 0 });
@@ -857,7 +860,7 @@ export default function GrowthPage() {
             新增 OKR
           </Button>
         }
-        style={{ borderRadius: 12, marginBottom: 24 }}
+        style={{ borderRadius: 20, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         styles={{ body: { padding: '20px 24px' } }}
       >
         {goals.length === 0 ? (
@@ -885,6 +888,7 @@ export default function GrowthPage() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
+            style={{ borderRadius: 20 }}
             onClick={() => {
               reviewForm.resetFields();
               setReviewModalOpen(true);
@@ -893,7 +897,7 @@ export default function GrowthPage() {
             新增复盘
           </Button>
         }
-        style={{ borderRadius: 12, marginBottom: 24 }}
+        style={{ borderRadius: 20, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         styles={{ body: { padding: '20px 24px' } }}
       >
         {annualReviews.length === 0 ? (
@@ -928,14 +932,14 @@ export default function GrowthPage() {
             label="日期"
             rules={[{ required: true, message: '请选择日期' }]}
           >
-            <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
+            <DatePicker style={{ width: '100%', borderRadius: 14 }} placeholder="选择日期" />
           </Form.Item>
           <Form.Item
             name="title"
             label="标题"
             rules={[{ required: true, message: '请输入标题' }]}
           >
-            <Input placeholder="如：晋升为 P7 技术专家" />
+            <Input placeholder="如：晋升为 P7 技术专家" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="description" label="描述">
             <TextArea
@@ -981,7 +985,7 @@ export default function GrowthPage() {
             label="日期"
             rules={[{ required: true, message: '请选择日期' }]}
           >
-            <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
+            <DatePicker style={{ width: '100%', borderRadius: 14 }} placeholder="选择日期" />
           </Form.Item>
           <Form.Item name="description" label="详细描述">
             <TextArea
@@ -994,12 +998,12 @@ export default function GrowthPage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="project" label="所属项目">
-                <Input placeholder="如：电商首页优化" />
+                <Input placeholder="如：电商首页优化" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="impact" label="影响力">
-                <Input placeholder="如：转化率提升 23%" />
+                <Input placeholder="如：转化率提升 23%" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
           </Row>
@@ -1034,7 +1038,7 @@ export default function GrowthPage() {
             label="目标 (Objective)"
             rules={[{ required: true, message: '请输入目标' }]}
           >
-            <Input placeholder="如：成为技术架构师" />
+            <Input placeholder="如：成为技术架构师" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="keyResults" label="关键结果 (Key Results)">
             <TextArea
@@ -1047,22 +1051,22 @@ export default function GrowthPage() {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="status" label="状态">
-                <Select options={OKR_STATUS_OPTIONS} />
+                <Select options={OKR_STATUS_OPTIONS} style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="progress" label="进度 (%)">
-                <Input type="number" min={0} max={100} placeholder="0" />
+                <Input type="number" min={0} max={100} placeholder="0" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="endDate" label="截止日期">
-                <DatePicker style={{ width: '100%' }} placeholder="选择" />
+                <DatePicker style={{ width: '100%', borderRadius: 14 }} placeholder="选择" />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item name="startDate" label="开始日期">
-            <DatePicker style={{ width: '100%' }} placeholder="选择开始日期" />
+            <DatePicker style={{ width: '100%', borderRadius: 14 }} placeholder="选择开始日期" />
           </Form.Item>
         </Form>
       </Modal>
@@ -1089,7 +1093,7 @@ export default function GrowthPage() {
             label="年份"
             rules={[{ required: true, message: '请输入年份' }]}
           >
-            <Input type="number" placeholder="如：2025" />
+            <Input type="number" placeholder="如：2025" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="highlights" label="年度亮点">
             <TextArea

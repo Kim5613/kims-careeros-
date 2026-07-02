@@ -16,7 +16,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
-        theme="dark"
+        theme="light"
         style={{
           position: 'fixed',
           left: 0,
@@ -25,6 +25,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           overflow: 'auto',
           height: '100vh',
           zIndex: 10,
+          background: '#fcfbfa',
+          borderRight: '1px solid #f0ece8',
         }}
       >
         <SidebarContent collapsed={collapsed} />
@@ -33,12 +35,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         style={{
           flex: 1,
           marginLeft: collapsed ? 80 : 240,
-          background: '#f5f5f5',
+          background: '#faf8f6',
           transition: 'margin-left 0.2s',
           minHeight: '100vh',
         }}
       >
-        <div style={{ padding: 24 }}>{children}</div>
+        {children}
       </main>
     </div>
   );

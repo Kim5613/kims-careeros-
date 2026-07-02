@@ -345,16 +345,16 @@ export default function CandidatesPage() {
     {
       title: '技能', dataIndex: 'skills', key: 'skills', width: 220,
       render: (skills: string[]) => (
-        <Space wrap>{skills.map(s => <Tag key={s} color="blue">{s}</Tag>)}</Space>
+        <Space wrap>{skills.map(s => <Tag key={s} color="#8b7cf0" style={{ borderRadius: 14 }}>{s}</Tag>)}</Space>
       ),
     },
     {
       title: '经验(年)', dataIndex: 'experienceYears', key: 'experienceYears', width: 90, align: 'center',
-      render: (y: number) => <Tag>{y}年</Tag>,
+      render: (y: number) => <Tag style={{ borderRadius: 14 }}>{y}年</Tag>,
     },
     {
       title: '来源', dataIndex: 'source', key: 'source', width: 100,
-      render: (s: string) => <Tag color="cyan">{s}</Tag>,
+      render: (s: string) => <Tag color="cyan" style={{ borderRadius: 14 }}>{s}</Tag>,
     },
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 120,
@@ -366,7 +366,7 @@ export default function CandidatesPage() {
           }}
           trigger={['click']}
         >
-          <Tag color={statusConfig[status]?.color} icon={statusConfig[status]?.icon} style={{ cursor: 'pointer' }}>
+          <Tag color={statusConfig[status]?.color} icon={statusConfig[status]?.icon} style={{ cursor: 'pointer', borderRadius: 14 }}>
             {status}
           </Tag>
         </Dropdown>
@@ -401,39 +401,39 @@ export default function CandidatesPage() {
 
   // ===================== Render =====================
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
       <Title level={2}>候选人简历库</Title>
 
       {/* Statistics Overview */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={6} lg={3}>
-          <Card size="small"><Statistic title="总候选人" value={stats.total} prefix={<TeamOutlined />} /></Card>
+          <Card size="small" style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Statistic title="总候选人" value={stats.total} prefix={<TeamOutlined />} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6} lg={3}>
-          <Card size="small"><Statistic title="待筛选" value={stats.byStatus['待筛选']} valueStyle={{ color: '#8c8c8c' }} /></Card>
+          <Card size="small" style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Statistic title="待筛选" value={stats.byStatus['待筛选']} valueStyle={{ color: '#8c8c8c' }} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6} lg={3}>
-          <Card size="small"><Statistic title="面试中" value={stats.byStatus['面试中']} valueStyle={{ color: '#1890ff' }} /></Card>
+          <Card size="small" style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Statistic title="面试中" value={stats.byStatus['面试中']} valueStyle={{ color: '#8b7cf0' }} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6} lg={3}>
-          <Card size="small"><Statistic title="已录用" value={stats.byStatus['已录用']} valueStyle={{ color: '#52c41a' }} /></Card>
+          <Card size="small" style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Statistic title="已录用" value={stats.byStatus['已录用']} valueStyle={{ color: '#52c41a' }} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6} lg={3}>
-          <Card size="small"><Statistic title="已拒绝" value={stats.byStatus['已拒绝']} valueStyle={{ color: '#ff4d4f' }} /></Card>
+          <Card size="small" style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Statistic title="已拒绝" value={stats.byStatus['已拒绝']} valueStyle={{ color: '#ff4d4f' }} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6} lg={3}>
-          <Card size="small"><Statistic title="暂缓" value={stats.byStatus['暂缓']} valueStyle={{ color: '#faad14' }} /></Card>
+          <Card size="small" style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Statistic title="暂缓" value={stats.byStatus['暂缓']} valueStyle={{ color: '#faad14' }} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6} lg={3}>
-          <Card size="small"><Statistic title="放弃" value={stats.byStatus['放弃']} valueStyle={{ color: '#d9d9d9' }} /></Card>
+          <Card size="small" style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Statistic title="放弃" value={stats.byStatus['放弃']} valueStyle={{ color: '#d9d9d9' }} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6} lg={3}>
-          <Card size="small"><Statistic title="人才储备" value={stats.talentPoolCount} prefix={<StarFilled style={{ color: '#faad14' }} />} /></Card>
+          <Card size="small" style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Statistic title="人才储备" value={stats.talentPoolCount} prefix={<StarFilled style={{ color: '#faad14' }} />} /></Card>
         </Col>
       </Row>
 
       {/* Filter Toolbar */}
-      <Card style={{ marginBottom: 16 }}>
+      <Card style={{ marginBottom: 16, borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <Space wrap>
           <Input
             placeholder="搜索候选人姓名"
@@ -441,14 +441,14 @@ export default function CandidatesPage() {
             value={searchText}
             onChange={e => setSearchText(e.target.value)}
             allowClear
-            style={{ width: 200 }}
+            style={{ width: 200, borderRadius: 14 }}
           />
           <Select
             placeholder="按状态筛选"
             value={statusFilter}
             onChange={v => setStatusFilter(v)}
             allowClear
-            style={{ width: 140 }}
+            style={{ width: 140, borderRadius: 14 }}
             options={statusOptions.map(s => ({ label: s, value: s }))}
           />
           <Select
@@ -456,7 +456,7 @@ export default function CandidatesPage() {
             value={sourceFilter}
             onChange={v => setSourceFilter(v)}
             allowClear
-            style={{ width: 140 }}
+            style={{ width: 140, borderRadius: 14 }}
             options={sourceOptions.map(s => ({ label: s, value: s }))}
           />
           <Button
@@ -466,14 +466,14 @@ export default function CandidatesPage() {
           >
             仅人才库
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalVisible(true)}>
+          <Button type="primary" icon={<PlusOutlined />} style={{ borderRadius: 20 }} onClick={() => setAddModalVisible(true)}>
             新增候选人
           </Button>
         </Space>
       </Card>
 
       {/* Candidate Table */}
-      <Card>
+      <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <Table
           columns={columns}
           dataSource={filteredCandidates}
@@ -495,50 +495,50 @@ export default function CandidatesPage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
-                <Input placeholder="请输入候选人姓名" />
+                <Input placeholder="请输入候选人姓名" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="phone" label="电话">
-                <Input placeholder="请输入电话号码" />
+                <Input placeholder="请输入电话号码" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="email" label="邮箱">
-                <Input placeholder="请输入邮箱" />
+                <Input placeholder="请输入邮箱" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="company" label="当前公司">
-                <Input placeholder="请输入当前公司" />
+                <Input placeholder="请输入当前公司" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="position" label="当前职位">
-                <Input placeholder="请输入当前职位" />
+                <Input placeholder="请输入当前职位" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="experienceYears" label="工作年限">
-                <InputNumber min={0} max={50} placeholder="年" style={{ width: '100%' }} />
+                <InputNumber min={0} max={50} placeholder="年" style={{ width: '100%', borderRadius: 14 }} />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item name="skills" label="技能标签">
-            <Input placeholder="多个技能用逗号分隔，如：Python, TensorFlow, NLP" />
+            <Input placeholder="多个技能用逗号分隔，如：Python, TensorFlow, NLP" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="source" label="来源渠道">
-            <Select placeholder="请选择来源" options={sourceOptions.map(s => ({ label: s, value: s }))} />
+            <Select placeholder="请选择来源" style={{ borderRadius: 14 }} options={sourceOptions.map(s => ({ label: s, value: s }))} />
           </Form.Item>
           <Form.Item name="resumeSnapshot" label="简历快照">
-            <TextArea rows={3} placeholder="简要描述候选人简历要点" />
+            <TextArea rows={3} placeholder="简要描述候选人简历要点" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="notes" label="备注">
-            <TextArea rows={2} placeholder="备注信息" />
+            <TextArea rows={2} placeholder="备注信息" style={{ borderRadius: 14 }} />
           </Form.Item>
         </Form>
       </Modal>
@@ -559,16 +559,16 @@ export default function CandidatesPage() {
               <Col span={12}><Text strong>公司：</Text>{selectedCandidate.company}</Col>
               <Col span={12}><Text strong>职位：</Text>{selectedCandidate.position}</Col>
               <Col span={12}><Text strong>工作年限：</Text>{selectedCandidate.experienceYears}年</Col>
-              <Col span={12}><Text strong>来源：</Text><Tag color="cyan">{selectedCandidate.source}</Tag></Col>
+              <Col span={12}><Text strong>来源：</Text><Tag color="cyan" style={{ borderRadius: 14 }}>{selectedCandidate.source}</Tag></Col>
               <Col span={12}>
                 <Text strong>状态：</Text>
-                <Tag color={statusConfig[selectedCandidate.status]?.color}>
+                <Tag color={statusConfig[selectedCandidate.status]?.color} style={{ borderRadius: 14 }}>
                   {selectedCandidate.status}
                 </Tag>
               </Col>
               <Col span={24}>
                 <Text strong>技能：</Text>
-                <Space wrap>{selectedCandidate.skills.map(s => <Tag key={s} color="blue">{s}</Tag>)}</Space>
+                <Space wrap>{selectedCandidate.skills.map(s => <Tag key={s} color="#8b7cf0" style={{ borderRadius: 14 }}>{s}</Tag>)}</Space>
               </Col>
               <Col span={12}>
                 <Text strong>人才储备：</Text>
@@ -585,6 +585,7 @@ export default function CandidatesPage() {
                 type="primary"
                 icon={<UploadOutlined />}
                 size="small"
+                style={{ borderRadius: 20 }}
                 onClick={() => setUploadAreaVisible(!uploadAreaVisible)}
               >
                 {uploadAreaVisible ? '收起上传' : '导入简历'}
@@ -630,7 +631,7 @@ export default function CandidatesPage() {
                 setSelectedCandidate({ ...selectedCandidate, resumeSnapshot: val });
               }}
               placeholder="简历快照可由文档解析自动填充，也可手动编辑"
-              style={{ marginBottom: 16 }}
+              style={{ marginBottom: 16, borderRadius: 14 }}
             />
 
             {selectedCandidate.notes && (
@@ -645,7 +646,7 @@ export default function CandidatesPage() {
               type="primary"
               icon={<PlusOutlined />}
               size="small"
-              style={{ marginBottom: 16 }}
+              style={{ marginBottom: 16, borderRadius: 20 }}
               onClick={() => setAddInterviewVisible(true)}
             >
               添加面试记录
@@ -655,7 +656,7 @@ export default function CandidatesPage() {
                 items={selectedCandidate.interviews
                   .sort((a, b) => a.round - b.round)
                   .map(interview => ({
-                    color: 'blue',
+                    color: '#8b7cf0',
                     children: (
                       <div key={interview.id}>
                         <Text strong>第{interview.round}轮面试</Text>
@@ -711,19 +712,19 @@ export default function CandidatesPage() {
       >
         <Form form={interviewForm} layout="vertical" onFinish={handleAddInterview}>
           <Form.Item name="round" label="面试轮次" rules={[{ required: true, message: '请输入面试轮次' }]}>
-            <InputNumber min={1} max={10} placeholder="第几轮" style={{ width: '100%' }} />
+            <InputNumber min={1} max={10} placeholder="第几轮" style={{ width: '100%', borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="interviewDate" label="面试日期" rules={[{ required: true, message: '请输入面试日期' }]}>
-            <Input placeholder="如：2024-03-20" />
+            <Input placeholder="如：2024-03-20" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="interviewer" label="面试官">
-            <Input placeholder="请输入面试官姓名" />
+            <Input placeholder="请输入面试官姓名" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="evaluation" label="面试评价">
-            <TextArea rows={3} placeholder="请输入面试评价" />
+            <TextArea rows={3} placeholder="请输入面试评价" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="notes" label="备注">
-            <TextArea rows={2} placeholder="备注信息" />
+            <TextArea rows={2} placeholder="备注信息" style={{ borderRadius: 14 }} />
           </Form.Item>
         </Form>
       </Modal>

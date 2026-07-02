@@ -373,7 +373,7 @@ export default function CompaniesPage() {
       render: (status: string) => {
         const color =
           status === '面试中' ? 'orange' : status === '已拿Offer' ? 'green' : 'blue';
-        return <Tag color={color}>{status}</Tag>;
+        return <Tag color={color} style={{ borderRadius: 14 }}>{status}</Tag>;
       },
     },
     {
@@ -404,14 +404,14 @@ export default function CompaniesPage() {
       render: (status: string) => {
         const color =
           status === '已录用' ? 'green' : status === '面试中' ? 'orange' : 'default';
-        return <Tag color={color}>{status}</Tag>;
+        return <Tag color={color} style={{ borderRadius: 14 }}>{status}</Tag>;
       },
     },
   ];
 
   // ── Render ──
   return (
-    <div style={{ padding: '0 4px' }}>
+    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div
         style={{
@@ -424,14 +424,14 @@ export default function CompaniesPage() {
         }}
       >
         <div>
-          <Title level={3} style={{ margin: 0 }}>
+          <Title level={3} style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>
             公司库
           </Title>
           <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 0 }}>
             管理关注和合作的公司信息，追踪关联的求职记录和候选人数据
           </Paragraph>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openCreateModal}>
+        <Button type="primary" icon={<PlusOutlined />} size="large" style={{ borderRadius: 20 }} onClick={openCreateModal}>
           新增公司
         </Button>
       </div>
@@ -441,10 +441,10 @@ export default function CompaniesPage() {
         <Col xs={12} sm={8} md={4}>
           <Card
             size="small"
-            style={{ borderRadius: 8, textAlign: 'center', borderTop: '3px solid #1677ff' }}
+            style={{ borderRadius: 14, textAlign: 'center', borderTop: '3px solid #8b7cf0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             styles={{ body: { padding: '10px 8px' } }}
           >
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#1677ff' }}>{companies.length}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#8b7cf0' }}>{companies.length}</div>
             <Text type="secondary" style={{ fontSize: 12 }}>
               公司总数
             </Text>
@@ -458,17 +458,18 @@ export default function CompaniesPage() {
               <Card
                 size="small"
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 14,
                   textAlign: 'center',
                   borderTop: `3px solid ${
                     industry === '互联网/科技'
-                      ? '#1677ff'
+                      ? '#8b7cf0'
                       : industry === '电商'
                       ? '#fa8c16'
                       : industry === '金融'
                       ? '#faad14'
                       : '#722ed1'
                   }`,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                 }}
                 styles={{ body: { padding: '10px 8px' } }}
               >
@@ -478,7 +479,7 @@ export default function CompaniesPage() {
                     fontWeight: 700,
                     color:
                       industry === '互联网/科技'
-                        ? '#1677ff'
+                        ? '#8b7cf0'
                         : industry === '电商'
                         ? '#fa8c16'
                         : industry === '金融'
@@ -499,7 +500,7 @@ export default function CompaniesPage() {
       {/* Toolbar */}
       <Card
         size="small"
-        style={{ borderRadius: 10, marginBottom: 16 }}
+        style={{ borderRadius: 20, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         styles={{ body: { padding: '12px 16px' } }}
       >
         <Space wrap size={10}>
@@ -507,14 +508,14 @@ export default function CompaniesPage() {
             placeholder="搜索公司名称..."
             prefix={<SearchOutlined style={{ color: '#bbb' }} />}
             allowClear
-            style={{ width: 220 }}
+            style={{ width: 220, borderRadius: 14 }}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
           <Select
             placeholder="行业筛选"
             allowClear
-            style={{ width: 150 }}
+            style={{ width: 150, borderRadius: 14 }}
             value={filterIndustry}
             onChange={(v) => setFilterIndustry(v)}
             options={INDUSTRY_OPTIONS.map((i) => ({ label: i, value: i }))}
@@ -522,7 +523,7 @@ export default function CompaniesPage() {
           <Select
             placeholder="城市筛选"
             allowClear
-            style={{ width: 130 }}
+            style={{ width: 130, borderRadius: 14 }}
             value={filterCity}
             onChange={(v) => setFilterCity(v)}
             options={CITY_OPTIONS.map((c) => ({ label: c, value: c }))}
@@ -532,7 +533,7 @@ export default function CompaniesPage() {
 
       {/* Company Cards */}
       {filteredCompanies.length === 0 && !loading ? (
-        <Card style={{ borderRadius: 12, textAlign: 'center', padding: 40 }}>
+        <Card style={{ borderRadius: 20, textAlign: 'center', padding: 40, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <Empty description="暂无公司数据，点击「新增公司」开始构建公司库" />
         </Card>
       ) : (
@@ -541,7 +542,7 @@ export default function CompaniesPage() {
             <Col xs={24} sm={12} lg={8} xl={6} key={item.id}>
               <Card
                 hoverable
-                style={{ borderRadius: 12, height: '100%' }}
+                style={{ borderRadius: 20, height: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
                 styles={{ body: { padding: '20px 20px 16px' } }}
                 onClick={() => openDrawer(item)}
                 actions={[
@@ -566,13 +567,13 @@ export default function CompaniesPage() {
                   </Title>
                   <Space size={6} wrap>
                     {item.industry && (
-                      <Tag color={INDUSTRY_COLOR_MAP[item.industry] ?? 'default'}>
+                      <Tag style={{ borderRadius: 14 }} color={INDUSTRY_COLOR_MAP[item.industry] ?? 'default'}>
                         {item.industry}
                       </Tag>
                     )}
-                    {item.scale && <Tag>{item.scale}</Tag>}
+                    {item.scale && <Tag style={{ borderRadius: 14 }}>{item.scale}</Tag>}
                     {item.city && (
-                      <Tag icon={<EnvironmentOutlined />} color="default">
+                      <Tag icon={<EnvironmentOutlined />} color="default" style={{ borderRadius: 14 }}>
                         {item.city}
                       </Tag>
                     )}
@@ -582,7 +583,7 @@ export default function CompaniesPage() {
                 {item.website && (
                   <div style={{ marginBottom: 8 }}>
                     <Space size={4}>
-                      <GlobalOutlined style={{ color: '#1677ff', fontSize: 13 }} />
+                      <GlobalOutlined style={{ color: '#8b7cf0', fontSize: 13 }} />
                       <Text
                         type="secondary"
                         style={{ fontSize: 12 }}
@@ -612,7 +613,7 @@ export default function CompaniesPage() {
                       count={`${item.applicationCount} 求职`}
                       style={{
                         backgroundColor: '#e6f4ff',
-                        color: '#1677ff',
+                        color: '#8b7cf0',
                         fontSize: 11,
                         boxShadow: 'none',
                       }}
@@ -657,7 +658,7 @@ export default function CompaniesPage() {
             label="公司名称"
             rules={[{ required: true, message: '请输入公司名称' }]}
           >
-            <Input placeholder="如：字节跳动" />
+            <Input placeholder="如：字节跳动" style={{ borderRadius: 14 }} />
           </Form.Item>
 
           <Row gutter={16}>
@@ -666,6 +667,7 @@ export default function CompaniesPage() {
                 <Select
                   placeholder="选择行业"
                   allowClear
+                  style={{ borderRadius: 14 }}
                   options={INDUSTRY_OPTIONS.map((i) => ({ label: i, value: i }))}
                 />
               </Form.Item>
@@ -675,6 +677,7 @@ export default function CompaniesPage() {
                 <Select
                   placeholder="选择规模"
                   allowClear
+                  style={{ borderRadius: 14 }}
                   options={SCALE_OPTIONS.map((s) => ({ label: s, value: s }))}
                 />
               </Form.Item>
@@ -687,13 +690,14 @@ export default function CompaniesPage() {
                 <Select
                   placeholder="选择城市"
                   allowClear
+                  style={{ borderRadius: 14 }}
                   options={CITY_OPTIONS.map((c) => ({ label: c, value: c }))}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="website" label="官网">
-                <Input placeholder="https://www.example.com" prefix={<GlobalOutlined />} />
+                <Input placeholder="https://www.example.com" prefix={<GlobalOutlined />} style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
           </Row>
@@ -704,6 +708,7 @@ export default function CompaniesPage() {
               placeholder="简要描述公司业务、文化和发展方向..."
               maxLength={1000}
               showCount
+              style={{ borderRadius: 14 }}
             />
           </Form.Item>
         </Form>
@@ -738,7 +743,7 @@ export default function CompaniesPage() {
                     行业
                   </Text>
                   {selectedCompany.industry ? (
-                    <Tag color={INDUSTRY_COLOR_MAP[selectedCompany.industry] ?? 'default'}>
+                    <Tag style={{ borderRadius: 14 }} color={INDUSTRY_COLOR_MAP[selectedCompany.industry] ?? 'default'}>
                       {selectedCompany.industry}
                     </Tag>
                   ) : (
@@ -794,7 +799,7 @@ export default function CompaniesPage() {
                 </Title>
                 <Badge
                   count={selectedCompany.applicationCount}
-                  style={{ backgroundColor: '#1677ff' }}
+                  style={{ backgroundColor: '#8b7cf0' }}
                 />
               </Space>
               {selectedCompany.applicationCount > 0 ? (

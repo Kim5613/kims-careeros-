@@ -43,29 +43,29 @@ export default function SettingsPage() {
   };
 
   return (
-    <div style={{ padding: 24, maxWidth: 720 }}>
-      <Title level={3} style={{ marginBottom: 24 }}>设置</Title>
+    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
+      <Title level={3} style={{ fontSize: 20, fontWeight: 600 }}>设置</Title>
 
       {/* 密码修改 */}
-      <Card title={<span><LockOutlined /> 密码修改</span>} style={{ marginBottom: 16, borderRadius: 12 }}>
+      <Card title={<span><LockOutlined /> 密码修改</span>} style={{ marginBottom: 16, borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Input.Password placeholder="旧密码" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} style={{ maxWidth: 320 }} />
-          <Input.Password placeholder="新密码" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} style={{ maxWidth: 320 }} />
-          <Button type="primary" loading={changing} onClick={handleChangePassword}>修改密码</Button>
+          <Input.Password placeholder="旧密码" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} style={{ borderRadius: 14, maxWidth: 320 }} />
+          <Input.Password placeholder="新密码" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} style={{ borderRadius: 14, maxWidth: 320 }} />
+          <Button type="primary" loading={changing} onClick={handleChangePassword} style={{ borderRadius: 20 }}>修改密码</Button>
           <Text type="secondary" style={{ fontSize: 12 }}>当前版本通过 .env 文件管理密码，后续版本支持在线修改</Text>
         </Space>
       </Card>
 
       {/* 主题切换 */}
-      <Card title="主题切换" style={{ marginBottom: 16, borderRadius: 12 }}>
+      <Card title="主题切换" style={{ marginBottom: 16, borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <Row gutter={[12, 12]}>
           {themes.map((theme) => (
             <Col key={theme.id} xs={12} sm={8} md={6}>
               <div
                 onClick={() => handleThemeChange(theme.id)}
                 style={{
-                  border: currentTheme.id === theme.id ? '2px solid #1677ff' : '1px solid #f0f0f0',
-                  borderRadius: 10,
+                  border: currentTheme.id === theme.id ? '2px solid #8b7cf0' : '1px solid #f0f0f0',
+                  borderRadius: 14,
                   padding: '12px 8px',
                   textAlign: 'center',
                   cursor: 'pointer',
@@ -82,12 +82,12 @@ export default function SettingsPage() {
       </Card>
 
       {/* 字体设计 */}
-      <Card title="字体设计" style={{ marginBottom: 16, borderRadius: 12 }}>
+      <Card title="字体设计" style={{ marginBottom: 16, borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <Text type="secondary">字体样式配置功能待下一版本开放</Text>
       </Card>
 
       {/* 分享权限 */}
-      <Card title="分享权限" style={{ borderRadius: 12 }}>
+      <Card title="分享权限" style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <Text type="secondary">分享链接权限管理功能待下一版本开放</Text>
       </Card>
     </div>

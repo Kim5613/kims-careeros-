@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import 'antd/dist/reset.css';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { AntdConfigProvider } from '@/components/AntdConfigProvider';
 
 export const metadata: Metadata = {
   title: "Kim's CareerOS",
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
-        <AntdRegistry>{children}</AntdRegistry>
+        <AntdRegistry>
+          <AntdConfigProvider>{children}</AntdConfigProvider>
+        </AntdRegistry>
       </body>
     </html>
   );

@@ -18,10 +18,10 @@ const INTERVIEW_TYPES = ['电话', '视频', '现场'];
 const INTERVIEW_ROUNDS = ['已沟通', '一面', '二面', '三面', '终面'];
 
 const COLUMN_CONFIG: Record<string, { color: string; bg: string }> = {
-  '已投递': { color: '#1677ff', bg: '#f0f5ff' },
+  '已投递': { color: '#8b7cf0', bg: '#f6f3ff' },
   '面试': { color: '#fa8c16', bg: '#fff7e6' },
   'offer': { color: '#52c41a', bg: '#f6ffed' },
-  '已结束': { color: '#8c8c8c', bg: '#f5f5f5' },
+  '已结束': { color: '#999', bg: '#faf8f6' },
 };
 
 interface InterviewRecord {
@@ -100,26 +100,26 @@ export default function JobSeekingPage() {
   const columnsForStage = (stage: string) => filtered.filter((a) => a.currentStage === stage);
 
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <Title level={3} style={{ margin: 0 }}>求职管理</Title>
-        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={openNew}>新增记录</Button>
+        <Title level={3} style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>求职管理</Title>
+        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={openNew} style={{ borderRadius: 20 }}>新增记录</Button>
       </div>
 
-      <Input prefix={<SearchOutlined />} placeholder="搜索公司或职位" value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 320, marginBottom: 24, borderRadius: 8 }} />
+      <Input prefix={<SearchOutlined />} placeholder="搜索公司或职位" value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 320, marginBottom: 20, borderRadius: 14 }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
         {MAIN_STAGES.map((stage) => {
           const config = COLUMN_CONFIG[stage] || { color: '#999', bg: '#fafafa' };
           const items = columnsForStage(stage);
           return (
-            <div key={stage} style={{ background: config.bg, borderRadius: 12, padding: 16, minHeight: 400 }}>
+            <div key={stage} style={{ background: config.bg, borderRadius: 20, padding: 18, minHeight: 400, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 10, height: 10, borderRadius: 5, background: config.color }} />
                   <Text strong style={{ fontSize: 16, color: config.color }}>{stage}</Text>
                 </div>
-                <Tag style={{ borderRadius: 10 }}>{items.length}</Tag>
+                <Tag style={{ borderRadius: 14 }}>{items.length}</Tag>
               </div>
 
               {items.length === 0 ? (
@@ -133,8 +133,8 @@ export default function JobSeekingPage() {
                       key={app.id}
                       hoverable
                       size="small"
-                      style={{ borderRadius: 8, borderLeft: `4px solid ${config.color}` }}
-                      styles={{ body: { padding: '8px 12px' } }}
+                      style={{ borderRadius: 14, borderLeft: `4px solid ${config.color}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+                      styles={{ body: { padding: '10px 14px' } }}
                       onClick={() => setViewApp(app)}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>

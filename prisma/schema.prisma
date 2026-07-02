@@ -405,6 +405,7 @@ model Todo {
   description String?                  // 描述
   reminder    String?                  // 15min / 30min / 1hour
   repeat      String?                  // none / daily / weekly / monthly
+  category    String?                  // work | personal | null
   isTodo      Boolean  @default(true)  // 是否同步到待办面板
   completed   Boolean  @default(false)
   createdAt   DateTime @default(now())

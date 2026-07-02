@@ -31,14 +31,14 @@ interface KnowledgeEntry {
 
 // ===================== Category Config =====================
 const categoryConfig: Record<string, { icon: React.ReactNode; color: string }> = {
-  '算法': { icon: <CodeOutlined />, color: '#1890ff' },
+  '算法': { icon: <CodeOutlined />, color: '#8b7cf0' },
   '产品': { icon: <ShoppingOutlined />, color: '#722ed1' },
   '技术': { icon: <CodeOutlined />, color: '#13c2c2' },
   '财务': { icon: <DollarOutlined />, color: '#52c41a' },
   '销售': { icon: <TeamOutlined />, color: '#fa8c16' },
   '运营': { icon: <TeamOutlined />, color: '#eb2f96' },
   '设计': { icon: <BookOutlined />, color: '#fa541c' },
-  'HR': { icon: <TeamOutlined />, color: '#2f54eb' },
+  'HR': { icon: <TeamOutlined />, color: '#8b7cf0' },
 };
 
 const categoryOptions = Object.keys(categoryConfig);
@@ -202,11 +202,11 @@ export default function KnowledgePage() {
 
   // ===================== Render =====================
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
       <Title level={2}>招聘知识库</Title>
 
       {/* Search */}
-      <Card style={{ marginBottom: 24 }}>
+      <Card style={{ marginBottom: 24, borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <Space wrap>
           <Input
             placeholder="搜索知识内容..."
@@ -214,7 +214,7 @@ export default function KnowledgePage() {
             value={searchText}
             onChange={e => setSearchText(e.target.value)}
             allowClear
-            style={{ width: 300 }}
+            style={{ width: 300, borderRadius: 14 }}
           />
           <Button
             type={selectedCategory === null ? 'primary' : 'default'}
@@ -222,7 +222,7 @@ export default function KnowledgePage() {
           >
             全部分类
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditEntry(null); form.resetFields(); setAddModalVisible(true); }}>
+          <Button type="primary" icon={<PlusOutlined />} style={{ borderRadius: 20 }} onClick={() => { setEditEntry(null); form.resetFields(); setAddModalVisible(true); }}>
             新增知识
           </Button>
         </Space>
@@ -242,6 +242,8 @@ export default function KnowledgePage() {
                 style={{
                   borderColor: isSelected ? config.color : undefined,
                   borderWidth: isSelected ? 2 : 1,
+                  borderRadius: 20,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                 }}
                 onClick={() => setSelectedCategory(isSelected ? null : cat)}
               >
@@ -261,17 +263,17 @@ export default function KnowledgePage() {
 
       {/* Knowledge Entries */}
       {filteredEntries.length === 0 ? (
-        <Card><Empty description="暂无知识条目" /></Card>
+        <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}><Empty description="暂无知识条目" /></Card>
       ) : (
         <Collapse
           items={filteredEntries.map(entry => ({
             key: entry.id,
             label: (
               <Space>
-                <Tag color={categoryConfig[entry.positionCategory]?.color}>{entry.positionCategory}</Tag>
+                <Tag color={categoryConfig[entry.positionCategory]?.color} style={{ borderRadius: 14 }}>{entry.positionCategory}</Tag>
                 <Text strong>{entry.company !== '通用' ? `[${entry.company}] ` : ''}{entry.positionCategory}岗位知识</Text>
                 <Text type="secondary">薪资范围：{entry.salaryRangeMin}K-{entry.salaryRangeMax}K</Text>
-                <Tag>{entry.updatedAt}</Tag>
+                <Tag style={{ borderRadius: 14 }}>{entry.updatedAt}</Tag>
               </Space>
             ),
             extra: (
@@ -318,7 +320,7 @@ export default function KnowledgePage() {
                 <Row>
                   <Col span={12}>
                     <Text strong>薪资范围：</Text>
-                    <Tag color="green">{entry.salaryRangeMin}K - {entry.salaryRangeMax}K</Tag>
+                    <Tag color="green" style={{ borderRadius: 14 }}>{entry.salaryRangeMin}K - {entry.salaryRangeMax}K</Tag>
                   </Col>
                   <Col span={12}>
                     <Text strong>更新时间：</Text>
@@ -350,41 +352,41 @@ export default function KnowledgePage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="positionCategory" label="岗位分类" rules={[{ required: true, message: '请选择岗位分类' }]}>
-                <Select placeholder="请选择" options={categoryOptions.map(c => ({ label: c, value: c }))} />
+                <Select placeholder="请选择" style={{ borderRadius: 14 }} options={categoryOptions.map(c => ({ label: c, value: c }))} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="company" label="公司（可选）">
-                <Input placeholder="特定公司或留空表示通用" />
+                <Input placeholder="特定公司或留空表示通用" style={{ borderRadius: 14 }} />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item name="terminology" label="技术术语 & 业务背景">
-            <TextArea rows={3} placeholder="该岗位相关的技术术语、业务背景知识" />
+            <TextArea rows={3} placeholder="该岗位相关的技术术语、业务背景知识" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="jdTemplate" label="JD 模板">
-            <TextArea rows={4} placeholder="职位描述模板" />
+            <TextArea rows={4} placeholder="职位描述模板" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="evaluationCriteria" label="评估标准">
-            <TextArea rows={4} placeholder="面试评估标准和考察要点" />
+            <TextArea rows={4} placeholder="面试评估标准和考察要点" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="salaryRangeMin" label="薪资下限(K)">
-                <InputNumber min={0} max={200} style={{ width: '100%' }} placeholder="最低薪资" />
+                <InputNumber min={0} max={200} style={{ width: '100%', borderRadius: 14 }} placeholder="最低薪资" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="salaryRangeMax" label="薪资上限(K)">
-                <InputNumber min={0} max={200} style={{ width: '100%' }} placeholder="最高薪资" />
+                <InputNumber min={0} max={200} style={{ width: '100%', borderRadius: 14 }} placeholder="最高薪资" />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item name="marketInfo" label="市场行情参考">
-            <TextArea rows={2} placeholder="市场行情、供需情况等" />
+            <TextArea rows={2} placeholder="市场行情、供需情况等" style={{ borderRadius: 14 }} />
           </Form.Item>
           <Form.Item name="notes" label="备注">
-            <TextArea rows={2} placeholder="其他备注" />
+            <TextArea rows={2} placeholder="其他备注" style={{ borderRadius: 14 }} />
           </Form.Item>
         </Form>
       </Modal>
