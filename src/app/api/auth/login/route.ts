@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ success: true });
     response.cookies.set('auth_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // HTTPS 配好后再改为 process.env.NODE_ENV === 'production'
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60, // 7 天
       path: '/',
