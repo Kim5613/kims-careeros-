@@ -1,20 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Input, message } from 'antd';
 import { useRouter } from 'next/navigation';
-import { Theme, getStoredTheme, themes } from '@/lib/themes';
+import { FONT_STYLES, getStoredFontIdx } from '@/lib/font-styles';
 
 export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [theme, setTheme] = useState<Theme>(themes[0]);
+  const [fontIdx, setFontIdx] = useState(() => getStoredFontIdx());
+  const cycleFont = () => {
+    const next = (fontIdx + 1) % FONT_STYLES.length;
+    setFontIdx(next);
+    localStorage.setItem('careeros-font', String(next));
+  };
   const router = useRouter();
-
-  useEffect(() => {
-    setTheme(getStoredTheme());
-  }, []);
+  const fontStyle = FONT_STYLES[fontIdx];
 
   const handleLogin = async () => {
     if (!password) return;
@@ -50,26 +52,29 @@ export default function LoginPage() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#fff',
-        gap: 24,
+        gap: 48,
       }}
     >
-      {/* Logo — 占屏幕 1/3 宽度 */}
-      <img
-        src={theme.logo}
-        alt="Kim's CareerOS"
-        onClick={() => setShowPassword(!showPassword)}
+      {/* Logo — 点击出密码框+换字体 */}
+      <div
+        onClick={() => { setShowPassword(true); cycleFont(); }}
         style={{
-          width: '33vw',
-          maxWidth: 400,
-          minWidth: 200,
-          objectFit: 'contain',
+          fontSize: 'clamp(36px, 7vw, 64px)',
+          fontFamily: fontStyle.family,
+          fontWeight: fontStyle.weight,
+          fontStyle: fontStyle.style,
+          color: fontStyle.color,
+          textTransform: fontStyle.transform,
           cursor: 'pointer',
-          transition: 'transform 0.3s',
-          transform: showPassword ? 'scale(0.8)' : 'scale(1)',
+          transition: 'all 0.3s',
+          transform: showPassword ? 'scale(0.9)' : 'scale(1)',
+          letterSpacing: fontStyle.transform === 'uppercase' ? '0.12em' : '0.04em',
+          userSelect: 'none',
         }}
-        title="点击进入管理后台"
-      />
+        title={`${fontStyle.name} — 点击登录`}
+      >
+        Kim&apos;s CareerOS
+      </div>
 
       {/* 访客按钮 — 密码未显示时 */}
       {!showPassword && (
@@ -79,7 +84,6 @@ export default function LoginPage() {
             padding: '10px 40px',
             borderRadius: 24,
             border: '1.5px solid #d9d9d9',
-            background: '#fff',
             color: '#666',
             fontSize: 15,
             cursor: 'pointer',
@@ -112,7 +116,7 @@ export default function LoginPage() {
             onPressEnter={handleLogin}
             disabled={loading}
             autoFocus
-            style={{ width: 280 }}
+            style={{ width: 200, height: 32, fontSize: 14 }}
           />
         </div>
       )}

@@ -43,7 +43,12 @@ interface CreateApplicationBody {
   currentStage?: string;
   stageDetail?: string | null;
   source?: string | null;
+  location?: string | null;
   appliedDate?: string | null;
+  jdLink?: string | null;
+  jdText?: string | null;
+  resumeVersion?: string | null;
+  endReason?: string | null;
   notes?: string | null;
 }
 
@@ -87,10 +92,15 @@ export async function POST(request: NextRequest) {
         industry: body.industry ?? null,
         salaryMin: body.salaryMin ?? null,
         salaryMax: body.salaryMax ?? null,
-        currentStage: body.currentStage ?? '已投递',
+        currentStage: body.currentStage ?? '未投递',
         stageDetail: body.stageDetail ?? null,
         source: body.source ?? null,
+        location: body.location ?? null,
         appliedDate: body.appliedDate ? new Date(body.appliedDate) : null,
+        jdLink: body.jdLink ?? null,
+        jdText: body.jdText ?? null,
+        resumeVersion: body.resumeVersion ?? null,
+        endReason: body.endReason ?? null,
         notes: body.notes ?? null,
       },
       include: {

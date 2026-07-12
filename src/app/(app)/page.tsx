@@ -11,6 +11,7 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 dayjs.extend(isoWeek);
 dayjs.locale('zh-cn');
 
+
 const { Title, Text } = Typography;
 
 interface Todo {
@@ -22,54 +23,6 @@ interface Todo {
 
 const TODO_COLORS = ['#1677ff','#52c41a','#fa8c16','#ff4d4f','#722ed1','#13c2c2','#eb2f96','#faad14','#2f54eb','#a0d911'];
 
-const MOVIE_QUOTES = [
-  { quote: '生活就像一盒巧克力，你永远不知道下一颗是什么味道。', movie: '《阿甘正传》' },
-  { quote: '希望是好事，也许是世间最好的事，好事永不消逝。', movie: '《肖申克的救赎》' },
-  { quote: '要想人前显贵，必得人后受罪。', movie: '《霸王别姬》' },
-  { quote: '人生不能像做菜，等所有材料准备好了才下锅。', movie: '《饮食男女》' },
-  { quote: '记住，希望是好事，也许是世间最好的事。', movie: '《肖申克的救赎》' },
-  { quote: '做人如果没有梦想，那跟咸鱼有什么分别？', movie: '《少林足球》' },
-  { quote: '说的是一辈子，差一年一个月一天一个时辰都不算一辈子。', movie: '《霸王别姬》' },
-  { quote: 'Carpe diem. Seize the day, boys. Make your lives extraordinary.', translation: '及时行乐，把握今天，让生命非凡。', movie: '《死亡诗社》' },
-  { quote: '有些鸟是关不住的，它们的羽毛太鲜亮了。', movie: '《肖申克的救赎》' },
-  { quote: '往往都是事情改变人，人改变不了事情。', movie: '《无间道》' },
-  { quote: '出来混，迟早要还的。', movie: '《无间道》' },
-  { quote: '我猜中了开头，却猜不中这结局。', movie: '《大话西游》' },
-  { quote: '曾经有一份真挚的爱情摆在我面前，我没有珍惜。', movie: '《大话西游》' },
-  { quote: 'You jump, I jump.', translation: '你跳，我就跳。', movie: '《泰坦尼克号》' },
-  { quote: '人生总是这么苦，还是只有童年如此？——总是如此。', movie: '《这个杀手不太冷》' },
-  { quote: '能力越大，责任越大。', movie: '《蜘蛛侠》' },
-  { quote: '我不做大哥好多年。', movie: '《英雄本色》' },
-  { quote: 'To infinity and beyond!', translation: '飞向宇宙，浩瀚无垠！', movie: '《玩具总动员》' },
-  { quote: 'Yesterday is history. Tomorrow is a mystery. Today is a gift.', translation: '昨日已成历史，明日尚未可知，今日是份礼物。', movie: '《功夫熊猫》' },
-  { quote: '我们一路奋战，不是为了改变世界，而是不让世界改变我们。', movie: '《熔炉》' },
-  { quote: '世界上只有一种英雄主义，就是在认清生活真相之后依然热爱生活。', movie: '《闻香识女人》' },
-  { quote: '让子弹飞一会儿。', movie: '《让子弹飞》' },
-  { quote: '念念不忘，必有回响。', movie: '《一代宗师》' },
-  { quote: '人如果没有了理想，那和无忧无虑有什么区别。', movie: '《后会无期》' },
-  { quote: 'Keep your friends close, but your enemies closer.', translation: '亲近朋友，更要亲近敌人。', movie: '《教父2》' },
-  { quote: '我听别人说这世界上有一种鸟是没有脚的。', movie: '《阿飞正传》' },
-  { quote: '有些事现在不做，一辈子都不会做了。', movie: '《练习曲》' },
-  { quote: 'Not all who wander are lost.', translation: '并非所有漂泊者都迷失了方向。', movie: '《指环王》' },
-  { quote: '决定我们成为什么样的人，不是我们的能力，而是我们的选择。', movie: '《哈利·波特》' },
-  { quote: '人最大的烦恼，就是记性太好。', movie: '《东邪西毒》' },
-  { quote: 'May the Force be with you.', translation: '愿原力与你同在。', movie: '《星球大战》' },
-  { quote: '风往哪个方向吹，草就往哪个方向倒。年轻的时候我以为自己是风，遍体鳞伤后才知道自己是草。', movie: '《艋舺》' },
-  { quote: 'I\'ll be back.', translation: '我会回来的。', movie: '《终结者》' },
-  { quote: '人生如棋，落子无悔。', movie: '《一代宗师》' },
-  { quote: 'Why so serious?', translation: '干嘛那么严肃？', movie: '《蝙蝠侠：黑暗骑士》' },
-  { quote: '你保护世界，我保护你。', movie: '《少年的你》' },
-  { quote: 'Here\'s looking at you, kid.', translation: '永志不忘，亲爱的。', movie: '《卡萨布兰卡》' },
-  { quote: '你越想忘记一个人时，其实你越会记得他。', movie: '《东邪西毒》' },
-  { quote: 'My precious.', translation: '我的宝贝。', movie: '《指环王》' },
-  { quote: '做人要厚道。', movie: '《手机》' },
-];
-
-interface MovieQuote { quote: string; movie: string; translation?: string; }
-function getDailyQuote(dateStr: string): MovieQuote {
-  const idx = dateStr.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % MOVIE_QUOTES.length;
-  return MOVIE_QUOTES[idx] as MovieQuote;
-}
 
 type CalendarView = 'week' | 'month' | 'year' | 'day';
 
@@ -87,6 +40,39 @@ export default function DashboardPage() {
   const [qaCategory, setQaCategory] = useState<string>('work');
   const qaInputRef = useRef<InputRef>(null);
   const [focusKey, setFocusKey] = useState(0);
+  // 隐私模式
+  const [workMode, setWorkMode] = useState(false); // true=仅工作内容
+  // 本周重点
+  const [weeklyWork, setWeeklyWork] = useState('');
+  const [weeklyPersonal, setWeeklyPersonal] = useState('');
+  const [wfModalOpen, setWfModalOpen] = useState(false);
+  const weekMonday = useMemo(() => {
+    const d = currentDate.toDate();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    d.setDate(diff);
+    return d.toISOString().slice(0, 10);
+  }, [currentDate]);
+  const fetchWeeklyFocus = async () => {
+    try {
+      const res = await fetch(`/api/weekly-focus?week=${weekMonday}`);
+      const data = await res.json();
+      setWeeklyWork(data.workContent || '');
+      setWeeklyPersonal(data.personalContent || '');
+    } catch { /* ignore */ }
+  };
+  useEffect(() => { fetchWeeklyFocus(); }, [weekMonday]);
+  const saveWeeklyWork = async (v: string) => {
+    setWeeklyWork(v);
+    fetch('/api/weekly-focus', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weekStart: weekMonday, workContent: v }) }).catch(()=>{});
+  };
+  const saveWeeklyPersonal = async (v: string) => {
+    setWeeklyPersonal(v);
+    fetch('/api/weekly-focus', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weekStart: weekMonday, personalContent: v }) }).catch(()=>{});
+  };
+  // 过滤：工作模式隐藏个人待办
+  const visibleTodos = useMemo(() => workMode ? todos.filter(t => t.category !== 'personal') : todos, [todos, workMode]);
+  const visibleWeeklyContent = workMode ? weeklyWork : [weeklyWork, weeklyPersonal].filter(Boolean).join('\n');
   // 置顶
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => {
     if (typeof window === 'undefined') return new Set<string>();
@@ -130,6 +116,11 @@ export default function DashboardPage() {
   const [reportText, setReportText] = useState('');
 
   const todayStr = dayjs().format('YYYY-MM-DD');
+  const [dailyQuote, setDailyQuote] = useState<{ quote: string; movie: string; translation?: string } | null>(null);
+  useEffect(() => {
+    fetch(`/api/movie-quote?date=${todayStr}`).then(r => r.json()).then(setDailyQuote).catch(() => {});
+  }, [todayStr]);
+  const isTodayDetail = currentDate.isSame(dayjs(), 'day');
   const yearStr = currentDate.format('YYYY');
 
   // 加载法定节假日
@@ -176,9 +167,10 @@ export default function DashboardPage() {
 
   const todosByDate = useMemo(() => {
     const map: Record<string, Todo[]> = {};
-    for (const t of todos) { if (!map[t.date]) map[t.date] = []; map[t.date].push(t); }
+    const source = workMode ? todos.filter(t => t.category !== 'personal') : todos;
+    for (const t of source) { if (!map[t.date]) map[t.date] = []; map[t.date].push(t); }
     return map;
-  }, [todos]);
+  }, [todos, workMode]);
 
   // ======== 快速添加 ========
   const quickAdd = async () => {
@@ -359,32 +351,37 @@ export default function DashboardPage() {
     (todosByDate[dayDateStr] || []).slice().sort((a,b)=>(a.time||'99')>(b.time||'99')?1:-1),
   [todosByDate, dayDateStr]);
   const dayTimedTodos = useMemo(() => dayTodos.filter(t => t.time), [dayTodos]);
-  const dayUntimedTodos = useMemo(() => dayTodos.filter(t => !t.time), [dayTodos]);
+  const dayUntimedTodos = useMemo(() => {
+    const untimed = dayTodos.filter(t => !t.time);
+    return workMode ? untimed.filter(t => t.category !== 'personal') : untimed;
+  }, [dayTodos, workMode]);
   // 按时段拆分
   const morningTodos = useMemo(() => dayTimedTodos.filter(t => parseInt(t.time || '0') < 12), [dayTimedTodos]);
   const afternoonTodos = useMemo(() => dayTimedTodos.filter(t => parseInt(t.time || '0') >= 12), [dayTimedTodos]);
   const morningHours = Array.from({length: 12}, (_, i) => i); // 0-11
   const afternoonHours = Array.from({length: 12}, (_, i) => i + 12); // 12-23
-  // 顺延待办：前一天未完成的待办，顺延到今天
-  const yesterdayStr = currentDate.subtract(1, 'day').format('YYYY-MM-DD');
-  const carriedTodos = useMemo(() =>
-    todos.filter((t) => !t.time && !t.completed && t.date === yesterdayStr),
-  [todos, yesterdayStr]);
+  // 顺延待办：所有过去日期未完成的待办，持续顺延直到确认，仅今天视图显示
+  const carriedTodos = useMemo(() => {
+    if (!isTodayDetail) return [];
+    const carried = todos.filter((t) => !t.time && !t.completed && t.date < todayStr);
+    return workMode ? carried.filter(t => t.category !== 'personal') : carried;
+  }, [todos, todayStr, isTodayDetail, workMode]);
   // 待办列表（置顶优先，引用稳定）
+  // 过往日期不显示未完成待办——它们已顺延到今天的 carriedTodos 区域
+  const isPastDay = dayDateStr < todayStr;
   const sortedIncompleteTodos = useMemo(() =>
-    dayUntimedTodos.filter(t => !t.completed).sort((a, b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0)),
-  [dayUntimedTodos, pinnedIds]);
+    isPastDay ? [] : dayUntimedTodos.filter(t => !t.completed).sort((a, b) => (pinnedIds.has(b.id) ? 1 : 0) - (pinnedIds.has(a.id) ? 1 : 0)),
+  [dayUntimedTodos, pinnedIds, isPastDay]);
   const sortedCompleteTodos = useMemo(() =>
     dayUntimedTodos.filter(t => t.completed),
   [dayUntimedTodos]);
   const nowHour = dayjs().hour();
-  const isTodayDetail = currentDate.isSame(dayjs(), 'day');
 
   // ======== 切换到日视图 ========
   const goToDay = (d: Dayjs) => {
     setCurrentDate(d);
     setView('day');
-    setQaTitle(''); setQaTime(null); setQaColor(TODO_COLORS[Math.floor(Math.random() * TODO_COLORS.length)]); setQaCategory(null);
+    setQaTitle(''); setQaTime(null); setQaColor(TODO_COLORS[Math.floor(Math.random() * TODO_COLORS.length)]); setQaCategory('work');
     setTimeout(() => setFocusKey(k => k + 1), 100);
   };
 
@@ -434,13 +431,13 @@ export default function DashboardPage() {
           <Button icon={<LeftOutlined />} size="small" onClick={goPrev} style={{ borderRadius: 20 }} />
           <Text strong style={{ fontSize: 15, minWidth: 170, textAlign: 'center', color: '#444' }}>{navLabel}</Text>
           <Button icon={<RightOutlined />} size="small" onClick={goNext} style={{ borderRadius: 20 }} />
-          <Button size="small" onClick={() => { setCurrentDate(dayjs()); if (view==='day') { setQaTitle(''); setQaTime(null); setQaCategory(null); setFocusKey(k=>k+1); } }} style={{ borderRadius: 20 }}>今天</Button>
+          <Button size="small" onClick={() => { setCurrentDate(dayjs()); if (view==='day') { setQaTitle(''); setQaTime(null); setQaCategory('work'); setFocusKey(k=>k+1); } }} style={{ borderRadius: 20 }}>今天</Button>
           {view === 'week' && (
             <Button size="small" icon={<ExportOutlined />} onClick={exportWeekReport} style={{ borderRadius: 20 }}>导出周报</Button>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Segmented value={view} onChange={(v) => { setView(v as CalendarView); if (v==='day') { setQaTitle(''); setQaTime(null); setQaCategory(null); setTimeout(()=>setFocusKey(k=>k+1),100); } }}
+          <Segmented value={view} onChange={(v) => { setView(v as CalendarView); if (v==='day') { setQaTitle(''); setQaTime(null); setQaCategory('work'); setTimeout(()=>setFocusKey(k=>k+1),100); } }}
             style={{ borderRadius: 24 }}
             options={[
               { label: '日', value: 'day' },
@@ -470,7 +467,7 @@ export default function DashboardPage() {
               borderRadius: isCurrentHour ? 12 : 8,
               cursor: todos.length === 0 ? 'pointer' : 'default',
               transition: 'background 0.15s',
-            }} onClick={() => { if (todos.length === 0) openNewAtHour(hourStr); }}
+            }} onClick={() => openNewAtHour(hourStr)}
               onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, hourStr)}>
               <Text type="secondary" style={{
                 width: 42, flexShrink: 0, textAlign: 'right', fontSize: 13,
@@ -571,12 +568,54 @@ export default function DashboardPage() {
 
         {/* 待办列 */}
         <div style={{ display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowAnchor: 'none' }}>
+          {/* 本周重点 */}
+          <div
+            onClick={() => setWfModalOpen(true)}
+            style={{
+              margin: '6px 8px 4px',
+              padding: '10px 12px',
+              borderRadius: 12,
+              background: (weeklyWork || weeklyPersonal) ? '#fffdf5' : '#fafafa',
+              border: (weeklyWork || weeklyPersonal) ? '1px solid #f5e6b8' : '1px dashed #e8e8e8',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            <div style={{ fontSize: 12, color: '#b8860b', fontWeight: 500, marginBottom: (weeklyWork || weeklyPersonal) ? 4 : 0 }}>
+              📌 本周重点
+            </div>
+            {/* 工作重点 */}
+            {weeklyWork ? (
+              <div style={{ fontSize: 12, color: '#666', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 2 }}>
+                <span style={{ fontSize: 11, color: '#8b7cf0', fontWeight: 600 }}>工作</span> {weeklyWork}
+              </div>
+            ) : null}
+            {/* 个人重点 — 仅非工作模式显示 */}
+            {!workMode && weeklyPersonal ? (
+              <div style={{ fontSize: 12, color: '#999', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+                <span style={{ fontSize: 11, color: '#f0a060', fontWeight: 600 }}>个人</span> {weeklyPersonal}
+              </div>
+            ) : null}
+            {!weeklyWork && !weeklyPersonal ? (
+              <div style={{ fontSize: 12, color: '#ccc' }}>点击设置…</div>
+            ) : null}
+          </div>
+          {/* 待办标题 */}
           <div style={{
-            fontWeight: 600, fontSize: 13, color: '#666', padding: '6px 12px',
-            background: '#faf8f6', borderBottom: '1px solid #f0ece8',
+            fontWeight: 600, fontSize: 13, color: '#666', padding: '16px 12px 6px',
+            background: '#faf8f6', borderTop: '1px solid #f0ece8',
             position: 'sticky', top: 0, zIndex: 1, display: 'flex', alignItems: 'center', gap: 6,
+            marginTop: 12,
           }}>
             📋 待办
+            <span
+              onClick={(e) => { e.stopPropagation(); setWorkMode(!workMode); }}
+              title={workMode ? '显示全部' : '仅工作'}
+              style={{
+                marginLeft: 'auto', fontSize: 16, cursor: 'pointer', userSelect: 'none',
+                opacity: workMode ? 0.4 : 1, transition: 'opacity 0.2s',
+              }}
+            >⭐</span>
           </div>
           <div style={{ padding: '4px 4px' }}>
             {/* 未完成（置顶优先） */}
@@ -614,7 +653,6 @@ export default function DashboardPage() {
             {/* 顺延待办 */}
             {carriedTodos.length > 0 && (
               <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed #eee' }}>
-                <Text type="secondary" style={{ fontSize: 11, marginBottom: 6, display: 'block' }}>顺延</Text>
                 {carriedTodos.map((t) => (
                   <div key={t.id} onClick={() => openEdit(t)} style={{
                     display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', marginBottom: 5,
@@ -627,7 +665,7 @@ export default function DashboardPage() {
                       {t.category === 'personal' && <span style={{ marginRight: 3 }}>🐱</span>}
                       {t.title}
                     </Text>
-                    <Text type="secondary" style={{ fontSize: 10 }}>{t.date}</Text>
+                    <Text type="secondary" style={{ fontSize: 10 }}>{t.date.slice(5)}</Text>
                     <Button type="text" size="small" danger icon={<DeleteOutlined style={{ fontSize: 10 }} />}
                       onClick={(e) => { e.stopPropagation(); deleteTodo(t.id); }} />
                   </div>
@@ -776,14 +814,49 @@ export default function DashboardPage() {
         <Title level={3} style={{ margin: 0, fontWeight: 600, fontSize: 22, letterSpacing: 1 }}>
           今天的Kim依旧光芒万丈
         </Title>
-        {(() => { const dq = getDailyQuote(todayStr); return (
-          <Text type="secondary" style={{ fontSize: 13, fontStyle: 'italic', color: '#bbb', maxWidth: 400, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-            「{dq.quote}」{dq.translation && <span style={{ fontStyle: 'normal' }}>（{dq.translation}）</span>}
-            <span style={{ fontStyle: 'normal', marginLeft: 4 }}>— {dq.movie}</span>
-          </Text>); })()}
+        {dailyQuote && (
+          <div style={{ fontSize: 13, color: '#bbb', maxWidth: 420, textAlign: 'right', lineHeight: 1.7 }}>
+            <div style={{ fontStyle: 'italic' }}>
+              「{dailyQuote.quote}」
+              {dailyQuote.translation && <div style={{ fontStyle: 'normal', marginTop: 2 }}>{dailyQuote.translation}</div>}
+            </div>
+            <div style={{ fontStyle: 'normal', fontSize: 12, color: '#ccc' }}>— {dailyQuote.movie}</div>
+          </div>)}
       </div>
 
       {renderNavBar()}
+
+      {/* 本周重点 — 日视图和周视图显示 */}
+      {/* 本周重点 — 仅周视图显示整行卡片 */}
+      {view === 'week' && (
+        <div
+          onClick={() => setWfModalOpen(true)}
+          style={{
+            marginTop: 12,
+            padding: '14px 20px',
+            borderRadius: 16,
+            background: '#fff',
+            border: '1px solid #eee',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            transition: 'box-shadow 0.2s',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)'; }}
+        >
+          <span style={{ fontSize: 16 }}>📌</span>
+          <span style={{ fontSize: 13, color: '#999', fontWeight: 500 }}>本周重点</span>
+          <span style={{
+            flex: 1, fontSize: 14, color: visibleWeeklyContent ? '#444' : '#ccc',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {visibleWeeklyContent || '点击添加本周重点事项…'}
+          </span>
+        </div>
+      )}
 
       <div style={{
         marginTop: 8, padding: view === 'day' ? '16px 24px' : '16px 20px',
@@ -903,6 +976,59 @@ export default function DashboardPage() {
           margin: 0,
         }}>{reportText}</pre>
       </Modal>
+
+      {/* 本周重点便签弹窗 */}
+      <Modal
+        open={wfModalOpen}
+        onCancel={() => setWfModalOpen(false)}
+        footer={null}
+        width={520}
+        closable={false}
+        maskStyle={{ background: 'rgba(0,0,0,0.3)' }}
+        styles={{ body: { padding: 0 } }}
+      >
+        <div style={{ padding: '24px 28px 28px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#333' }}>📌 本周重点</span>
+            <span
+              onClick={() => { setWfModalOpen(false); }}
+              style={{ fontSize: 20, color: '#bbb', cursor: 'pointer', lineHeight: 1 }}
+            >×</span>
+          </div>
+          {/* 工作重点 */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 13, color: '#8b7cf0', fontWeight: 500, marginBottom: 6 }}>💼 工作</div>
+            <Input.TextArea
+              value={weeklyWork}
+              onChange={(e) => saveWeeklyWork(e.target.value)}
+              placeholder="这周工作上的重点…"
+              rows={3}
+              style={{
+                fontSize: 14, border: '1px solid #eee', background: '#fafafa',
+                borderRadius: 10, padding: 12, resize: 'none', lineHeight: 1.8,
+              }}
+            />
+          </div>
+          {/* 个人重点 */}
+          <div>
+            <div style={{ fontSize: 13, color: '#f0a060', fontWeight: 500, marginBottom: 6 }}>🐱 个人</div>
+            <Input.TextArea
+              value={weeklyPersonal}
+              onChange={(e) => saveWeeklyPersonal(e.target.value)}
+              placeholder="这周个人的事…"
+              rows={3}
+              style={{
+                fontSize: 14, border: '1px solid #eee', background: '#fafafa',
+                borderRadius: 10, padding: 12, resize: 'none', lineHeight: 1.8,
+              }}
+            />
+          </div>
+          <div style={{ textAlign: 'right', marginTop: 16 }}>
+            <Button onClick={() => setWfModalOpen(false)} style={{ borderRadius: 20 }}>完成</Button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 }

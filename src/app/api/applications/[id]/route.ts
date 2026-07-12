@@ -26,12 +26,26 @@ export async function PATCH(
 ) {
   try {
     const body = await req.json();
-    const { companyName, ...data } = body;
+    const { companyName, companyScale, companyCity, companyWebsite, ...data } = body;
 
+    // Handle date conversion
+    if (data.appliedDate && typeof data.appliedDate === 'string') {
+      data.appliedDate = new Date(data.appliedDate);
+    }
+
+    // Update company info
     if (companyName !== undefined) {
       let company = await prisma.company.findFirst({ where: { name: companyName } });
       if (!company) {
         company = await prisma.company.create({ data: { name: companyName } });
+      }
+      // Update company detail fields if provided
+      const coUpdates: any = {};
+      if (companyScale !== undefined) coUpdates.scale = companyScale || null;
+      if (companyCity !== undefined) coUpdates.city = companyCity || null;
+      if (companyWebsite !== undefined) coUpdates.website = companyWebsite || null;
+      if (Object.keys(coUpdates).length > 0) {
+        await prisma.company.update({ where: { id: company.id }, data: coUpdates });
       }
       data.companyId = company.id;
     }

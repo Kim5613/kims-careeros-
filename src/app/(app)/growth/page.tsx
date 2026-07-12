@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useApiList } from '@/lib/hooks/useApi';
 import {
   Card,
@@ -513,6 +514,7 @@ function AnnualReviewCard({ review }: { review: AnnualReview }) {
 // ────────────────────────────────────────────
 
 export default function GrowthPage() {
+  const router = useRouter();
   const { data: milestones, loading: msLoading, create: msCreate } = useApiList<Milestone>({ endpoint: '/api/milestones', mockData: MOCK_MILESTONES });
   const { data: achievements, loading: achLoading, create: achCreate } = useApiList<Achievement>({ endpoint: '/api/achievements', mockData: MOCK_ACHIEVEMENTS });
   const { data: goals, loading: goalLoading, create: goalCreate } = useApiList<GoalOKR>({ endpoint: '/api/goals', mockData: MOCK_GOALS });
@@ -714,13 +716,30 @@ export default function GrowthPage() {
   return (
     <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
       {/* ── Header ── */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>
-          成长档案
-        </Title>
-        <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 0 }}>
-          记录职业里程碑、成就亮点、OKR 目标与年度复盘
-        </Paragraph>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div>
+          <Title level={3} style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>
+            成长档案
+          </Title>
+          <Paragraph type="secondary" style={{ marginTop: 4, marginBottom: 0 }}>
+            记录职业里程碑、成就亮点、OKR 目标与年度复盘
+          </Paragraph>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button
+            style={{ borderRadius: 20 }}
+            onClick={() => router.push('/growth/career-sphere')}
+          >
+            🌐 职业宇宙
+          </Button>
+          <Button
+            icon={<AimOutlined />}
+            style={{ borderRadius: 20 }}
+            onClick={() => router.push('/growth/skill-map')}
+          >
+            能力地图
+          </Button>
+        </div>
       </div>
 
       {/* ── Section 1: Career Milestones Timeline ── */}

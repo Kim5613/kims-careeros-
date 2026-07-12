@@ -19,3 +19,57 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #ccc; }
+
+/* 侧边栏卡片翻转动画 */
+.sidebar-stage .ant-menu-item,
+.sidebar-stage .ant-menu-submenu-title {
+  animation: cardFlipIn 1s ease both;
+  transform-origin: left center;
+}
+.sidebar-stage .ant-menu-item:nth-child(1),
+.sidebar-stage .ant-menu-submenu:nth-child(1) > .ant-menu-submenu-title { animation-delay: 0.04s; }
+.sidebar-stage .ant-menu-item:nth-child(2),
+.sidebar-stage .ant-menu-submenu:nth-child(2) > .ant-menu-submenu-title { animation-delay: 0.10s; }
+.sidebar-stage .ant-menu-item:nth-child(3),
+.sidebar-stage .ant-menu-submenu:nth-child(3) > .ant-menu-submenu-title { animation-delay: 0.16s; }
+.sidebar-stage .ant-menu-item:nth-child(4),
+.sidebar-stage .ant-menu-submenu:nth-child(4) > .ant-menu-submenu-title { animation-delay: 0.22s; }
+.sidebar-stage .ant-menu-item:nth-child(5),
+.sidebar-stage .ant-menu-submenu:nth-child(5) > .ant-menu-submenu-title { animation-delay: 0.28s; }
+.sidebar-stage .ant-menu-item:nth-child(6),
+.sidebar-stage .ant-menu-submenu:nth-child(6) > .ant-menu-submenu-title { animation-delay: 0.34s; }
+@keyframes cardFlipIn {
+  from {
+    opacity: 0;
+    transform: rotateY(-70deg) translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(0deg) translateX(0);
+  }
+}
+
+/* ── View Transitions: 职业宇宙 ⇄ 引力透镜 空间连续过渡 ── */
+::view-transition-old(root) {
+  animation: vt-out 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+::view-transition-new(root) {
+  animation: vt-in 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+    filter: blur(2px);
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

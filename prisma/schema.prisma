@@ -99,10 +99,15 @@ model JobApplication {
   salaryMin      Int?
   salaryMax      Int?
   offerSalary    Int?
-  currentStage   String   @default("已投递")  // 一级：已投递/面试/offer/已入职/已结束
-  stageDetail    String?                      // 二级：已沟通/一面/二面/三面/终面/已谈薪/接offer/拒offer
-  source         String?                      // 招聘网站/猎头/内推/官网
+  currentStage   String   @default("未投递") // 未投递/已投递/面试/offer/已入职/已结束
+  stageDetail    String?                     // 二级：已沟通/一面/二面/三面/终面/已谈薪/接offer/拒offer
+  source         String?                     // 招聘网站/猎头/内推/官网
+  location       String?                     // base地（城市）
   appliedDate    DateTime?
+  jdLink         String?                     // JD 链接
+  jdText         String?  @db.Text           // JD 原文/描述
+  resumeVersion  String?                     // 关联简历版本
+  endReason      String?                     // 结束原因：简历挂/面试挂/ghost/自己放弃/已入职
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -412,4 +417,28 @@ model Todo {
 
   @@index([date])
   @@map("todos")
+}
+
+// 电影台词库
+model MovieQuote {
+  id          String    @id @default(cuid())
+  quote       String
+  translation String?                   // 中文翻译（原句非中文时）
+  movie       String
+  used        Boolean   @default(false)
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("movie_quotes")
+}
+
+// 本周重点便签
+model WeeklyFocus {
+  id              String   @id @default(cuid())
+  weekStart       String   @unique               // 周一日期 YYYY-MM-DD
+  workContent     String   @default("") @db.Text
+  personalContent String   @default("") @db.Text
+  updatedAt       DateTime @updatedAt
+
+  @@map("weekly_focus")
 }

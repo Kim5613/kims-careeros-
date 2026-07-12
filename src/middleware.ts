@@ -7,7 +7,7 @@ const getSecret = () => new TextEncoder().encode(process.env.JWT_SECRET || 'fall
 const PUBLIC_PATHS = ['/login', '/api/auth/login'];
 
 // 静态资源和 API 不需要拦截
-const SKIP_PREFIXES = ['/_next', '/favicon.ico', '/api/auth/'];
+const SKIP_PREFIXES = ['/_next', '/favicon.ico', '/api/auth/', '/logos/'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

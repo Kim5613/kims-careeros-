@@ -1,42 +1,71 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Layout } from 'antd';
+import { usePathname } from 'next/navigation';
 import SidebarContent from './Sidebar';
 
-const { Sider } = Layout;
+const DARK_ROUTES = ['/growth/career-sphere', '/growth/domain/'];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
+  const pathname = usePathname();
+  const isDark = DARK_ROUTES.some((r) => pathname.startsWith(r));
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sider
-        width={240}
-        collapsible
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        theme="light"
+      {/* 触发带 — 左侧边缘细线 */}
+      <div
+        onMouseEnter={() => setCollapsed(false)}
         style={{
           position: 'fixed',
           left: 0,
           top: 0,
           bottom: 0,
-          overflow: 'auto',
+          width: 10,
+          zIndex: 15,
+          cursor: 'pointer',
+        }}
+      />
+
+      {/* 毛玻璃菜单 + 翻转卡片动画 */}
+      <aside
+        onMouseLeave={() => setCollapsed(true)}
+        className={!collapsed ? 'sidebar-open' : ''}
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: collapsed ? 0 : 260,
+          overflow: 'hidden',
           height: '100vh',
           zIndex: 10,
-          background: '#fcfbfa',
-          borderRight: '1px solid #f0ece8',
+          background: isDark
+            ? 'rgba(13,13,13,0.85)'
+            : 'rgba(255,255,255,0.72)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          borderRight: isDark
+            ? '1px solid rgba(255,255,255,0.08)'
+            : '1px solid rgba(0,0,0,0.06)',
+          transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <SidebarContent collapsed={collapsed} />
-      </Sider>
+        {!collapsed && (
+          <div className="sidebar-stage">
+            <SidebarContent collapsed={false} />
+          </div>
+        )}
+      </aside>
+
+      {/* 主内容 */}
       <main
         style={{
           flex: 1,
-          marginLeft: collapsed ? 80 : 240,
-          background: '#faf8f6',
-          transition: 'margin-left 0.2s',
+          marginLeft: collapsed ? 0 : 260,
+          transition: 'margin-left 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
           minHeight: '100vh',
         }}
       >
