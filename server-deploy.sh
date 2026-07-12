@@ -1,92 +1,93 @@
 #!/bin/bash
-# Kim's CareerOS 服务器部署脚本
-# 在阿里云 Workbench 终端中逐段执行（先 sudo -i）
+# Kim's CareerOS 服务器部署脚本（v2 — 带错误检查和验证）
+# 在阿里云 Workbench 终端中执行（先 sudo -i）
+# 用法: chmod +x server-deploy.sh && ./server-deploy.sh
 
-set -e
+set -e  # 任何命令失败立即停止
 
-echo "========== 1. 检查环境 =========="
-node -v
-npm -v
-nginx -v 2>&1 || echo "nginx 未安装"
-pm2 -v 2>/dev/null || echo "pm2 未安装，将安装..."
-psql --version 2>/dev/null || echo "psql 未安装，将安装..."
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+check() { echo -e "${GREEN}[OK]${NC} $1"; }
+fail() { echo -e "${RED}[FAIL]${NC} $1"; exit 1; }
 
-echo "========== 2. 克隆代码 =========="
-cd /opt
-# 先删旧的（如果有）
-rm -rf /opt/hr-platform
-# 用镜像克隆（国内快）
-git clone https://ghproxy.cc/https://github.com/Kim5613/kims-careeros-.git hr-platform 2>/dev/null || \
-git clone https://github.com/Kim5613/kims-careeros-.git hr-platform
+echo "==== Kim's CareerOS 部署 v1.1 ===="
 
+# —— 0. 检查 git 状态 & 清理冲突 ——
 cd /opt/hr-platform
+echo "[0] 清理本地修改..."
+git checkout -- . 2>/dev/null || true
+git clean -fd 2>/dev/null || true
 
-echo "========== 3. 配置环境变量 =========="
-cat > .env << 'ENVEOF'
-DATABASE_URL="postgresql://hr_user:Kim2026Secure@localhost:5432/hr_platform"
-PRISMA_ENGINES_MIRROR="https://cdn.npmmirror.com/binaries/prisma"
-UPLOAD_DIR="/data/careeros-uploads"
-ACCESS_PASSWORD="111"
-JWT_SECRET="careeros-jwt-secret-change-in-production"
-ENVEOF
+# —— 1. 拉代码 ——
+echo "[1] 拉取最新代码..."
+EXPECTED_SHA=$(git rev-parse HEAD)
+git pull origin main || fail "git pull 失败，检查网络或 GitHub 访问"
+ACTUAL_SHA=$(git rev-parse HEAD)
 
-echo "========== 4. 创建上传目录 =========="
-mkdir -p /data/careeros-uploads
+echo "  前: $EXPECTED_SHA"
+echo "  后: $ACTUAL_SHA"
 
-echo "========== 5. 设置 PostgreSQL（如果还没启动）=========="
-# 检查 PostgreSQL 是否在运行
-if ! systemctl is-active --quiet postgresql 2>/dev/null; then
-    echo "启动 PostgreSQL..."
-    systemctl start postgresql || service postgresql start
+if [ "$EXPECTED_SHA" = "$ACTUAL_SHA" ]; then
+    echo "  代码已是最新，跳过后续步骤"
+    exit 0
 fi
+check "代码已更新到 $(git log -1 --oneline)"
 
-# 检查数据库是否存在，不存在就创建
-su - postgres -c "psql -c \"SELECT 1 FROM pg_roles WHERE rolname='hr_user'\"" 2>/dev/null | grep -q 1 || {
-    echo "创建数据库用户..."
-    su - postgres -c "psql -c \"CREATE USER hr_user WITH PASSWORD 'Kim2026Secure';\"" 2>/dev/null
-    su - postgres -c "psql -c \"CREATE DATABASE hr_platform OWNER hr_user;\"" 2>/dev/null
-    su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE hr_platform TO hr_user;\"" 2>/dev/null
-}
+# —— 2. 环境 ——
+echo "[2] 检查 .env..."
+[ -f .env ] || fail ".env 文件不存在"
+check ".env 存在"
 
-echo "========== 6. 安装依赖 =========="
-npm install
+# —— 3. 安装依赖 ——
+echo "[3] npm install..."
+npm install || fail "npm install 失败"
+check "依赖安装完成"
 
-echo "========== 7. 数据库建表 =========="
-npx prisma db push
+# —— 4. 数据库同步（必须在最新代码后） ——
+echo "[4] Prisma db push..."
+npx prisma db push || fail "prisma db push 失败"
+check "数据库 schema 同步完成"
 
-echo "========== 8. 构建 =========="
-npm run build
+# —— 5. 构建 ——
+echo "[5] npm run build..."
+npm run build || fail "构建失败（可能是内存不足，先加 swap 再试）"
+check "构建成功"
 
-echo "========== 9. 停止旧进程 + 启动 =========="
+# —— 6. PM2 启动 ——
+echo "[6] PM2 启动..."
 pm2 delete hr-platform 2>/dev/null || true
 pm2 start npm --name "hr-platform" -- start
 pm2 save
-pm2 startup 2>/dev/null || true
 
-echo "========== 10. 配置 Nginx =========="
-cat > /etc/nginx/sites-available/hr-platform << 'NGINXEOF'
-server {
-    listen 80;
-    server_name _;
-    client_max_body_size 50m;
+# 确保下次重启自动恢复
+pm2 startup systemd -u root 2>/dev/null || true
 
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-NGINXEOF
+sleep 3
+pm2 status | grep hr-platform | grep -q online || fail "PM2 进程未正常启动"
+check "PM2 进程 online"
 
-ln -sf /etc/nginx/sites-available/hr-platform /etc/nginx/sites-enabled/
-rm -f /etc/nginx/sites-enabled/default
-nginx -t && systemctl restart nginx
+# —— 7. Nginx 检查 ——
+echo "[7] Nginx 检查..."
+nginx -t || fail "Nginx 配置语法错误"
+systemctl restart nginx
+check "Nginx 已重启"
 
-echo "========== 部署完成! =========="
-echo "访问 http://139.196.159.68 查看"
+# —— 8. 验证 ——
+echo "[8] 验证..."
+LOCAL_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000)
+HTTPS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.kimstar.cn -L)
+
+echo "  localhost:3000 → HTTP $LOCAL_CODE"
+echo "  www.kimstar.cn → HTTP $HTTPS_CODE"
+
+if [ "$HTTPS_CODE" = "200" ] || [ "$HTTPS_CODE" = "307" ]; then
+    check "外部访问正常"
+else
+    fail "外部访问异常 (HTTP $HTTPS_CODE)"
+fi
+
+echo ""
+echo -e "${GREEN}===== 部署完成! =====${NC}"
+echo "  https://www.kimstar.cn"
 pm2 status
