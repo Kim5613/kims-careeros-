@@ -1,6 +1,6 @@
 // Auto-generated from OB project reviews. DO NOT EDIT MANUALLY.
 // Run: node scripts/sync-ob-tracks.js
-// Generated: 2026-07-15T11:24:58.109Z
+// Generated: 2026-07-15T11:38:29.546Z
 
 export type SkillCategory = "hard" | "soft" | "domain" | "tool";
 export type SkillLevel = 1 | 2 | 3 | 4;

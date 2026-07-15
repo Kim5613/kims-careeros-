@@ -598,7 +598,7 @@ export default function DashboardPage() {
             })}
 
             {/* 日程卡片叠加层 */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: totalH, pointerEvents: 'none' }}>
               {positioned.map(ev => {
                 const t = ev.todo;
                 const wp = 100 / ev.totalColumns;
@@ -606,7 +606,7 @@ export default function DashboardPage() {
                 const startRow = ((ev.startMin - colStartMin) / 15) + 1;
                 const endRow = ((ev.endMin - colStartMin) / 15) + 1;
                 const topPx = (startRow - 1) * BLOCK_H;
-                const heightPx = (endRow - startRow + 1) * BLOCK_H; // +1 补偿浏览器渲染偏差
+                const heightPx = (endRow - startRow + 1) * BLOCK_H;
                 return (
                   <div key={t.id} draggable onDragStart={(e) => handleDragStart(e, t.id)}
                     onClick={(e) => { e.stopPropagation(); openEdit(t); }}
