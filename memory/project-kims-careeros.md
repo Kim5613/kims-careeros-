@@ -84,7 +84,10 @@ v1.0 无剩余待办。下一步进入 v1.1。
 | DNS + HTTPS | 📋 v1.0 | 备案已通过，下一步配置 |
 | 数据同步 | ✅ v1.0 | pg_dump + SQL 导入，21条待办已同步 |
 | 分享链接 | 📋 v1.0 | 待开发 |
-| AI 功能 | ⏳ v1.1 | 简历分析、面试评估等 |
+| AI 桌宠助手 | 🚧 v1.2 Phase 1 | 代码已完成，待 Rust 环境 + API Key + 精灵图。详见 `docs/PRD-v1.2.md` |
+| AI 功能 | ⏳ v1.1 | 已并入 v1.2 AI 桌宠 |
+| 面试管理 | 📋 v1.1 | 待开发 |
+| Offer管理 | 📋 v1.1 | 待开发 |
 
 **2026-07-11 | [UI] 侧边栏毛玻璃+卡片翻转，Logo纯文字化**
 - 四个方案试过后，Kim 选了方案三（毛玻璃）+ 方案四（翻转动画）混搭
@@ -347,6 +350,24 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 - 解法：服务器能连 GitHub，文件通过服务器 `git pull` 同步；服务器修改文件后先 `git checkout` 再 pull 避免冲突
 - **注意：本地 push 前需先告诉 Kim，Kim 需要开代理才能连 GitHub**
 
+**2026-07-15 | [日视图] 15分钟时间块 + 重叠并列 + 必须参加 + 拖拽调整**
+- 完整功能交付，见 CHANGELOG v1.1.1
+- 日程卡片渲染偏差：生产构建存在固定 1 行偏移，通过 +1 行补偿（top 和 height）解决
+- 拖拽零卡顿方案：DOM 直控（`cardEl.style.top/height`），松手后读 DOM → setTodos → API 保存。不可在 mousemove 中 setTodos，否则全量重渲染导致闪烁
+- 时区：服务器 UTC，dayjs() 取到的时间比北京慢 8h。统一用 `dayjs().tz('Asia/Shanghai')` 或 `nowShanghai()` helper
+- 事件层 `bottom:0` 在生产构建中行为不一致，改用显式 `height: totalH`
+
+**2026-07-15 | [部署] 阿里云→GitHub HTTPS TLS 被墙 + PM2 用户隔离**
+- 问题：服务器 `git pull https://github.com/...` 报 `GnuTLS recv error (-110)`，反复重试无效；切 SSH 后需配 SSH key 才能拉；部署时发现 `pm2 restart hr-platform` 报 not found
+- 根因：
+  1. 阿里云到 GitHub HTTPS 443 端口被 GFW 间歇性阻断，HTTP 代理、SSL 跳过均无效
+  2. 之前部署用 root 跑 PM2，现在用 admin 登录，两个用户的 PM2 进程列表不互通
+- 解法：
+  1. 生成 `~/.ssh/id_ed25519`，公钥加到 GitHub Settings → SSH Keys，`git remote set-url origin git@github.com:Kim5613/kims-careeros-.git`
+  2. 固定用 admin 部署，不再混用 root
+  3. SSH 协议不受 HTTPS 墙影响，以后一劳永逸
+- **教训**：以后阿里云部署遇到 GitHub 连不上，直接切 SSH 协议，不要反复试 HTTPS 变通
+
 **2026-07-09 | [3D球体] React setState 在 rAF 中导致性能崩溃**
 - 问题：requestAnimationFrame 中用 setState 更新旋转角度，每帧触发 React 重渲染 350+ 粒子 → 卡死
 - 解法：用 useRef 存旋转值，rAF 直接操作 `sphereRef.current.style.transform`，React 渲染一次后不再参与动画。粒子/标签全部走 DOM ref 直接操作
@@ -366,6 +387,49 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 **2026-07-09 | [动态路由] useParams 页面为动态渲染（ƒ）**
 - `/growth/domain/[slug]` 使用 `useParams()` 的页面标记为 Dynamic（ƒ），不能静态预渲染（○）
 - 这是 Next.js App Router 的预期行为，不影响功能
+
+**2026-07-13 | [架构] v1.2 AI 桌宠助手 — 完整方案确认 + Phase 1 代码完成**
+- 定位：独立桌面应用（Tauri 2.0），悬浮在所有窗口之上
+- 桌宠 = Claude + CareerOS 数据库 + 实时联网 + 随时可聊
+- 多变人格：专业秘书 / 温暖伙伴 / 毒舌损友，根据场景自动切换
+- Phase 1 代码已完成：CareerOS `/api/chat`（10 个工具）+ Tauri 桌宠（19 个文件）
+- 待 Kim 准备：Rust 环境安装、Anthropic API Key、桌宠精灵图、桌宠名字
+- 完整 PRD：`docs/PRD-v1.2.md`
+- 用户原话："我希望它就像你一样，可以跟我进行对话，可以给我情绪价值，可以给我答案，同步检索我的数据库和实时互联网分析"
+- 用户原话："全都要哈哈哈，风格可以多变" / "B要主动的" / "就像是搜狗输入法的图标一样，永远悬浮在桌面"
+
+## v1.2 规划 — AI 桌宠助手（2026-07-13 启动）
+
+### 核心定位
+桌宠 = Claude 思考能力 + CareerOS 全部数据 + 实时联网 + 随时可聊。独立桌面应用（Tauri 2.0），悬浮在所有窗口之上。
+
+### 功能清单
+- **对话能力**：自然语言聊天，流式输出，Claude 驱动
+- **数据检索**：查公司/人脉/投递/面试/知识库/简历/日程
+- **日程操作**：创建/修改/查询待办和日程
+- **联网搜索**：快速搜索 + 深度研究（多轮搜索→交叉验证→带引用报告）
+- **主动提醒**：日程提醒、待办积压检测、每日早安、每周复盘、数据变化通知、情绪感知
+- **语音输入**：长按空格 → Web Speech API 录音
+- **调参面板**：所有主动提醒开关，实时生效
+- **多变人格**：专业/温暖/毒舌 三种模式，随场景切换
+
+### 技术架构
+- **桌宠**：Tauri 2.0 + React 19 + TypeScript + Vite
+- **AI 后端**：CareerOS `/api/chat` — Vercel AI SDK + Claude + 工具调用
+- **通信**：桌宠 → HTTP → CareerOS API (localhost:3000)
+- **窗口**：frameless + always-on-top + 透明 + 可拖拽
+- **动画**：CSS 精灵图逐帧动画（8×3 帧 PNG）
+
+### 参考项目
+- DebugDuck (Tauri 2 + React 19 + AI)
+- CodeWalkers (Tauri 2 + 精灵动画 + 点击穿透)
+- WindowPet (Tauri + React + 45+ 宠物)
+- CareerOS by Samir-Sahiti (Next.js + Claude + Vercel AI SDK)
+
+### 待定
+- 桌宠名字（Kim 的猫叫 奶糕/奶棍/奶球）
+- 角色形象（Kim 提供参考图 → AI 生成精灵图）
+- Rust 环境安装（需 rustup + VS C++ Build Tools）
 
 ## v1.1 规划
 
