@@ -8,9 +8,16 @@ import type { InputRef } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(isoWeek);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 dayjs.locale('zh-cn');
+
+// 服务器 UTC 时区修正：统一用北京时间
+const nowShanghai = () => dayjs().tz('Asia/Shanghai');
 
 
 const { Title, Text } = Typography;
@@ -30,7 +37,7 @@ type CalendarView = 'week' | 'month' | 'year' | 'day';
 
 export default function DashboardPage() {
   const [view, setView] = useState<CalendarView>('day');
-  const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
+  const [currentDate, setCurrentDate] = useState<Dayjs>(nowShanghai());
   const [todos, setTodos] = useState<Todo[]>([]);
   const [holidays, setHolidays] = useState<Record<string, string>>({});
 
@@ -108,7 +115,7 @@ export default function DashboardPage() {
   // 编辑弹窗
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [mOpen, setMOpen] = useState(false);
-  const [mDate, setMDate] = useState<Dayjs>(dayjs());
+  const [mDate, setMDate] = useState<Dayjs>(nowShanghai());
   const [mTitle, setMTitle] = useState('');
   const [mTime, setMTime] = useState<Dayjs | null>(null);
   const [mEndTime, setMEndTime] = useState<Dayjs | null>(null);
@@ -125,12 +132,12 @@ export default function DashboardPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportText, setReportText] = useState('');
 
-  const todayStr = dayjs().format('YYYY-MM-DD');
+  const todayStr = nowShanghai().format('YYYY-MM-DD');
   const [dailyQuote, setDailyQuote] = useState<{ quote: string; movie: string; translation?: string } | null>(null);
   useEffect(() => {
     fetch(`/api/movie-quote?date=${todayStr}`).then(r => r.json()).then(setDailyQuote).catch(() => {});
   }, [todayStr]);
-  const isTodayDetail = currentDate.isSame(dayjs(), 'day');
+  const isTodayDetail = currentDate.isSame(nowShanghai(), 'day');
   const yearStr = currentDate.format('YYYY');
 
   // 加载法定节假日
@@ -396,7 +403,7 @@ export default function DashboardPage() {
   const sortedCompleteTodos = useMemo(() =>
     dayUntimedTodos.filter(t => t.completed),
   [dayUntimedTodos]);
-  const nowHour = dayjs().hour();
+  const nowHour = nowShanghai().hour();
 
   // ======== 切换到日视图 ========
   const goToDay = (d: Dayjs) => {
@@ -411,7 +418,7 @@ export default function DashboardPage() {
     const s = currentDate.startOf('isoWeek');
     const lines: string[] = [
       `📅 周报 | ${s.format('YYYY/M/D')} - ${s.add(6, 'day').format('M/D')}`,
-      `生成时间：${dayjs().format('YYYY-MM-DD HH:mm')}`,
+      `生成时间：${nowShanghai().format('YYYY-MM-DD HH:mm')}`,
       ``,
     ];
     let totalTasks = 0, doneTasks = 0;
@@ -452,7 +459,7 @@ export default function DashboardPage() {
           <Button icon={<LeftOutlined />} size="small" onClick={goPrev} style={{ borderRadius: 20 }} />
           <Text strong style={{ fontSize: 15, minWidth: 170, textAlign: 'center', color: '#444' }}>{navLabel}</Text>
           <Button icon={<RightOutlined />} size="small" onClick={goNext} style={{ borderRadius: 20 }} />
-          <Button size="small" onClick={() => { setCurrentDate(dayjs()); if (view==='day') { setQaTitle(''); setQaTime(null); setQaCategory('work'); setFocusKey(k=>k+1); } }} style={{ borderRadius: 20 }}>今天</Button>
+          <Button size="small" onClick={() => { setCurrentDate(nowShanghai()); if (view==='day') { setQaTitle(''); setQaTime(null); setQaCategory('work'); setFocusKey(k=>k+1); } }} style={{ borderRadius: 20 }}>今天</Button>
           {view === 'week' && (
             <Button size="small" icon={<ExportOutlined />} onClick={exportWeekReport} style={{ borderRadius: 20 }}>导出周报</Button>
           )}
@@ -479,7 +486,7 @@ export default function DashboardPage() {
   const renderHourColumn = (hours: number[], hourTodos: Todo[], bg: string, colStartHour: number) => {
     const colStartMin = colStartHour * 60;
     const colEndMin = colStartMin + 12 * 60;
-    const nowMin = dayjs().hour() * 60 + dayjs().minute();
+    const nowMin = nowShanghai().hour() * 60 + nowShanghai().minute();
 
     // 筛选本列日程
     const colTodos = hourTodos.filter(t => {
@@ -637,7 +644,7 @@ export default function DashboardPage() {
 
             {/* 当前时间红线 — 浮在最上层 */}
             {(() => {
-              const nowTotalMin = dayjs().hour() * 60 + dayjs().minute();
+              const nowTotalMin = nowShanghai().hour() * 60 + nowShanghai().minute();
               if (isTodayDetail && nowTotalMin >= colStartMin && nowTotalMin < colEndMin) {
                 const lineTop = ((nowTotalMin - colStartMin) / 15) * BLOCK_H;
                 return (
