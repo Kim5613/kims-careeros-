@@ -31,6 +31,7 @@ interface Todo {
 }
 
 const TODO_COLORS = ['#1677ff','#52c41a','#fa8c16','#ff4d4f','#722ed1','#13c2c2','#eb2f96','#faad14','#2f54eb','#a0d911'];
+const BLOCK_H = 16; // 每15分钟块的高度(px) — 模块级常量，renderHourColumn 和 resize 共用
 
 
 type CalendarView = 'week' | 'month' | 'year' | 'day';
@@ -51,7 +52,164 @@ export default function DashboardPage() {
   const qaInputRef = useRef<InputRef>(null);
   const [focusKey, setFocusKey] = useState(0);
   // 隐私模式
-  const [workMode, setWorkMode] = useState(false); // true=仅工作内容
+  const [workMode, setWorkMode] = useState(false);
+  // 拖拽调整日程时间
+  const [resizing, setResizing] = useState<{ todoId: string; edge: 'top' | 'bottom'; colStartMin: number; origTime: string; origEndTime: string | null } | null>(null);
+  const [moving, setMoving] = useState<{ todoId: string; colStartMin: number; origTime: string; origEndTime: string | null; startMin: number; endMin: number } | null>(null);
+  const [dragPreview, setDragPreview] = useState<{ time: string; endTime: string | null } | null>(null);
+  const dragPreviewRef = useRef(dragPreview);
+  dragPreviewRef.current = dragPreview;
+  const didDrag = useRef(false);
+
+  const handleMoveStart = (e: React.MouseEvent, todo: Todo, colStartMin: number) => {
+    e.stopPropagation();
+    const sh = parseInt(todo.time!.split(':')[0]), sm = parseInt(todo.time!.split(':')[1]);
+    const startMin = sh * 60 + sm;
+    let endMin: number;
+    if (todo.endTime) { const [eh, em] = todo.endTime.split(':').map(Number); endMin = eh * 60 + em; }
+    else endMin = startMin + 60;
+    didDrag.current = false;
+    setMoving({ todoId: todo.id, colStartMin, origTime: todo.time!, origEndTime: todo.endTime || null, startMin, endMin });
+  };
+
+  const handleResizeStart = (e: React.MouseEvent, todoId: string, edge: 'top' | 'bottom', colStartMin: number, todo: Todo) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setResizing({ todoId, edge, colStartMin, origTime: todo.time!, origEndTime: todo.endTime || null });
+  };
+
+  // 边��拖拽调整时间（DOM 直控）
+  useEffect(() => {
+    if (!resizing) return;
+    const gridEl = document.getElementById(`grid-col-${resizing.colStartMin}`);
+    const cardEl = document.getElementById(`todo-card-${resizing.todoId}`);
+    if (!gridEl || !cardEl) return;
+
+    const handleMove = (e: MouseEvent) => {
+      const rect = gridEl.getBoundingClientRect();
+      const y = e.clientY - rect.top;
+      const totalMin = Math.round((y / BLOCK_H) * 15 + resizing.colStartMin);
+      const snapped = Math.round(totalMin / 15) * 15;
+      if (snapped < resizing.colStartMin || snapped >= resizing.colStartMin + 720) return;
+
+      if (resizing.edge === 'top') {
+        let endMin: number;
+        if (resizing.origEndTime) { const [eh, em] = resizing.origEndTime.split(':').map(Number); endMin = eh * 60 + em; }
+        else endMin = (parseInt(resizing.origTime.split(':')[0]) * 60 + parseInt(resizing.origTime.split(':')[1])) + 60;
+        if (snapped >= endMin) return;
+        const oldEndRow = ((endMin - resizing.colStartMin) / 15) + 1;
+        const newStartRow = ((snapped - resizing.colStartMin) / 15) + 1;
+        cardEl.style.top = `${(newStartRow - 1) * BLOCK_H}px`;
+        cardEl.style.height = `${(oldEndRow - newStartRow + 1) * BLOCK_H}px`;
+      } else {
+        const startMin = parseInt(resizing.origTime.split(':')[0]) * 60 + parseInt(resizing.origTime.split(':')[1]);
+        if (snapped <= startMin) return;
+        const oldStartRow = ((startMin - resizing.colStartMin) / 15) + 1;
+        const newEndRow = ((snapped - resizing.colStartMin) / 15) + 1;
+        cardEl.style.top = `${(oldStartRow - 1) * BLOCK_H}px`;
+        cardEl.style.height = `${(newEndRow - oldStartRow + 1) * BLOCK_H}px`;
+      }
+    };
+    const handleUp = async () => {
+      // 先读 DOM
+      const finalTop = parseFloat(cardEl.style.top) || 0;
+      const finalH = parseFloat(cardEl.style.height) || 0;
+      setResizing(null);
+      if (finalTop <= 0) return;
+
+      const finalStartMin = Math.round(finalTop / BLOCK_H * 15 + resizing.colStartMin);
+      const finalEndMin = Math.round((finalTop + finalH) / BLOCK_H * 15 + resizing.colStartMin - 15);
+      const fh1 = String(Math.floor(finalStartMin / 60)).padStart(2, '0');
+      const fm1 = String(finalStartMin % 60).padStart(2, '0');
+      const fh2 = String(Math.floor(finalEndMin / 60)).padStart(2, '0');
+      const fm2 = String(finalEndMin % 60).padStart(2, '0');
+
+      try {
+        const body: Record<string, any> = {};
+        if (resizing.edge === 'top') body.time = `${fh1}:${fm1}`;
+        else body.endTime = `${fh2}:${fm2}`;
+        const res = await fetch(`/api/todos/${resizing.todoId}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setTodos(prev => prev.map(t => t.id === resizing.todoId ? { ...t, time: updated.time, endTime: updated.endTime } : t));
+        }
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
+  }, [resizing]);
+
+  // 整体拖动日程移动（DOM 直控，不经过 React）
+  useEffect(() => {
+    if (!moving) return;
+    const gridEl = document.getElementById(`grid-col-${moving.colStartMin}`);
+    const cardEl = document.getElementById(`todo-card-${moving.todoId}`);
+    if (!gridEl || !cardEl) return;
+
+    const handleMove = (e: MouseEvent) => {
+      didDrag.current = true;
+      const rect = gridEl.getBoundingClientRect();
+      const y = e.clientY - rect.top;
+      const totalMin = Math.round((y / BLOCK_H) * 15 + moving.colStartMin);
+      const snapped = Math.round(totalMin / 15) * 15;
+      if (snapped < moving.colStartMin || snapped >= moving.colStartMin + 720) return;
+      const delta = snapped - moving.startMin;
+      let newStart = (parseInt(moving.origTime.split(':')[0]) * 60 + parseInt(moving.origTime.split(':')[1])) + delta;
+      let newEnd = moving.origEndTime ? (parseInt(moving.origEndTime.split(':')[0]) * 60 + parseInt(moving.origEndTime.split(':')[1])) + delta : newStart + 60;
+      if (newStart < moving.colStartMin) newStart = moving.colStartMin;
+      if (newEnd > moving.colStartMin + 720) newEnd = moving.colStartMin + 720;
+      if (newEnd - newStart < 15) return;
+      const h1 = String(Math.floor(newStart / 60)).padStart(2, '0');
+      const m1 = String(newStart % 60).padStart(2, '0');
+      const h2 = String(Math.floor(newEnd / 60)).padStart(2, '0');
+      const m2 = String(newEnd % 60).padStart(2, '0');
+      // 直接操作 DOM，不经过 React
+      const startRow = ((newStart - moving.colStartMin) / 15) + 1;
+      const endRow = ((newEnd - moving.colStartMin) / 15) + 1;
+      cardEl.style.top = `${(startRow - 1) * BLOCK_H}px`;
+      cardEl.style.height = `${(endRow - startRow + 1) * BLOCK_H}px`;
+      // 更新时间文字
+      const timeEl = cardEl.querySelector('.drag-time') as HTMLElement;
+      if (timeEl) timeEl.textContent = `${h1}:${m1}${moving.origEndTime ? `-${h2}:${m2}` : ''}`;
+    };
+    const handleUp = async () => {
+      // ⚠️ 先读 DOM 值再 setState，否则 React 重渲染会清掉拖动样式
+      const finalTop = parseFloat(cardEl.style.top) || 0;
+      const finalH = parseFloat(cardEl.style.height) || 0;
+      const finalStartMin = finalTop > 0 ? Math.round(finalTop / BLOCK_H * 15 + moving.colStartMin) : 0;
+      const finalEndMin = (finalTop > 0 && finalH > 0) ? Math.round((finalTop + finalH) / BLOCK_H * 15 + moving.colStartMin - 15) : 0;
+
+      setMoving(null);
+      setDragPreview(null);
+
+      if (!didDrag.current || finalStartMin <= 0 || finalEndMin <= 0) return;
+      const fh1 = String(Math.floor(finalStartMin / 60)).padStart(2, '0');
+      const fm1 = String(finalStartMin % 60).padStart(2, '0');
+      const fh2 = String(Math.floor(finalEndMin / 60)).padStart(2, '0');
+      const fm2 = String(finalEndMin % 60).padStart(2, '0');
+      const finalTime = `${fh1}:${fm1}`;
+      const finalEnd = moving.origEndTime ? `${fh2}:${fm2}` : null;
+
+      try {
+        const res = await fetch(`/api/todos/${moving.todoId}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ time: finalTime, endTime: finalEnd }),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setTodos(prev => prev.map(t => t.id === moving.todoId ? { ...t, time: updated.time, endTime: updated.endTime } : t));
+        }
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
+  }, [moving]);
+
   // 本周重点
   const [weeklyWork, setWeeklyWork] = useState('');
   const [weeklyPersonal, setWeeklyPersonal] = useState('');
@@ -479,8 +637,6 @@ export default function DashboardPage() {
   );
 
   // ======== 日视图 ========
-  const BLOCK_H = 16; // 每15分钟块的高度(px)
-
   // 时间线列（上午/下午共用）
   // colStartHour: 0=上午, 12=下午
   const renderHourColumn = (hours: number[], hourTodos: Todo[], bg: string, colStartHour: number) => {
@@ -572,7 +728,7 @@ export default function DashboardPage() {
           </div>
 
           {/* 网格 + 日程 */}
-          <div style={{ flex: 1, position: 'relative' }}>
+          <div id={`grid-col-${colStartMin}`} style={{ flex: 1, position: 'relative' }}>
             {/* 网格背景层 — 纯 div，不用 Grid */}
             {Array.from({ length: 48 }, (_, i) => {
               const totalMin = colStartMin + i * 15;
@@ -608,9 +764,11 @@ export default function DashboardPage() {
                 const topPx = (startRow - 1) * BLOCK_H;
                 const heightPx = (endRow - startRow + 1) * BLOCK_H;
                 return (
-                  <div key={t.id} draggable onDragStart={(e) => handleDragStart(e, t.id)}
-                    onClick={(e) => { e.stopPropagation(); openEdit(t); }}
+                  <div key={t.id} id={`todo-card-${t.id}`}
+                    onMouseDown={(e) => { if (!resizing) handleMoveStart(e, t, colStartMin); }}
+                    onClick={(e) => { if (!didDrag.current) { e.stopPropagation(); openEdit(t); } }}
                     style={{
+                      userSelect: 'none', WebkitUserSelect: 'none',
                       position: 'absolute', top: topPx, left: `${lp}%`,
                       width: `calc(${wp}% - 4px)`, height: heightPx,
                       boxSizing: 'border-box', pointerEvents: 'auto',
@@ -621,7 +779,12 @@ export default function DashboardPage() {
                       boxShadow: t.mustAttend ? '0 1px 4px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.04)',
                       overflow: 'hidden',
                     }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
+                    {/* 上边缘拖拽手柄 — 调开始时间 */}
+                    <div
+                      onMouseDown={(e) => handleResizeStart(e, t.id, 'top', colStartMin, t)}
+                      style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 1 }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, marginTop: 4 }}>
                       {t.mustAttend && <span style={{ fontSize: 9, flexShrink: 0 }}>🔴</span>}
                       {t.category === 'work' && <span style={{ flexShrink: 0, fontSize: 10 }}>💼</span>}
                       {t.category === 'personal' && <span style={{ flexShrink: 0, fontSize: 10 }}>🐱</span>}
@@ -632,8 +795,13 @@ export default function DashboardPage() {
                       }}>{t.title}</Text>
                       {t.isTodo && <Tag style={{ fontSize: 7, lineHeight: '10px', margin: 0, padding: '0 2px', flexShrink: 0 }}>待办</Tag>}
                     </div>
+                    {/* 下边缘拖拽手柄 — 调结束时间 */}
+                    <div
+                      onMouseDown={(e) => handleResizeStart(e, t.id, 'bottom', colStartMin, t)}
+                      style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 1 }}
+                    />
                     {heightPx > 24 && (
-                      <div style={{ fontSize: 8, color: '#aaa', marginTop: 0, lineHeight: '12px' }}>
+                      <div className="drag-time" style={{ fontSize: 8, color: '#aaa', marginTop: 0, lineHeight: '12px' }}>
                         {t.time}{t.endTime ? `-${t.endTime}` : ''}{t.location ? ` 📍${t.location}` : ''}
                       </div>
                     )}
