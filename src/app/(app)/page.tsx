@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Card, Typography, Segmented, Button, Input, Checkbox, message, Popconfirm, Modal, DatePicker, TimePicker, Select, Tag, ColorPicker } from 'antd';
+import { useDataSync } from '@/lib/hooks/useDataSync';
+import { Card, Typography, Segmented, Button, Input, Checkbox, Switch, message, Popconfirm, Modal, DatePicker, TimePicker, Select, Tag, ColorPicker } from 'antd';
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, ScheduleOutlined, EnvironmentOutlined, ClockCircleOutlined, ExportOutlined, CopyOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
@@ -16,9 +17,10 @@ const { Title, Text } = Typography;
 
 interface Todo {
   id: string; date: string; title: string; time?: string | null;
+  endTime?: string | null;
   color: string; location?: string | null; description?: string | null;
   reminder?: string | null; repeat?: string | null; category?: string | null;
-  isTodo: boolean; completed: boolean;
+  isTodo: boolean; mustAttend: boolean; completed: boolean;
 }
 
 const TODO_COLORS = ['#1677ff','#52c41a','#fa8c16','#ff4d4f','#722ed1','#13c2c2','#eb2f96','#faad14','#2f54eb','#a0d911'];
@@ -35,6 +37,7 @@ export default function DashboardPage() {
   // 快速添加栏
   const [qaTitle, setQaTitle] = useState('');
   const [qaTime, setQaTime] = useState<string | null>(null);
+  const [qaEndTime, setQaEndTime] = useState<string | null>(null);
   const [qaColor, setQaColor] = useState('#1677ff');
   const [qaIsTodo, setQaIsTodo] = useState(true);
   const [qaCategory, setQaCategory] = useState<string>('work');
@@ -46,6 +49,11 @@ export default function DashboardPage() {
   const [weeklyWork, setWeeklyWork] = useState('');
   const [weeklyPersonal, setWeeklyPersonal] = useState('');
   const [wfModalOpen, setWfModalOpen] = useState(false);
+
+  // 桌宠数据同步：当芝士通过 /api/chat 修改数据后，自动重新拉取
+  const [dataVersion, setDataVersion] = useState(0);
+  useDataSync(() => setDataVersion((v) => v + 1));
+
   const weekMonday = useMemo(() => {
     const d = currentDate.toDate();
     const day = d.getDay();
@@ -103,6 +111,7 @@ export default function DashboardPage() {
   const [mDate, setMDate] = useState<Dayjs>(dayjs());
   const [mTitle, setMTitle] = useState('');
   const [mTime, setMTime] = useState<Dayjs | null>(null);
+  const [mEndTime, setMEndTime] = useState<Dayjs | null>(null);
   const [mColor, setMColor] = useState('#1677ff');
   const [mLoc, setMLoc] = useState('');
   const [mDesc, setMDesc] = useState('');
@@ -110,6 +119,7 @@ export default function DashboardPage() {
   const [mRepeat, setMRepeat] = useState<string | null>(null);
   const [mIsTodo, setMIsTodo] = useState(true);
   const [mCategory, setMCategory] = useState<string | null>(null);
+  const [mMustAttend, setMMustAttend] = useState(false);
 
   // 周报弹窗
   const [reportOpen, setReportOpen] = useState(false);
@@ -163,7 +173,7 @@ export default function DashboardPage() {
       }
       setTodos(merged);
     }).catch(() => {});
-  }, [view, currentDate]);
+  }, [view, currentDate, dataVersion]);
 
   const todosByDate = useMemo(() => {
     const map: Record<string, Todo[]> = {};
@@ -179,13 +189,14 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/todos', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, title: qaTitle.trim(), time: qaTime, color: qaColor, isTodo: qaIsTodo, category: qaCategory }),
+        body: JSON.stringify({ date, title: qaTitle.trim(), time: qaTime, endTime: qaEndTime, color: qaColor, isTodo: qaIsTodo, category: qaCategory }),
       });
       if (res.ok) {
         const nt = await res.json();
         setTodos((p) => [...p, nt]);
         setQaTitle('');
         setQaTime(null);
+        setQaEndTime(null);
         setQaColor(TODO_COLORS[Math.floor(Math.random() * TODO_COLORS.length)]);
       }
     } catch { message.error('添加失败'); }
@@ -197,6 +208,7 @@ export default function DashboardPage() {
     setMDate(dayjs(todo.date));
     setMTitle(todo.title);
     setMTime(todo.time ? dayjs(`${todo.date} ${todo.time}`, 'YYYY-MM-DD HH:mm') : null);
+    setMEndTime(todo.endTime ? dayjs(`${todo.date} ${todo.endTime}`, 'YYYY-MM-DD HH:mm') : null);
     setMColor(todo.color);
     setMLoc(todo.location || '');
     setMDesc(todo.description || '');
@@ -204,6 +216,7 @@ export default function DashboardPage() {
     setMRepeat(todo.repeat ?? null);
     setMIsTodo(todo.isTodo);
     setMCategory(todo.category ?? null);
+    setMMustAttend(todo.mustAttend || false);
     setMOpen(true);
   };
 
@@ -213,6 +226,7 @@ export default function DashboardPage() {
     setMDate(currentDate);
     setMTitle('');
     setMTime(dayjs(`${currentDate.format('YYYY-MM-DD')} ${hourStr}`, 'YYYY-MM-DD HH:mm'));
+    setMEndTime(null);
     setMColor(TODO_COLORS[Math.floor(Math.random() * TODO_COLORS.length)]);
     setMLoc('');
     setMDesc('');
@@ -220,6 +234,7 @@ export default function DashboardPage() {
     setMRepeat(null);
     setMIsTodo(false);
     setMCategory(null);
+    setMMustAttend(false);
     setMOpen(true);
   };
 
@@ -232,9 +247,12 @@ export default function DashboardPage() {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             date: mDate.format('YYYY-MM-DD'), title: mTitle.trim(),
-            time: mTime ? mTime.format('HH:mm') : null, color: mColor,
+            time: mTime ? mTime.format('HH:mm') : null,
+            endTime: mEndTime ? mEndTime.format('HH:mm') : null,
+            color: mColor,
             location: mLoc.trim() || null, description: mDesc.trim() || null,
             reminder: mRemind, repeat: mRepeat, isTodo: mIsTodo, category: mCategory,
+            mustAttend: mMustAttend,
           }),
         });
         if (res.ok) {
@@ -247,9 +265,12 @@ export default function DashboardPage() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             date: mDate.format('YYYY-MM-DD'), title: mTitle.trim(),
-            time: mTime ? mTime.format('HH:mm') : null, color: mColor,
+            time: mTime ? mTime.format('HH:mm') : null,
+            endTime: mEndTime ? mEndTime.format('HH:mm') : null,
+            color: mColor,
             location: mLoc.trim() || null, description: mDesc.trim() || null,
             reminder: mRemind, repeat: mRepeat, isTodo: mIsTodo, category: mCategory,
+            mustAttend: mMustAttend,
           }),
         });
         if (res.ok) {
@@ -303,14 +324,14 @@ export default function DashboardPage() {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = async (e: React.DragEvent, hourStr: string) => {
+  const handleDrop = async (e: React.DragEvent, timeStr: string) => {
     e.preventDefault();
     const todoId = e.dataTransfer.getData('text/plain');
     if (!todoId) return;
     try {
       const res = await fetch(`/api/todos/${todoId}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ time: `${hourStr}:00` }),
+        body: JSON.stringify({ time: timeStr }),
       });
       if (res.ok) {
         const updated = await res.json();
@@ -451,54 +472,196 @@ export default function DashboardPage() {
   );
 
   // ======== 日视图 ========
-  // 时间线列（上午/下午共用的渲染函数）
-  const renderHourColumn = (hours: number[], hourTodos: typeof morningTodos, bg: string) => (
-    <div style={{ flex: 1, overflowY: 'scroll', paddingRight: 4, overflowAnchor: 'none', background: bg, borderRadius: 16, padding: '6px 10px' }}>
-        {hours.map((h) => {
-          const hh = String(h).padStart(2, '0');
-          const hourStr = `${hh}:00`;
-          const todos = hourTodos.filter((t) => t.time && t.time.startsWith(hh));
-          const isCurrentHour = isTodayDetail && h === nowHour;
-          return (
-            <div key={h} style={{
-              display: 'flex', gap: 8, padding: '4px 6px',
-              borderBottom: '1px solid #f3f1ee', minHeight: 56,
-              background: isCurrentHour ? '#f6f3ff' : 'transparent',
-              borderRadius: isCurrentHour ? 12 : 8,
-              cursor: todos.length === 0 ? 'pointer' : 'default',
-              transition: 'background 0.15s',
-            }} onClick={() => openNewAtHour(hourStr)}
-              onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, hourStr)}>
-              <Text type="secondary" style={{
-                width: 42, flexShrink: 0, textAlign: 'right', fontSize: 13,
-                fontWeight: isCurrentHour ? 600 : 400, color: isCurrentHour ? '#8b7cf0' : '#ccc',
-                paddingTop: 2,
-              }}>{hourStr}</Text>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {todos.map((t) => (
+  const BLOCK_H = 16; // 每15分钟块的高度(px)
+
+  // 时间线列（上午/下午共用）
+  // colStartHour: 0=上午, 12=下午
+  const renderHourColumn = (hours: number[], hourTodos: Todo[], bg: string, colStartHour: number) => {
+    const colStartMin = colStartHour * 60;
+    const colEndMin = colStartMin + 12 * 60;
+    const nowMin = dayjs().hour() * 60 + dayjs().minute();
+
+    // 筛选本列日程
+    const colTodos = hourTodos.filter(t => {
+      if (!t.time) return false;
+      const [h, m] = t.time.split(':').map(Number);
+      const sm = h * 60 + m;
+      return sm >= colStartMin && sm < colEndMin;
+    });
+
+    // 计算每个日程位置
+    interface PosEv {
+      todo: Todo; top: number; height: number;
+      column: number; totalColumns: number;
+      startMin: number; endMin: number;
+    }
+    const positioned: PosEv[] = colTodos.map(t => {
+      const [sh, sm] = t.time!.split(':').map(Number);
+      const startMin = sh * 60 + sm;
+      let endMin: number;
+      if (t.endTime) {
+        const [eh, em] = t.endTime.split(':').map(Number);
+        endMin = eh * 60 + em;
+      } else {
+        endMin = Math.min(startMin + 60, colEndMin);
+      }
+      if (endMin <= startMin) endMin = startMin + 15;
+      return {
+        todo: t,
+        top: ((startMin - colStartMin) / 15) * BLOCK_H,
+        height: Math.max(BLOCK_H, ((endMin - startMin) / 15) * BLOCK_H),
+        column: 0, totalColumns: 1, startMin, endMin,
+      };
+    });
+
+    // 排序：必须参加优先 → 开始时间 → 时长长的优先
+    positioned.sort((a, b) =>
+      (b.todo.mustAttend ? 1 : 0) - (a.todo.mustAttend ? 1 : 0) ||
+      a.startMin - b.startMin ||
+      (b.endMin - b.startMin) - (a.endMin - a.startMin)
+    );
+    const groups: PosEv[][] = [];
+    for (const ev of positioned) {
+      let placed = false;
+      for (const group of groups) {
+        if (group.some(g => ev.startMin < g.endMin && ev.endMin > g.startMin)) {
+          group.push(ev); placed = true; break;
+        }
+      }
+      if (!placed) groups.push([ev]);
+    }
+    for (const group of groups) {
+      const cols: number[] = [];
+      for (const ev of group) {
+        let col = 0;
+        while (col < cols.length && cols[col] > ev.startMin) col++;
+        if (col === cols.length) cols.push(ev.endMin);
+        else cols[col] = ev.endMin;
+        ev.column = col;
+      }
+      for (const ev of group) ev.totalColumns = cols.length;
+    }
+
+    const totalH = 48 * BLOCK_H;
+
+    return (
+      <div style={{ flex: 1, overflowY: 'scroll', overflowAnchor: 'none', background: bg, borderRadius: 16 }}>
+        <div style={{ display: 'flex', minHeight: totalH }}>
+          {/* 时间标签列 */}
+          <div style={{ width: 48, flexShrink: 0 }}>
+            {Array.from({ length: 12 }, (_, i) => {
+              const h = colStartHour + i;
+              const hh = String(h).padStart(2, '0');
+              const isCurrent = isTodayDetail && h === nowHour;
+              return (
+                <div key={i} style={{ height: BLOCK_H * 4, display: 'flex', alignItems: 'flex-start', boxSizing: 'border-box' }}>
+                  <Text style={{
+                    fontSize: 11, color: isCurrent ? '#8b7cf0' : '#bbb',
+                    fontWeight: isCurrent ? 600 : 400, width: '100%', textAlign: 'right',
+                  }}>{`${hh}:00`}</Text>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 网格 + 日程 */}
+          <div style={{ flex: 1, position: 'relative' }}>
+            {/* 网格背景层 — 纯 div，不用 Grid */}
+            {Array.from({ length: 48 }, (_, i) => {
+              const totalMin = colStartMin + i * 15;
+              const m = totalMin % 60;
+              const h = Math.floor(totalMin / 60);
+              const hh = String(h).padStart(2, '0');
+              const mm = String(m).padStart(2, '0');
+              const timeStr = `${hh}:${mm}`;
+              const isHourStart = m === 0;
+              const isCurrentBlock = isTodayDetail && totalMin === Math.floor(nowMin / 15) * 15;
+              return (
+                <div key={i} style={{
+                  height: BLOCK_H, boxSizing: 'border-box',
+                  borderBottom: isHourStart ? '1px solid #e8e4e0' : 'none',
+                  background: isCurrentBlock ? '#f6f3ff' : 'transparent',
+                  cursor: 'pointer', transition: 'background 0.15s',
+                }}
+                  onClick={() => openNewAtHour(timeStr)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, timeStr)}
+                />
+              );
+            })}
+
+            {/* 日程卡片叠加层 */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+              {positioned.map(ev => {
+                const t = ev.todo;
+                const wp = 100 / ev.totalColumns;
+                const lp = ev.column * wp;
+                const startRow = ((ev.startMin - colStartMin) / 15) + 1;
+                const endRow = ((ev.endMin - colStartMin) / 15) + 1;
+                const topPx = (startRow - 1) * BLOCK_H;
+                const heightPx = (endRow - startRow + 1) * BLOCK_H; // +1 补偿浏览器渲染偏差
+                return (
                   <div key={t.id} draggable onDragStart={(e) => handleDragStart(e, t.id)}
-                    onClick={(e) => { e.stopPropagation(); openEdit(t); }} style={{
-                    display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px',
-                    borderRadius: 12, background: `${t.color}16`, borderLeft: `4px solid ${t.color}`,
-                    marginBottom: 3, cursor: 'grab', boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
-                  }}>
-                    {t.isTodo && !t.completed && <Checkbox checked={false} onChange={() => toggleTodo(t)} onClick={(e) => e.stopPropagation()} style={{ transform: 'scale(0.85)' }} />}
-                    <Text strong delete={t.completed} style={{ flex: 1, fontSize: 13, wordBreak: 'break-word' }}>
-                      {t.category === 'work' && <span style={{ marginRight: 2 }}>💼</span>}
-                      {t.category === 'personal' && <span style={{ marginRight: 2 }}>🐱</span>}
-                      {t.title}
-                    </Text>
-                    {t.isTodo && <Tag style={{ fontSize: 9, lineHeight: '14px', margin: 0, padding: '0 4px' }}>待办</Tag>}
-                    <Button type="text" size="small" danger icon={<DeleteOutlined style={{ fontSize: 10 }} />}
-                      onClick={(e) => { e.stopPropagation(); deleteTodo(t.id); }} />
+                    onClick={(e) => { e.stopPropagation(); openEdit(t); }}
+                    style={{
+                      position: 'absolute', top: topPx, left: `${lp}%`,
+                      width: `calc(${wp}% - 4px)`, height: heightPx,
+                      boxSizing: 'border-box', pointerEvents: 'auto',
+                      padding: '1px 6px', borderRadius: 6,
+                      background: t.mustAttend ? `${t.color}28` : `${t.color}14`,
+                      borderLeft: t.mustAttend ? `5px solid ${t.color}` : `3px solid ${t.color}`,
+                      cursor: 'pointer', zIndex: t.mustAttend ? 3 : 2,
+                      boxShadow: t.mustAttend ? '0 1px 4px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.04)',
+                      overflow: 'hidden',
+                    }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
+                      {t.mustAttend && <span style={{ fontSize: 9, flexShrink: 0 }}>🔴</span>}
+                      {t.category === 'work' && <span style={{ flexShrink: 0, fontSize: 10 }}>💼</span>}
+                      {t.category === 'personal' && <span style={{ flexShrink: 0, fontSize: 10 }}>🐱</span>}
+                      <Text strong delete={t.completed} style={{
+                        flex: 1, fontSize: 10, color: t.mustAttend ? '#222' : '#555',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        lineHeight: '14px',
+                      }}>{t.title}</Text>
+                      {t.isTodo && <Tag style={{ fontSize: 7, lineHeight: '10px', margin: 0, padding: '0 2px', flexShrink: 0 }}>待办</Tag>}
+                    </div>
+                    {heightPx > 24 && (
+                      <div style={{ fontSize: 8, color: '#aaa', marginTop: 0, lineHeight: '12px' }}>
+                        {t.time}{t.endTime ? `-${t.endTime}` : ''}{t.location ? ` 📍${t.location}` : ''}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          );
-        })}
+
+            {/* 当前时间红线 — 浮在最上层 */}
+            {(() => {
+              const nowTotalMin = dayjs().hour() * 60 + dayjs().minute();
+              if (isTodayDetail && nowTotalMin >= colStartMin && nowTotalMin < colEndMin) {
+                const lineTop = ((nowTotalMin - colStartMin) / 15) * BLOCK_H;
+                return (
+                  <div style={{
+                    position: 'absolute', top: lineTop, left: 0, right: 0, zIndex: 10,
+                    pointerEvents: 'none',
+                  }}>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: '50%', background: '#ff4d4f',
+                      marginLeft: -4, position: 'absolute', top: -3,
+                    }} />
+                    <div style={{
+                      height: 2, background: '#ff4d4f',
+                    }} />
+                  </div>
+                );
+              }
+              return null;
+            })()}
+          </div>
+        </div>
       </div>
-  );
+    );
+  };
 
   const renderDayView = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 170px)' }}>
@@ -529,9 +692,14 @@ export default function DashboardPage() {
             </span>}
           />
           {!qaIsTodo && (
-            <TimePicker value={qaTime ? dayjs(qaTime, 'HH:mm') : null}
-              onChange={(t) => setQaTime(t ? t.format('HH:mm') : null)}
-              format="HH:mm" placeholder="时间" size="small" style={{ width: 100 }} />
+            <>
+              <TimePicker value={qaTime ? dayjs(qaTime, 'HH:mm') : null}
+                onChange={(t) => setQaTime(t ? t.format('HH:mm') : null)}
+                format="HH:mm" placeholder="开始" size="small" style={{ width: 90 }} />
+              <TimePicker value={qaEndTime ? dayjs(qaEndTime, 'HH:mm') : null}
+                onChange={(t) => setQaEndTime(t ? t.format('HH:mm') : null)}
+                format="HH:mm" placeholder="结束" size="small" style={{ width: 90 }} />
+            </>
           )}
           <Segmented size="small" value={qaIsTodo ? 'todo' : 'schedule'}
             onChange={(v) => setQaIsTodo(v === 'todo')}
@@ -551,7 +719,7 @@ export default function DashboardPage() {
           }}>
             ☀️ 上午 <span style={{ fontWeight: 400, fontSize: 11, color: '#bbb', marginLeft: 'auto' }}>00:00–12:00</span>
           </div>
-          {renderHourColumn(morningHours, morningTodos, '#fefdfb')}
+          {renderHourColumn(morningHours, morningTodos, '#fefdfb', 0)}
         </div>
 
         {/* 下午列 */}
@@ -563,7 +731,7 @@ export default function DashboardPage() {
           }}>
             🌙 下午 <span style={{ fontWeight: 400, fontSize: 11, color: '#bbb', marginLeft: 'auto' }}>12:00–24:00</span>
           </div>
-          {renderHourColumn(afternoonHours, afternoonTodos, '#fdfbfa')}
+          {renderHourColumn(afternoonHours, afternoonTodos, '#fdfbfa', 12)}
         </div>
 
         {/* 待办列 */}
@@ -879,7 +1047,7 @@ export default function DashboardPage() {
         onCancel={() => { setMOpen(false); setEditingTodo(null); }}
         okText={editingTodo ? '保存' : '创建'} cancelText="取消"
         okButtonProps={{ disabled: !mTitle.trim() }}
-        width={mIsTodo ? 420 : 480}
+        width={mIsTodo ? 420 : 520}
         footer={(_, { OkBtn, CancelBtn }) => (
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             {editingTodo ? (
@@ -894,7 +1062,7 @@ export default function DashboardPage() {
           </div>
         )}
       >
-        <div style={{ display: 'flex', gap: 24, marginBottom: 12, alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 24, marginBottom: 12 }}>
           <div>
             <Text type="secondary">分类</Text>
             <div style={{ marginTop: 4 }}>
@@ -915,6 +1083,14 @@ export default function DashboardPage() {
               </ColorPicker>
             </div>
           </div>
+          {!mIsTodo && (
+            <div>
+              <Text type="secondary">必须本人参加</Text>
+              <div style={{ marginTop: 4 }}>
+                <Switch checked={mMustAttend} onChange={setMMustAttend} />
+              </div>
+            </div>
+          )}
         </div>
         <div style={{ marginBottom: 12 }}>
           <Text type="secondary">事项</Text>
@@ -929,10 +1105,13 @@ export default function DashboardPage() {
           <>
             <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
               <div style={{ flex: 1 }}>
-                <Text type="secondary">时间</Text>
+                <Text type="secondary">开始时间</Text>
                 <TimePicker value={mTime} onChange={(t) => setMTime(t)} format="HH:mm" placeholder="选填" style={{ width: '100%', marginTop: 4 }} />
               </div>
-              <div style={{ flex: 1 }} />
+              <div style={{ flex: 1 }}>
+                <Text type="secondary">结束时间</Text>
+                <TimePicker value={mEndTime} onChange={(t) => setMEndTime(t)} format="HH:mm" placeholder="选填" style={{ width: '100%', marginTop: 4 }} />
+              </div>
             </div>
             <div style={{ marginBottom: 12 }}>
               <Text type="secondary">地点</Text>

@@ -404,7 +404,8 @@ model Todo {
   id          String   @id @default(cuid())
   date        String                   // YYYY-MM-DD
   title       String                   // 标题
-  time        String?                  // HH:mm
+  time        String?                  // HH:mm 开始时间
+  endTime     String?                  // HH:mm 结束时间
   color       String   @default("#1677ff")  // 背景色
   location    String?                  // 地点
   description String?                  // 描述
@@ -412,6 +413,7 @@ model Todo {
   repeat      String?                  // none / daily / weekly / monthly
   category    String?                  // work | personal | null
   isTodo      Boolean  @default(true)  // 是否同步到待办面板
+  mustAttend  Boolean  @default(false) // 是否必须本人参加
   completed   Boolean  @default(false)
   createdAt   DateTime @default(now())
 
@@ -441,4 +443,21 @@ model WeeklyFocus {
   updatedAt       DateTime @updatedAt
 
   @@map("weekly_focus")
+}
+
+// AI 桌宠记忆 — 芝士的长期记忆库
+model PetMemory {
+  id        String   @id @default(cuid())
+  type      String   // fact | preference | event | decision
+  content   String   @db.Text  // 记忆内容（一句中文摘要）
+  keywords  String[] // 搜索关键词
+  source    String?  // 来自哪次对话（trace）
+  version   Int      @default(1) // Source→Concept→Synthesis 提炼层次
+  mergedFrom String[] @default([]) // 合并来源（version>=2时指向原始记忆 ID）
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([version])
+  @@map("pet_memory")
 }

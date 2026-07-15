@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 // POST /api/todos
 export async function POST(req: NextRequest) {
   try {
-    const { date, title, time, color, location, description, reminder, repeat, isTodo, category } = await req.json();
+    const { date, title, time, endTime, color, location, description, reminder, repeat, isTodo, category, mustAttend } = await req.json();
     if (!date || !title) {
       return NextResponse.json({ error: '缺少日期或标题' }, { status: 400 });
     }
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
         date,
         title,
         time: time || null,
+        endTime: endTime || null,
         color: color || '#1677ff',
         location: location || null,
         description: description || null,
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
         repeat: repeat || null,
         isTodo: isTodo !== undefined ? isTodo : true,
         category: category || null,
+        mustAttend: mustAttend || false,
       },
     });
     return NextResponse.json(todo, { status: 201 });
