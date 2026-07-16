@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import SidebarContent from './Sidebar';
-import FloatingPet from '@/components/FloatingPet';
 
 const DARK_ROUTES = ['/growth/career-sphere', '/growth/domain/'];
 
@@ -75,8 +74,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* 芝士 — body 层级，不受页面布局影响 */}
-      <FloatingPet />
+      {/* 芝士 — body 层级，不受页面布局影响（v1.2 桌宠待上线） */}
     </>
   );
 }
