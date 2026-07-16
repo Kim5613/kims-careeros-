@@ -1,5 +1,37 @@
 # Kim's CareerOS — 项目入口
 
+## ⚠️ 必读（2026-07-15 部署教训后新增）
+
+**每次会话、每次回复、每条命令都必须遵守。**
+
+### 1. 命令必须标注环境
+```
+【本地-Windows】在 Windows 终端/PowerShell 执行
+【本地-Bash】   在 Git Bash 执行
+【服务器】      阿里云 Workbench (admin@iZuf...)
+```
+**绝不混在一起、不用 && 跨环境连接、不让用户猜。**
+
+### 2. 交付前反查（提交/部署前逐条过）
+- [ ] `dayjs()` / `new Date()` — 服务器 UTC，必须用 `nowShanghai()` 或 `.tz('Asia/Shanghai')`
+- [ ] `git status` — 所有新文件都 add 了？
+- [ ] `npm run build` — 本地构建通过？
+- [ ] 新功能在本地浏览器验证过？
+
+### 3. 环境差异（牢记）
+| | 本地 | 服务器 |
+|---|---|---|
+| 时区 | UTC+8 | **UTC** |
+| 用户 | Kim | admin |
+| Git | HTTPS | **SSH** (git@github.com) |
+| 部署 | — | `git pull origin main && npm run build && pm2 restart hr-platform` |
+
+### 4. 先查文档再动手
+- 修 bug / 做功能前 → 读 `memory/project-kims-careeros.md` 技术坑点
+- 部署问题 → 读 `memory/project-kims-careeros.md` 部署相关坑点
+
+---
+
 ## AI OS Framework 核心约束
 
 来自 ai-os-framework v1.10.0，每会话自动生效。全文见 `.claude/skills/ai-os-framework/SKILL.md`。

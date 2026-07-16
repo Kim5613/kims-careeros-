@@ -100,14 +100,14 @@ export default function DashboardPage() {
         const oldEndRow = ((endMin - resizing.colStartMin) / 15) + 1;
         const newStartRow = ((snapped - resizing.colStartMin) / 15) + 1;
         cardEl.style.top = `${(newStartRow - 1) * BLOCK_H}px`;
-        cardEl.style.height = `${(oldEndRow - newStartRow + 1) * BLOCK_H}px`;
+        cardEl.style.height = `${(oldEndRow - newStartRow) * BLOCK_H}px`;
       } else {
         const startMin = parseInt(resizing.origTime.split(':')[0]) * 60 + parseInt(resizing.origTime.split(':')[1]);
         if (snapped <= startMin) return;
         const oldStartRow = ((startMin - resizing.colStartMin) / 15) + 1;
         const newEndRow = ((snapped - resizing.colStartMin) / 15) + 1;
         cardEl.style.top = `${(oldStartRow - 1) * BLOCK_H}px`;
-        cardEl.style.height = `${(newEndRow - oldStartRow + 1) * BLOCK_H}px`;
+        cardEl.style.height = `${(newEndRow - oldStartRow) * BLOCK_H}px`;
       }
     };
     const handleUp = async () => {
@@ -118,7 +118,7 @@ export default function DashboardPage() {
       if (finalTop <= 0) return;
 
       const finalStartMin = Math.round(finalTop / BLOCK_H * 15 + resizing.colStartMin);
-      const finalEndMin = Math.round((finalTop + finalH) / BLOCK_H * 15 + resizing.colStartMin - 15);
+      const finalEndMin = Math.round((finalTop + finalH) / BLOCK_H * 15 + resizing.colStartMin);
       const fh1 = String(Math.floor(finalStartMin / 60)).padStart(2, '0');
       const fm1 = String(finalStartMin % 60).padStart(2, '0');
       const fh2 = String(Math.floor(finalEndMin / 60)).padStart(2, '0');
@@ -171,7 +171,7 @@ export default function DashboardPage() {
       const startRow = ((newStart - moving.colStartMin) / 15) + 1;
       const endRow = ((newEnd - moving.colStartMin) / 15) + 1;
       cardEl.style.top = `${(startRow - 1) * BLOCK_H}px`;
-      cardEl.style.height = `${(endRow - startRow + 1) * BLOCK_H}px`;
+      cardEl.style.height = `${(endRow - startRow) * BLOCK_H}px`;
       // 更新时间文字
       const timeEl = cardEl.querySelector('.drag-time') as HTMLElement;
       if (timeEl) timeEl.textContent = `${h1}:${m1}${moving.origEndTime ? `-${h2}:${m2}` : ''}`;
@@ -181,7 +181,7 @@ export default function DashboardPage() {
       const finalTop = parseFloat(cardEl.style.top) || 0;
       const finalH = parseFloat(cardEl.style.height) || 0;
       const finalStartMin = finalTop > 0 ? Math.round(finalTop / BLOCK_H * 15 + moving.colStartMin) : 0;
-      const finalEndMin = (finalTop > 0 && finalH > 0) ? Math.round((finalTop + finalH) / BLOCK_H * 15 + moving.colStartMin - 15) : 0;
+      const finalEndMin = (finalTop > 0 && finalH > 0) ? Math.round((finalTop + finalH) / BLOCK_H * 15 + moving.colStartMin) : 0;
 
       setMoving(null);
       setDragPreview(null);
@@ -387,6 +387,7 @@ export default function DashboardPage() {
 
   // ======== 从时间段新建日程 ========
   const openNewAtHour = (hourStr: string) => {
+    console.log('[openNewAtHour] clicked', hourStr, 'mOpen will be set to true');
     setEditingTodo(null);
     setMDate(currentDate);
     setMTitle('');
@@ -728,7 +729,20 @@ export default function DashboardPage() {
           </div>
 
           {/* 网格 + 日程 */}
-          <div id={`grid-col-${colStartMin}`} style={{ flex: 1, position: 'relative' }}>
+          <div id={`grid-col-${colStartMin}`} style={{ flex: 1, position: 'relative' }}
+            onClick={(e) => {
+              // 点击卡片时 stopPropagation 已阻止冒泡，这里只处理空白区域点击
+              const rect = e.currentTarget.getBoundingClientRect();
+              const y = e.clientY - rect.top + e.currentTarget.scrollTop;
+              const blockIndex = Math.floor(y / BLOCK_H);
+              if (blockIndex >= 0 && blockIndex < 48) {
+                const totalMin = colStartMin + blockIndex * 15;
+                const hh = String(Math.floor(totalMin / 60)).padStart(2, '0');
+                const mm = String(totalMin % 60).padStart(2, '0');
+                openNewAtHour(`${hh}:${mm}`);
+              }
+            }}
+          >
             {/* 网格背景层 — 纯 div，不用 Grid */}
             {Array.from({ length: 48 }, (_, i) => {
               const totalMin = colStartMin + i * 15;
@@ -742,73 +756,70 @@ export default function DashboardPage() {
               return (
                 <div key={i} style={{
                   height: BLOCK_H, boxSizing: 'border-box',
-                  borderBottom: isHourStart ? '1px solid #e8e4e0' : 'none',
+                  borderTop: isHourStart ? '1px solid #e8e4e0' : 'none',
                   background: isCurrentBlock ? '#f6f3ff' : 'transparent',
                   cursor: 'pointer', transition: 'background 0.15s',
                 }}
-                  onClick={() => openNewAtHour(timeStr)}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, timeStr)}
                 />
               );
             })}
 
-            {/* 日程卡片叠加层 */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: totalH, pointerEvents: 'none' }}>
-              {positioned.map(ev => {
-                const t = ev.todo;
-                const wp = 100 / ev.totalColumns;
-                const lp = ev.column * wp;
-                const startRow = ((ev.startMin - colStartMin) / 15) + 1;
-                const endRow = ((ev.endMin - colStartMin) / 15) + 1;
-                const topPx = (startRow - 1) * BLOCK_H;
-                const heightPx = (endRow - startRow + 1) * BLOCK_H;
-                return (
-                  <div key={t.id} id={`todo-card-${t.id}`}
-                    onMouseDown={(e) => { if (!resizing) handleMoveStart(e, t, colStartMin); }}
-                    onClick={(e) => { if (!didDrag.current) { e.stopPropagation(); openEdit(t); } }}
-                    style={{
-                      userSelect: 'none', WebkitUserSelect: 'none',
-                      position: 'absolute', top: topPx, left: `${lp}%`,
-                      width: `calc(${wp}% - 4px)`, height: heightPx,
-                      boxSizing: 'border-box', pointerEvents: 'auto',
-                      padding: '1px 6px', borderRadius: 6,
-                      background: t.mustAttend ? `${t.color}28` : `${t.color}14`,
-                      borderLeft: t.mustAttend ? `5px solid ${t.color}` : `3px solid ${t.color}`,
-                      cursor: 'pointer', zIndex: t.mustAttend ? 3 : 2,
-                      boxShadow: t.mustAttend ? '0 1px 4px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.04)',
-                      overflow: 'hidden',
-                    }}>
-                    {/* 上边缘拖拽手柄 — 调开始时间 */}
-                    <div
-                      onMouseDown={(e) => handleResizeStart(e, t.id, 'top', colStartMin, t)}
-                      style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 1 }}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, marginTop: 4 }}>
-                      {t.mustAttend && <span style={{ fontSize: 9, flexShrink: 0 }}>🔴</span>}
-                      {t.category === 'work' && <span style={{ flexShrink: 0, fontSize: 10 }}>💼</span>}
-                      {t.category === 'personal' && <span style={{ flexShrink: 0, fontSize: 10 }}>🐱</span>}
-                      <Text strong delete={t.completed} style={{
-                        flex: 1, fontSize: 10, color: t.mustAttend ? '#222' : '#555',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        lineHeight: '14px',
-                      }}>{t.title}</Text>
-                      {t.isTodo && <Tag style={{ fontSize: 7, lineHeight: '10px', margin: 0, padding: '0 2px', flexShrink: 0 }}>待办</Tag>}
-                    </div>
-                    {/* 下边缘拖拽手柄 — 调结束时间 */}
-                    <div
-                      onMouseDown={(e) => handleResizeStart(e, t.id, 'bottom', colStartMin, t)}
-                      style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 1 }}
-                    />
-                    {heightPx > 24 && (
-                      <div className="drag-time" style={{ fontSize: 8, color: '#aaa', marginTop: 0, lineHeight: '12px' }}>
-                        {t.time}{t.endTime ? `-${t.endTime}` : ''}{t.location ? ` 📍${t.location}` : ''}
-                      </div>
-                    )}
+            {/* 日程卡片 — 直接放在网格列内，不用 overlay 包装层 */}
+            {positioned.map(ev => {
+              const t = ev.todo;
+              const wp = 100 / ev.totalColumns;
+              const lp = ev.column * wp;
+              const startRow = ((ev.startMin - colStartMin) / 15) + 1;
+              const endRow = ((ev.endMin - colStartMin) / 15) + 1;
+              const topPx = (startRow - 1) * BLOCK_H;
+              const heightPx = (endRow - startRow) * BLOCK_H;
+              return (
+                <div key={t.id} id={`todo-card-${t.id}`}
+                  onMouseDown={(e) => { if (!resizing) handleMoveStart(e, t, colStartMin); }}
+                  onClick={(e) => { if (!didDrag.current) { e.stopPropagation(); openEdit(t); } }}
+                  style={{
+                    userSelect: 'none', WebkitUserSelect: 'none',
+                    position: 'absolute', top: topPx, left: `${lp}%`,
+                    width: `calc(${wp}% - 4px)`, height: heightPx,
+                    boxSizing: 'border-box',
+                    padding: '1px 6px', borderRadius: 6,
+                    background: t.mustAttend ? `${t.color}28` : `${t.color}14`,
+                    borderLeft: t.mustAttend ? `5px solid ${t.color}` : `3px solid ${t.color}`,
+                    cursor: 'pointer', zIndex: t.mustAttend ? 3 : 2,
+                    boxShadow: t.mustAttend ? '0 1px 4px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.04)',
+                    overflow: 'hidden',
+                  }}>
+                  {/* 上边缘拖拽手柄 — 调开始时间 */}
+                  <div
+                    onMouseDown={(e) => handleResizeStart(e, t.id, 'top', colStartMin, t)}
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 1 }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, marginTop: 4 }}>
+                    {t.mustAttend && <span style={{ fontSize: 9, flexShrink: 0 }}>🔴</span>}
+                    {t.category === 'work' && <span style={{ flexShrink: 0, fontSize: 10 }}>💼</span>}
+                    {t.category === 'personal' && <span style={{ flexShrink: 0, fontSize: 10 }}>🐱</span>}
+                    <Text strong delete={t.completed} style={{
+                      flex: 1, fontSize: 10, color: t.mustAttend ? '#222' : '#555',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      lineHeight: '14px',
+                    }}>{t.title}</Text>
+                    {t.isTodo && <Tag style={{ fontSize: 7, lineHeight: '10px', margin: 0, padding: '0 2px', flexShrink: 0 }}>待办</Tag>}
                   </div>
-                );
-              })}
-            </div>
+                  {/* 下边缘拖拽手柄 — 调结束时间 */}
+                  <div
+                    onMouseDown={(e) => handleResizeStart(e, t.id, 'bottom', colStartMin, t)}
+                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 1 }}
+                  />
+                  {heightPx > 24 && (
+                    <div className="drag-time" style={{ fontSize: 8, color: '#aaa', marginTop: 0, lineHeight: '12px' }}>
+                      {t.time}{t.endTime ? `-${t.endTime}` : ''}{t.location ? ` 📍${t.location}` : ''}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {/* 当前时间红线 — 浮在最上层 */}
             {(() => {

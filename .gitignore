@@ -21,5 +21,7 @@ prisma/migrations/
 .DS_Store
 Thumbs.db
 
-# 日志
-*.log
+# Tauri 桌宠
+desktop-pet/node_modules/
+desktop-pet/src-tauri/target/
+desktop-pet/dist/

@@ -352,10 +352,10 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 
 **2026-07-15 | [日视图] 15分钟时间块 + 重叠并列 + 必须参加 + 拖拽调整**
 - 完整功能交付，见 CHANGELOG v1.1.1
-- 日程卡片渲染偏差：生产构建存在固定 1 行偏移，通过 +1 行补偿（top 和 height）解决
+- 日程卡片渲染偏差：~~生产构建存在固定 1 行偏移，通过 +1 行补偿（top 和 height）解决~~ → **2026-07-16 发现此补偿是 Bug 根因**：+1 行让每个卡片覆盖多一行网格单元格，阻碍空白格点击；拖拽 handler 中配套的 -15 分钟修正也随之移除。正确做法是去掉 +1 补偿 + 去掉 overlay 包装层（pointerEvents:none 在生产构建可能不生效），卡片直接放在网格列内。
 - 拖拽零卡顿方案：DOM 直控（`cardEl.style.top/height`），松手后读 DOM → setTodos → API 保存。不可在 mousemove 中 setTodos，否则全量重渲染导致闪烁
 - 时区：服务器 UTC，dayjs() 取到的时间比北京慢 8h。统一用 `dayjs().tz('Asia/Shanghai')` 或 `nowShanghai()` helper
-- 事件层 `bottom:0` 在生产构建中行为不一致，改用显式 `height: totalH`
+- ~~事件层 `bottom:0` 在生产构建中行为不一致，改用显式 `height: totalH`~~ → **2026-07-16 移除 overlay 包装层**：卡片直接放在 grid-col 内作为 absolute 子元素，不再需要 overlay 中间层。生产构建中 pointerEvents:none 可能不可靠，去掉中间层彻底消除点击穿透问题。
 
 **2026-07-15 | [部署] 阿里云→GitHub HTTPS TLS 被墙 + PM2 用户隔离**
 - 问题：服务器 `git pull https://github.com/...` 报 `GnuTLS recv error (-110)`，反复重试无效；切 SSH 后需配 SSH key 才能拉；部署时发现 `pm2 restart hr-platform` 报 not found
