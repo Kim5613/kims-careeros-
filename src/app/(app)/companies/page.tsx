@@ -373,7 +373,7 @@ export default function CompaniesPage() {
       render: (status: string) => {
         const color =
           status === '面试中' ? 'orange' : status === '已拿Offer' ? 'green' : 'blue';
-        return <Tag color={color} style={{ borderRadius: 14 }}>{status}</Tag>;
+        return <Tag color={color} style={{ borderRadius: 8 }}>{status}</Tag>;
       },
     },
     {
@@ -404,14 +404,14 @@ export default function CompaniesPage() {
       render: (status: string) => {
         const color =
           status === '已录用' ? 'green' : status === '面试中' ? 'orange' : 'default';
-        return <Tag color={color} style={{ borderRadius: 14 }}>{status}</Tag>;
+        return <Tag color={color} style={{ borderRadius: 8 }}>{status}</Tag>;
       },
     },
   ];
 
   // ── Render ──
   return (
-    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
+    <div style={{ padding: '40px 48px 24px', background: '#faf8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div
         style={{
@@ -431,7 +431,7 @@ export default function CompaniesPage() {
             管理关注和合作的公司信息，追踪关联的求职记录和候选人数据
           </Paragraph>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} size="large" style={{ borderRadius: 20 }} onClick={openCreateModal}>
+        <Button type="primary" icon={<PlusOutlined />} size="large" style={{ borderRadius: 8 }} onClick={openCreateModal}>
           新增公司
         </Button>
       </div>
@@ -441,7 +441,7 @@ export default function CompaniesPage() {
         <Col xs={12} sm={8} md={4}>
           <Card
             size="small"
-            style={{ borderRadius: 14, textAlign: 'center', borderTop: '3px solid #8b7cf0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+            style={{ borderRadius: 8, textAlign: 'center', borderTop: '3px solid #8b7cf0', boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)' }}
             styles={{ body: { padding: '10px 8px' } }}
           >
             <div style={{ fontSize: 22, fontWeight: 700, color: '#8b7cf0' }}>{companies.length}</div>
@@ -458,7 +458,7 @@ export default function CompaniesPage() {
               <Card
                 size="small"
                 style={{
-                  borderRadius: 14,
+                  borderRadius: 8,
                   textAlign: 'center',
                   borderTop: `3px solid ${
                     industry === '互联网/科技'
@@ -469,7 +469,7 @@ export default function CompaniesPage() {
                       ? '#faad14'
                       : '#722ed1'
                   }`,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)',
                 }}
                 styles={{ body: { padding: '10px 8px' } }}
               >
@@ -500,7 +500,7 @@ export default function CompaniesPage() {
       {/* Toolbar */}
       <Card
         size="small"
-        style={{ borderRadius: 20, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+        style={{ borderRadius: 8, marginBottom: 16, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)' }}
         styles={{ body: { padding: '12px 16px' } }}
       >
         <Space wrap size={10}>
@@ -508,14 +508,14 @@ export default function CompaniesPage() {
             placeholder="搜索公司名称..."
             prefix={<SearchOutlined style={{ color: '#bbb' }} />}
             allowClear
-            style={{ width: 220, borderRadius: 14 }}
+            style={{ width: 220, borderRadius: 8 }}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
           <Select
             placeholder="行业筛选"
             allowClear
-            style={{ width: 150, borderRadius: 14 }}
+            style={{ width: 150, borderRadius: 8 }}
             value={filterIndustry}
             onChange={(v) => setFilterIndustry(v)}
             options={INDUSTRY_OPTIONS.map((i) => ({ label: i, value: i }))}
@@ -523,7 +523,7 @@ export default function CompaniesPage() {
           <Select
             placeholder="城市筛选"
             allowClear
-            style={{ width: 130, borderRadius: 14 }}
+            style={{ width: 130, borderRadius: 8 }}
             value={filterCity}
             onChange={(v) => setFilterCity(v)}
             options={CITY_OPTIONS.map((c) => ({ label: c, value: c }))}
@@ -533,7 +533,7 @@ export default function CompaniesPage() {
 
       {/* Company Cards */}
       {filteredCompanies.length === 0 && !loading ? (
-        <Card style={{ borderRadius: 20, textAlign: 'center', padding: 40, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <Card style={{ borderRadius: 8, textAlign: 'center', padding: 40, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)' }}>
           <Empty description="暂无公司数据，点击「新增公司」开始构建公司库" />
         </Card>
       ) : (
@@ -542,7 +542,7 @@ export default function CompaniesPage() {
             <Col xs={24} sm={12} lg={8} xl={6} key={item.id}>
               <Card
                 hoverable
-                style={{ borderRadius: 20, height: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+                style={{ borderRadius: 8, height: '100%', boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)' }}
                 styles={{ body: { padding: '20px 20px 16px' } }}
                 onClick={() => openDrawer(item)}
                 actions={[
@@ -567,13 +567,13 @@ export default function CompaniesPage() {
                   </Title>
                   <Space size={6} wrap>
                     {item.industry && (
-                      <Tag style={{ borderRadius: 14 }} color={INDUSTRY_COLOR_MAP[item.industry] ?? 'default'}>
+                      <Tag style={{ borderRadius: 8 }} color={INDUSTRY_COLOR_MAP[item.industry] ?? 'default'}>
                         {item.industry}
                       </Tag>
                     )}
-                    {item.scale && <Tag style={{ borderRadius: 14 }}>{item.scale}</Tag>}
+                    {item.scale && <Tag style={{ borderRadius: 8 }}>{item.scale}</Tag>}
                     {item.city && (
-                      <Tag icon={<EnvironmentOutlined />} color="default" style={{ borderRadius: 14 }}>
+                      <Tag icon={<EnvironmentOutlined />} color="default" style={{ borderRadius: 8 }}>
                         {item.city}
                       </Tag>
                     )}
@@ -658,7 +658,7 @@ export default function CompaniesPage() {
             label="公司名称"
             rules={[{ required: true, message: '请输入公司名称' }]}
           >
-            <Input placeholder="如：字节跳动" style={{ borderRadius: 14 }} />
+            <Input placeholder="如：字节跳动" style={{ borderRadius: 8 }} />
           </Form.Item>
 
           <Row gutter={16}>
@@ -667,7 +667,7 @@ export default function CompaniesPage() {
                 <Select
                   placeholder="选择行业"
                   allowClear
-                  style={{ borderRadius: 14 }}
+                  style={{ borderRadius: 8 }}
                   options={INDUSTRY_OPTIONS.map((i) => ({ label: i, value: i }))}
                 />
               </Form.Item>
@@ -677,7 +677,7 @@ export default function CompaniesPage() {
                 <Select
                   placeholder="选择规模"
                   allowClear
-                  style={{ borderRadius: 14 }}
+                  style={{ borderRadius: 8 }}
                   options={SCALE_OPTIONS.map((s) => ({ label: s, value: s }))}
                 />
               </Form.Item>
@@ -690,14 +690,14 @@ export default function CompaniesPage() {
                 <Select
                   placeholder="选择城市"
                   allowClear
-                  style={{ borderRadius: 14 }}
+                  style={{ borderRadius: 8 }}
                   options={CITY_OPTIONS.map((c) => ({ label: c, value: c }))}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="website" label="官网">
-                <Input placeholder="https://www.example.com" prefix={<GlobalOutlined />} style={{ borderRadius: 14 }} />
+                <Input placeholder="https://www.example.com" prefix={<GlobalOutlined />} style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
           </Row>
@@ -708,7 +708,7 @@ export default function CompaniesPage() {
               placeholder="简要描述公司业务、文化和发展方向..."
               maxLength={1000}
               showCount
-              style={{ borderRadius: 14 }}
+              style={{ borderRadius: 8 }}
             />
           </Form.Item>
         </Form>
@@ -743,7 +743,7 @@ export default function CompaniesPage() {
                     行业
                   </Text>
                   {selectedCompany.industry ? (
-                    <Tag style={{ borderRadius: 14 }} color={INDUSTRY_COLOR_MAP[selectedCompany.industry] ?? 'default'}>
+                    <Tag style={{ borderRadius: 8 }} color={INDUSTRY_COLOR_MAP[selectedCompany.industry] ?? 'default'}>
                       {selectedCompany.industry}
                     </Tag>
                   ) : (

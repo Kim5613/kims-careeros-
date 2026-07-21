@@ -100,19 +100,12 @@ export default function DiagnosisPage() {
       if (!reader) throw new Error('No stream');
 
       const decoder = new TextDecoder();
-      let buffer = '';
+      let content = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-          if (line.startsWith('0:')) {
-            const text = line.slice(2).trim().replace(/^"|"$/g, '');
-            setReport(prev => prev + text);
-          }
-        }
+        content += decoder.decode(value, { stream: true });
+        setReport(content);
       }
     } catch (e: any) {
       setError(e.message || '生成失败，请稍后重试');
@@ -124,7 +117,7 @@ export default function DiagnosisPage() {
   const focusLabel = (k: string) => FOCUS_OPTIONS.find(o => o.key === k)?.label || k;
 
   return (
-    <div style={{ padding: '24px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
+    <div style={{ padding: '40px 48px 24px', background: '#faf8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20 }}>
         <div>
@@ -143,13 +136,13 @@ export default function DiagnosisPage() {
         message={'⚠️ 隐私提醒：本次分析走云端模型（DeepSeek），内容会发送到云端且不可撤回。建议简历脱敏：姓名→「X先生/女士」，删除手机/邮箱，现公司名→「现雇主A」。'}
         type="warning"
         showIcon
-        style={{ borderRadius: 14, marginBottom: 20, maxWidth: 800, margin: '0 auto 20px' }}
+        style={{ borderRadius: 8, marginBottom: 20, maxWidth: 800, margin: '0 auto 20px' }}
       />
 
       {/* Form Cards */}
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
         {/* 1: 目标公司 */}
-        <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: 14 }}
+        <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', marginBottom: 14 }}
           bodyStyle={{ padding: '20px 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <span style={{ fontSize: 18 }}>🏢</span>
@@ -158,14 +151,14 @@ export default function DiagnosisPage() {
           </div>
           <Input value={company} onChange={e => setCompany(e.target.value)}
             placeholder="公司名，简称或全称都行，如：字节、阿里巴巴、小红书……"
-            style={{ borderRadius: 14, fontSize: 14 }} size="large" />
+            style={{ borderRadius: 8, fontSize: 14 }} size="large" />
           <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 6 }}>
             集团名请注明具体 BU（如 阿里云 而非 阿里巴巴），不同 BU 现金流和稳定性可能完全不同
           </Text>
         </Card>
 
         {/* 2: 岗位 JD */}
-        <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: 14 }}
+        <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', marginBottom: 14 }}
           bodyStyle={{ padding: '20px 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <span style={{ fontSize: 18 }}>📋</span>
@@ -179,11 +172,11 @@ export default function DiagnosisPage() {
 [硬性-加分] "有 XX 经验优先"
 [软性-特质] 性格、风格、价值观
 [软性-场景] 工作模式、环境要求`}
-            autoSize={{ minRows: 4, maxRows: 10 }} style={{ borderRadius: 14, fontSize: 14 }} />
+            autoSize={{ minRows: 4, maxRows: 10 }} style={{ borderRadius: 8, fontSize: 14 }} />
         </Card>
 
         {/* 3: 简历 — 文件上传 */}
-        <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: 14 }}
+        <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', marginBottom: 14 }}
           bodyStyle={{ padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -205,7 +198,7 @@ export default function DiagnosisPage() {
                 showUploadList={false}
                 disabled={parsing}
                 beforeUpload={handleResumeUpload as any}
-                style={{ borderRadius: 14 }}>
+                style={{ borderRadius: 8 }}>
                 <p className="ant-upload-drag-icon" style={{ marginBottom: 8 }}>
                   {parsing ? <LoadingOutlined style={{ fontSize: 32, color: '#8b7cf0' }} /> : <InboxOutlined />}
                 </p>
@@ -243,13 +236,13 @@ export default function DiagnosisPage() {
 
 AI 会提取：核心技能 / 项目成果 / 平均任期 / 学历
 用于和 JD 做五维匹配（M1技能 M2年限 M3文化 M4经历 M5成长）`}
-              autoSize={{ minRows: 5, maxRows: 12 }} style={{ borderRadius: 14, fontSize: 14 }} />
+              autoSize={{ minRows: 5, maxRows: 12 }} style={{ borderRadius: 8, fontSize: 14 }} />
           )}
         </Card>
 
         {/* 4 & 5: 关注重点 + 深度 */}
         <div style={{ display: 'flex', gap: 14, marginBottom: 14 }}>
-          <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', flex: 1 }}
+          <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', flex: 1 }}
             bodyStyle={{ padding: '20px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <span style={{ fontSize: 18 }}>🎯</span>
@@ -267,7 +260,7 @@ AI 会提取：核心技能 / 项目成果 / 平均任期 / 学历
             </div>
           </Card>
 
-          <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', flex: '0 0 200px' }}
+          <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', flex: '0 0 200px' }}
             bodyStyle={{ padding: '20px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <span style={{ fontSize: 18 }}>📐</span>
@@ -293,7 +286,7 @@ AI 会提取：核心技能 / 项目成果 / 平均任期 / 学历
           <Button type="primary" size="large"
             icon={generating ? <LoadingOutlined /> : <ThunderboltOutlined />}
             onClick={handleGenerate} disabled={!canGenerate} loading={generating}
-            style={{ borderRadius: 20, height: 52, paddingInline: 48, fontSize: 16, background: canGenerate ? '#8b7cf0' : undefined, borderColor: canGenerate ? '#8b7cf0' : undefined }}>
+            style={{ borderRadius: 8, height: 52, paddingInline: 48, fontSize: 16, background: canGenerate ? '#8b7cf0' : undefined, borderColor: canGenerate ? '#8b7cf0' : undefined }}>
             {generating ? 'AI 正在联网调研并生成报告...' : '一键生成诊断报告'}
           </Button>
           {!canGenerate && (
@@ -307,7 +300,7 @@ AI 会提取：核心技能 / 项目成果 / 平均任期 / 学历
 
         {/* Error */}
         {error && (
-          <Card style={{ borderRadius: 20, border: '1px solid #ffccc7', background: '#fff2f0', marginBottom: 20 }}
+          <Card style={{ borderRadius: 8, border: '1px solid #ffccc7', background: '#fff2f0', marginBottom: 20 }}
             bodyStyle={{ padding: '16px 24px' }}>
             <Text type="danger">❌ {error}</Text>
           </Card>
@@ -319,7 +312,7 @@ AI 会提取：核心技能 / 项目成果 / 平均任期 / 学历
             <Divider style={{ margin: '8px 0 20px' }}>
               <Text type="secondary" style={{ fontSize: 13 }}><FileTextOutlined /> 诊断报告</Text>
             </Divider>
-            <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', background: '#fff' }}
+            <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', background: '#fff' }}
               bodyStyle={{ padding: '28px 32px' }}>
               {report ? (
                 <ReactMarkdown components={{

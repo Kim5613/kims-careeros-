@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import SidebarContent from './Sidebar';
+import AISkillPanel from '@/components/AISkillPanel';
 
 const DARK_ROUTES = ['/growth/career-sphere', '/growth/domain/'];
 
@@ -14,59 +15,41 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <div style={{ display: 'flex', minHeight: '100vh' }}>
-        {/* 触发带 — 左侧边缘细线 */}
-        <div
-          onMouseEnter={() => setCollapsed(false)}
-          style={{
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 10,
-            zIndex: 15,
-            cursor: 'pointer',
-          }}
-        />
-
-        {/* 毛玻璃菜单 */}
+        {/* 侧边栏 — 收起显示图标列 (60px)，hover 展开 (220px) */}
         <aside
+          onMouseEnter={() => setCollapsed(false)}
           onMouseLeave={() => setCollapsed(true)}
-          className={!collapsed ? 'sidebar-open' : ''}
           style={{
             position: 'fixed',
             left: 0,
             top: 0,
             bottom: 0,
-            width: collapsed ? 0 : 260,
+            width: collapsed ? 60 : 220,
             overflow: 'hidden',
             height: '100vh',
             zIndex: 10,
             background: isDark
-              ? 'rgba(13,13,13,0.85)'
-              : 'rgba(255,255,255,0.72)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+              ? 'rgba(13,13,13,0.92)'
+              : 'rgba(252,250,248,0.90)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             borderRight: isDark
-              ? '1px solid rgba(255,255,255,0.08)'
-              : '1px solid rgba(0,0,0,0.06)',
-            transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              ? '1px solid rgba(255,255,255,0.06)'
+              : '1px solid rgba(0,0,0,0.05)',
+            transition: 'width 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          {!collapsed && (
-            <div className="sidebar-stage">
-              <SidebarContent collapsed={false} />
-            </div>
-          )}
+          <SidebarContent collapsed={collapsed} />
         </aside>
 
         {/* 主内容 */}
         <main
           style={{
             flex: 1,
-            marginLeft: collapsed ? 0 : 260,
-            transition: 'margin-left 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            marginLeft: collapsed ? 60 : 220,
+            transition: 'margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
             minHeight: '100vh',
           }}
         >
@@ -74,7 +57,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* 芝士 — body 层级，不受页面布局影响（v1.2 桌宠待上线） */}
+      <AISkillPanel />
     </>
   );
 }

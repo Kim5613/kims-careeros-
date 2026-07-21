@@ -882,7 +882,7 @@ export default function DashboardPage() {
             onPressEnter={quickAdd}
             placeholder={qaIsTodo ? '输入待办，回车添加…' : '输入日程标题，回车添加…'}
             autoFocus
-            style={{ flex: 1, minWidth: 140 }}
+            style={{ flex: 1, minWidth: 140, fontWeight: 400 }}
             prefix={<span onClick={() => setQaCategory(qaCategory === 'work' ? 'personal' : 'work')}
               style={{ cursor: 'pointer', userSelect: 'none' }}>
               {qaCategory === 'work' ? '💼' : '🐱'}

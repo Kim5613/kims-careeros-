@@ -26,7 +26,21 @@
 | Git | HTTPS | **SSH** (git@github.com) |
 | 部署 | — | `git pull origin main && npm run build && pm2 restart hr-platform` |
 
-### 4. 先查文档再动手
+### 5. Skill 强制调用规则（2026-07-21 新增）
+
+以下场景**必须先调 skill 再动手**，不准凭直觉直接写代码：
+
+| 场景 | 必须调用的 Skill |
+|------|-----------------|
+| 设计新功能、写 PRD、规划模块 | `pm-spec-writing` + `jtbd-framing` |
+| 改 UI 布局、配色、排版、组件样式 | `ui-design-review` |
+| 设计交互流程、hover/点击/弹窗等交互链 | `cognitive-walkthrough` |
+| 重新设计信息架构、页面结构 | `ux-audit-rethink` |
+| 验证功能设计是否符合用户实际行为 | `discovery-research-synthesis` |
+
+**触发词检测**：只要用户说「设计」「排版」「交互」「流程」「方案」「规划」「重新设计」，自动检查上表。
+
+### 6. 先查文档再动手
 - 修 bug / 做功能前 → 读 `memory/project-kims-careeros.md` 技术坑点
 - 部署问题 → 读 `memory/project-kims-careeros.md` 部署相关坑点
 

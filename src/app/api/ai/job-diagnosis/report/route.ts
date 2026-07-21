@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server';
-import { streamText, tool } from 'ai';
+import { streamText } from 'ai';
 import { deepseek } from '@ai-sdk/deepseek';
-import { z } from 'zod';
-import { searchWeb, fetchPage } from '@/lib/ai/search';
+import { searchWeb } from '@/lib/ai/search';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -130,7 +129,24 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const userMessage = `## 目标公司
+    // 服务端直接搜索，绕过 AI SDK 工具调用问题
+    let searchContext = '';
+    try {
+      const queries = [
+        `${company} 公司 融资 财报`,
+         `${company} 员工评价 工作体验`,
+      ];
+      const results = await Promise.all(queries.map(q => searchWeb(q, 3)));
+      searchContext = results.map((res:any) => (res.results||[]).map((r:any) => `- ${r.title||''}: ${r.snippet||''}`).join('\n')).join('\n');
+    } catch (_) { searchContext = '(联网搜索暂不可用)'; }
+
+    let contextNote = '';
+    try {
+      const existing = await prisma.company.findFirst({ where: { name: { contains: company.slice(0, 4) } } });
+      if (existing) { contextNote += `\n[数据库] ${existing.name}（${existing.industry || ''}，${existing.scale || ''}）`; }
+    } catch (_) {}
+
+    const fullPrompt = `## 目标公司
 ${company}
 
 ## 岗位 JD
@@ -139,52 +155,24 @@ ${jd}
 ## 我的简历
 ${resume}
 
-## 关注重点
-${focus || '稳定性、成长空间、工作生活平衡'}
+## 联网调研结果
+${searchContext}
+${contextNote}
 
 ## 深度档位
-${depth === 'deep' ? '深度版（请做更详尽的联网调研和交叉验证）' : '标准版'}
+${depth === 'deep' ? '深度版' : '标准版'}
 
-请严格按照输出格式，生成完整的求职适配度诊断报告。先用 searchWeb 做必要的联网调研。`;
-
-    // 注入数据上下文
-    let contextNote = '';
-    try {
-      const existing = await prisma.company.findFirst({
-        where: { name: { contains: company.slice(0, 4) } },
-      });
-      if (existing) {
-        contextNote += `\n[数据库] 公司库已有记录：${existing.name}（${existing.industry || '未知行业'}，${existing.scale || '未知规模'}）`;
-      }
-    } catch (_) { /* skip */ }
+请基于以上调研结果，严格按照输出格式生成完整的求职适配度诊断报告。`;
 
     const result = streamText({
       model: deepseek('deepseek-chat'),
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT + contextNote },
-        { role: 'user', content: userMessage },
-      ],
-      tools: {
-        searchWeb: tool({
-          description: '搜索互联网获取公司信息、行业数据、舆情',
-          inputSchema: z.object({ query: z.string(), limit: z.number().optional().default(5) }),
-          execute: async ({ query, limit }: any) => {
-            const results = await searchWeb(query, limit || 5);
-            return results;
-          },
-        }),
-        fetchPage: tool({
-          description: '抓取网页内容',
-          inputSchema: z.object({ url: z.string() }),
-          execute: async ({ url }: any) => {
-            const content = await fetchPage(url);
-            return content;
-          },
-        }),
-      },
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: fullPrompt }],
     });
 
-    return result.toTextStreamResponse();
+    let fullText = '';
+    for await (const chunk of result.textStream) { fullText += chunk; }
+    return new Response(JSON.stringify({ report: fullText }), { headers: { 'Content-Type': 'application/json' } });
   } catch (error: any) {
     console.error('[job-diagnosis/report] Error:', error);
     return new Response(JSON.stringify({ error: '报告生成失败，请稍后重试' }), {

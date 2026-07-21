@@ -18,23 +18,28 @@ export function AntdConfigProvider({ children }: { children: React.ReactNode }) 
       theme={{
         token: {
           colorPrimary: primaryColor,
-          borderRadius: radius.md,
+          borderRadius: radius.sm,
           colorBgContainer: colors.surface,
           colorBgLayout: colors.bg,
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif',
+          fontSize: 14,
+          colorText: colors.text,
+          colorTextSecondary: colors.textSecondary,
+          colorBorder: colors.border,
         },
         components: {
           Card: {
-            borderRadiusLG: radius.lg,
+            borderRadiusLG: radius.md,
             paddingLG: 20,
           },
           Button: {
-            borderRadius: radius.lg,
+            borderRadius: radius.sm,
             primaryShadow: 'none',
+            defaultShadow: 'none',
           },
           Table: {
-            borderRadius: radius.lg,
-            headerBg: colors.bg,
+            borderRadius: radius.md,
+            headerBg: colors.bgWarm,
             headerBorderRadius: radius.sm,
           },
           Modal: {
@@ -44,19 +49,27 @@ export function AntdConfigProvider({ children }: { children: React.ReactNode }) 
             borderRadiusSM: radius.sm,
           },
           Segmented: {
-            borderRadius: radius.lg,
+            borderRadius: radius.sm,
+          },
+          Input: {
+            borderRadius: radius.sm,
+            activeBorderColor: primaryColor,
           },
           Menu: {
-            itemBorderRadius: radius.md,
+            itemBorderRadius: radius.sm,
             itemSelectedBg: colors.primaryLight,
             itemSelectedColor: primaryColor,
-            itemActiveBg: '#f3f1ee',
-            itemColor: '#666',
-            itemHoverColor: '#333',
+            itemActiveBg: colors.bgWarm,
+            itemColor: colors.textSecondary,
+            itemHoverColor: colors.text,
             subMenuItemBg: 'transparent',
           },
+          Typography: {
+            titleMarginBottom: 0,
+            titleMarginTop: 0,
+          },
           Layout: {
-            siderBg: '#fcfbfa',
+            siderBg: 'transparent',
           },
         },
       }}

@@ -57,14 +57,10 @@ export async function POST(req: NextRequest) {
       }
     } catch (_) { /* 数据库不可用时跳过 */ }
 
-    const allMessages = [
-      { role: 'system', content: SYSTEM_PROMPT + contextNote },
-      ...(messages || []),
-    ];
-
     const result = streamText({
       model: deepseek('deepseek-chat'),
-      messages: allMessages,
+      system: SYSTEM_PROMPT + contextNote,
+      messages: (messages || []),
       tools: {
         searchWeb: tool({
           description: '搜索互联网获取公司信息、行业数据、舆情',

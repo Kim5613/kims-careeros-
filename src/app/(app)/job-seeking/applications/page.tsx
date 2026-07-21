@@ -191,11 +191,11 @@ export default function ApplicationsPage() {
   };
 
   return (
-    <div style={{ padding: '24px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
+    <div style={{ padding: '40px 48px 24px', background: '#faf8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <Title level={3} style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>投递管理</Title>
-        <Button type="primary" icon={<PlusOutlined />} style={{ borderRadius: 14 }}
+        <Button type="primary" icon={<PlusOutlined />} style={{ borderRadius: 8 }}
           onClick={() => setShowQuickAdd(!showQuickAdd)}>快速添加</Button>
       </div>
 
@@ -216,13 +216,13 @@ export default function ApplicationsPage() {
           {STAGE_TABS.map((t) => (
             <Button key={t.key} size="small"
               type={tab === t.key ? 'primary' : 'default'}
-              style={{ borderRadius: 14, background: tab === t.key ? t.color : '#fff', borderColor: tab === t.key ? t.color : '#e8e8e8', color: tab === t.key ? '#fff' : '#666', fontWeight: tab === t.key ? 600 : 400 }}
+              style={{ borderRadius: 8, background: tab === t.key ? t.color : '#fff', borderColor: tab === t.key ? t.color : '#e8e8e8', color: tab === t.key ? '#fff' : '#666', fontWeight: tab === t.key ? 600 : 400 }}
               onClick={() => setTab(t.key)}>
               {t.key}{t.key !== '全部' && <span style={{ marginLeft: 4, opacity: 0.8, fontSize: 11 }}>{mapped.filter((a) => a.currentStage === t.key).length}</span>}
             </Button>
           ))}
         </div>
-        <Input size="small" placeholder="搜索公司/职位/行业/城市" prefix={<SearchOutlined style={{ color: '#bbb' }} />} value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 220, borderRadius: 14 }} />
+        <Input size="small" placeholder="搜索公司/职位/行业/城市" prefix={<SearchOutlined style={{ color: '#bbb' }} />} value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 220, borderRadius: 8 }} />
       </div>
 
       {/* Card Grid */}
@@ -241,7 +241,7 @@ export default function ApplicationsPage() {
                 hoverable
                 onClick={() => setDetail(app)}
                 style={{
-                  borderRadius: 14,
+                  borderRadius: 8,
                   boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
                   cursor: 'pointer',
                   transition: 'all 0.2s',

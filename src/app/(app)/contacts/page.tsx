@@ -279,7 +279,7 @@ export default function ContactsPage() {
       key: 'relationType',
       width: 110,
       render: (type: string) => (
-        <Tag color={RELATION_COLOR_MAP[type] ?? 'default'} style={{ borderRadius: 14 }}>{type}</Tag>
+        <Tag color={RELATION_COLOR_MAP[type] ?? 'default'} style={{ borderRadius: 8 }}>{type}</Tag>
       ),
       filters: RELATION_TYPE_OPTIONS.map((t) => ({ text: t, value: t })),
       onFilter: (value, record) => record.relationType === value,
@@ -323,7 +323,7 @@ export default function ContactsPage() {
       dataIndex: 'tags',
       key: 'tags',
       width: 160,
-      render: (tags: string[]) => tags && tags.length > 0 ? <Space size={2} wrap>{tags.map((t: string) => <Tag key={t} style={{ fontSize: 11, borderRadius: 14 }}>{t}</Tag>)}</Space> : '-',
+      render: (tags: string[]) => tags && tags.length > 0 ? <Space size={2} wrap>{tags.map((t: string) => <Tag key={t} style={{ fontSize: 11, borderRadius: 8 }}>{t}</Tag>)}</Space> : '-',
     },
     {
       title: '上次互动',
@@ -333,7 +333,7 @@ export default function ContactsPage() {
       render: (d: string | null) => {
         if (!d) return <Text type="secondary">-</Text>;
         const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
-        return <Tag color={days > 180 ? 'red' : days > 90 ? 'orange' : 'green'} style={{ borderRadius: 14 }}>{d}</Tag>;
+        return <Tag color={days > 180 ? 'red' : days > 90 ? 'orange' : 'green'} style={{ borderRadius: 8 }}>{d}</Tag>;
       },
     },
     {
@@ -381,7 +381,7 @@ export default function ContactsPage() {
         <Col xs={24} sm={12} lg={8} key={item.id}>
           <Card
             hoverable
-            style={{ borderRadius: 20, height: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+            style={{ borderRadius: 8, height: '100%', boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)' }}
             styles={{ body: { padding: '20px 20px 16px' } }}
             onClick={() => openEditModal(item)}
           >
@@ -408,7 +408,7 @@ export default function ContactsPage() {
                   <Title level={5} style={{ margin: 0 }}>
                     {item.name}
                   </Title>
-                  <Tag color={RELATION_COLOR_MAP[item.relationType] ?? 'default'} style={{ margin: 0, borderRadius: 14 }}>
+                  <Tag color={RELATION_COLOR_MAP[item.relationType] ?? 'default'} style={{ margin: 0, borderRadius: 8 }}>
                     {item.relationType}
                   </Tag>
                 </div>
@@ -460,7 +460,7 @@ export default function ContactsPage() {
 
   // ── Render ──
   return (
-    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
+    <div style={{ padding: '40px 48px 24px', background: '#faf8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div
         style={{
@@ -480,7 +480,7 @@ export default function ContactsPage() {
             管理职业人脉关系，记录猎头、同行、前同事等重要联系人
           </Paragraph>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openCreateModal} style={{ borderRadius: 20 }}>
+        <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openCreateModal} style={{ borderRadius: 8 }}>
           新增联系人
         </Button>
       </div>
@@ -496,7 +496,7 @@ export default function ContactsPage() {
         <Col xs={12} sm={8} md={4}>
           <Card
             size="small"
-            style={{ borderRadius: 14, textAlign: 'center', borderTop: '3px solid #8b7cf0' }}
+            style={{ borderRadius: 8, textAlign: 'center', borderTop: '3px solid #8b7cf0' }}
             styles={{ body: { padding: '10px 8px' } }}
           >
             <div style={{ fontSize: 22, fontWeight: 700, color: '#8b7cf0' }}>{contacts.length}</div>
@@ -510,7 +510,7 @@ export default function ContactsPage() {
             <Card
               size="small"
               style={{
-                borderRadius: 14,
+                borderRadius: 8,
                 textAlign: 'center',
                 borderTop: `3px solid ${
                   type === '猎头'
@@ -555,7 +555,7 @@ export default function ContactsPage() {
       {/* Toolbar */}
       <Card
         size="small"
-        style={{ borderRadius: 20, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+        style={{ borderRadius: 8, marginBottom: 16, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)' }}
         styles={{ body: { padding: '12px 16px' } }}
       >
         <div
@@ -572,19 +572,19 @@ export default function ContactsPage() {
               placeholder="搜索姓名、公司或备注..."
               prefix={<SearchOutlined style={{ color: '#bbb' }} />}
               allowClear
-              style={{ width: 240, borderRadius: 14 }}
+              style={{ width: 240, borderRadius: 8 }}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
             <Select
               placeholder="关系类型筛选"
               allowClear
-              style={{ width: 140, borderRadius: 14 }}
+              style={{ width: 140, borderRadius: 8 }}
               value={filterRelation}
               onChange={(v) => setFilterRelation(v)}
               options={RELATION_TYPE_OPTIONS.map((t) => ({
                 label: (
-                  <Tag color={RELATION_COLOR_MAP[t]} style={{ margin: 0, borderRadius: 14 }}>
+                  <Tag color={RELATION_COLOR_MAP[t]} style={{ margin: 0, borderRadius: 8 }}>
                     {t}
                   </Tag>
                 ),
@@ -605,7 +605,7 @@ export default function ContactsPage() {
 
       {/* Content */}
       {filteredContacts.length === 0 && !loading ? (
-        <Card style={{ borderRadius: 20, textAlign: 'center', padding: 40, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <Card style={{ borderRadius: 8, textAlign: 'center', padding: 40, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)' }}>
           <TeamOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
           <br />
           <Text type="secondary" style={{ fontSize: 14 }}>
@@ -615,7 +615,7 @@ export default function ContactsPage() {
       ) : viewMode === 'card' ? (
         renderCardView()
       ) : (
-        <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }} styles={{ body: { padding: 0 } }}>
+        <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)' }} styles={{ body: { padding: 0 } }}>
           <Table<ContactItem>
             columns={columns}
             dataSource={filteredContacts}
@@ -637,7 +637,7 @@ export default function ContactsPage() {
       </>)}
 
       {activeTab === 'candidates' && (
-        <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }} styles={{ body: { padding: 0 } }}>
+        <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)' }} styles={{ body: { padding: 0 } }}>
           <Table
             dataSource={candidates}
             rowKey="id"
@@ -646,8 +646,8 @@ export default function ContactsPage() {
               { title: '姓名', dataIndex: 'name', key: 'name', width: 100, render: (n: string) => <Text strong>{n}</Text> },
               { title: '职位', dataIndex: 'position', key: 'position', width: 140, render: (p: string) => p || '-' },
               { title: '公司', dataIndex: 'company', key: 'company', width: 140, render: (c: any) => typeof c === 'string' ? c : c?.name || '-' },
-              { title: '状态', dataIndex: 'status', key: 'status', width: 100, render: (s: string) => <Tag color={s === '已发Offer' ? 'green' : s === '面试中' ? 'orange' : s === '待筛选' ? 'blue' : 'default'} style={{ borderRadius: 14 }}>{s || '-'}</Tag> },
-              { title: '人才库', dataIndex: 'talentPoolTag', key: 'talentPoolTag', width: 80, render: (t: boolean) => t ? <Tag color="gold" style={{ borderRadius: 14 }}>★ 人才库</Tag> : null },
+              { title: '状态', dataIndex: 'status', key: 'status', width: 100, render: (s: string) => <Tag color={s === '已发Offer' ? 'green' : s === '面试中' ? 'orange' : s === '待筛选' ? 'blue' : 'default'} style={{ borderRadius: 8 }}>{s || '-'}</Tag> },
+              { title: '人才库', dataIndex: 'talentPoolTag', key: 'talentPoolTag', width: 80, render: (t: boolean) => t ? <Tag color="gold" style={{ borderRadius: 8 }}>★ 人才库</Tag> : null },
               { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 110, render: (d: string) => d ? new Date(d).toLocaleDateString('zh-CN') : '-' },
             ]}
             locale={{ emptyText: <Empty description="暂无候选人" /> }}
@@ -685,7 +685,7 @@ export default function ContactsPage() {
                 label="姓名"
                 rules={[{ required: true, message: '请输入联系人姓名' }]}
               >
-                <Input placeholder="联系人姓名" style={{ borderRadius: 14 }} />
+                <Input placeholder="联系人姓名" style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -695,10 +695,10 @@ export default function ContactsPage() {
                 rules={[{ required: true, message: '请选择关系类型' }]}
               >
                 <Select
-                  style={{ borderRadius: 14 }}
+                  style={{ borderRadius: 8 }}
                   options={RELATION_TYPE_OPTIONS.map((t) => ({
                     label: (
-                      <Tag color={RELATION_COLOR_MAP[t]} style={{ margin: 0, borderRadius: 14 }}>
+                      <Tag color={RELATION_COLOR_MAP[t]} style={{ margin: 0, borderRadius: 8 }}>
                         {t}
                       </Tag>
                     ),
@@ -710,39 +710,39 @@ export default function ContactsPage() {
           </Row>
 
           <Form.Item name="company" label="所在公司">
-            <Input placeholder="如：字节跳动" style={{ borderRadius: 14 }} />
+            <Input placeholder="如：字节跳动" style={{ borderRadius: 8 }} />
           </Form.Item>
 
           <Row gutter={14}>
             <Col span={8}>
               <Form.Item name="phone" label="电话">
-                <Input placeholder="手机号码" prefix={<PhoneOutlined />} style={{ borderRadius: 14 }} />
+                <Input placeholder="手机号码" prefix={<PhoneOutlined />} style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="email" label="邮箱">
-                <Input placeholder="电子邮箱" prefix={<MailOutlined />} style={{ borderRadius: 14 }} />
+                <Input placeholder="电子邮箱" prefix={<MailOutlined />} style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="wechat" label="微信">
-                <Input placeholder="微信号" prefix={<WechatOutlined />} style={{ borderRadius: 14 }} />
+                <Input placeholder="微信号" prefix={<WechatOutlined />} style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item name="tags" label="标签">
-            <Select mode="tags" placeholder="输入后回车添加，如：技术方向、高潜、可内推" style={{ borderRadius: 14 }} />
+            <Select mode="tags" placeholder="输入后回车添加，如：技术方向、高潜、可内推" style={{ borderRadius: 8 }} />
           </Form.Item>
           <Row gutter={14}>
             <Col span={12}>
               <Form.Item name="lastInteractionDate" label="上次互动">
-                <Input placeholder="2026-06-01" style={{ borderRadius: 14 }} />
+                <Input placeholder="2026-06-01" style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="interactionFrequency" label="联系频率">
-                <Select allowClear placeholder="选填" style={{ borderRadius: 14 }} options={[
+                <Select allowClear placeholder="选填" style={{ borderRadius: 8 }} options={[
                   { label: '每月', value: 'monthly' },
                   { label: '每季度', value: 'quarterly' },
                   { label: '每半年', value: 'halfYearly' },
@@ -751,7 +751,7 @@ export default function ContactsPage() {
             </Col>
           </Row>
           <Form.Item name="notes" label="备注">
-            <TextArea rows={2} placeholder="备注信息..." maxLength={500} showCount style={{ borderRadius: 14 }} />
+            <TextArea rows={2} placeholder="备注信息..." maxLength={500} showCount style={{ borderRadius: 8 }} />
           </Form.Item>
         </Form>
       </Modal>

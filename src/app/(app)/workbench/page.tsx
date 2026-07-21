@@ -1,19 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Typography, Statistic, Tag, List, Skeleton, Empty } from 'antd';
-import {
-  FundOutlined, TeamOutlined, GlobalOutlined, BookOutlined,
-  TrophyOutlined,
-} from '@ant-design/icons';
+import { Typography, List, Skeleton } from 'antd';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
-
-interface ActivityItem {
-  id: string; type: string; title: string; subtitle: string; date: string; link: string;
-}
+const { Text } = Typography;
 
 export default function WorkbenchPage() {
   const router = useRouter();
@@ -28,109 +20,102 @@ export default function WorkbenchPage() {
       fetch('/api/contacts').then(r => r.json()).catch(() => []),
       fetch('/api/market-insights').then(r => r.json()).catch(() => []),
       fetch('/api/applications').then(r => r.json()).catch(() => []),
-      fetch('/api/dashboard/activity?limit=8').then(r => r.json()).catch(() => ({ activities: [] })),
-    ]).then(([companies, contacts, insights, applications, activityData]) => {
+    ]).then(([companies, contacts, insights, applications]) => {
       const comps = Array.isArray(companies) ? companies : [];
       const conts = Array.isArray(contacts) ? contacts : [];
       const insts = Array.isArray(insights) ? insights : [];
       const apps = Array.isArray(applications) ? applications : [];
-      setStats({
-        companies: comps.length,
-        contacts: conts.length,
-        insights: insts.length,
-        applications: apps.length,
-      });
-      setRecentCompanies(comps.slice(0, 5));
-      setRecentContacts(conts.slice(0, 5));
+      setStats({ companies: comps.length, contacts: conts.length, insights: insts.length, applications: apps.length });
+      setRecentCompanies(comps.slice(0, 6));
+      setRecentContacts(conts.slice(0, 6));
       setLoading(false);
     });
   }, []);
 
-  const statCards = [
-    { title: '公司', value: stats.companies, icon: <FundOutlined />, color: '#8b7cf0', link: '/companies' },
-    { title: '人脉', value: stats.contacts, icon: <TeamOutlined />, color: '#52c41a', link: '/contacts' },
-    { title: '市场洞察', value: stats.insights, icon: <GlobalOutlined />, color: '#1890ff', link: '/market' },
-    { title: '投递记录', value: stats.applications, icon: <BookOutlined />, color: '#fa8c16', link: '/job-seeking/applications' },
+  const metrics = [
+    { label: '公司', value: stats.companies, link: '/companies' },
+    { label: '人脉', value: stats.contacts, link: '/contacts' },
+    { label: '市场洞察', value: stats.insights, link: '/market' },
+    { label: '投递记录', value: stats.applications, link: '/job-seeking/applications' },
   ];
 
   return (
-    <div style={{ padding: '24px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20 }}>
-        <Title level={2} style={{ margin: 0, fontWeight: 600, letterSpacing: 1 }}>HR工作台</Title>
-        <Text style={{ fontSize: 13, color: '#bbb' }}>{dayjs().format('YYYY年M月D日 dddd')}</Text>
+    <div style={{ padding: '40px 48px 24px', background: '#faf8f6', minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 36 }}>
+        <Text style={{ fontSize: 11, fontWeight: 500, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Workbench</Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 2 }}>
+          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500, color: '#1a1a1a', letterSpacing: '-0.02em' }}>HR 工作台</h1>
+          <Text style={{ fontSize: 13, color: '#bbb' }}>{dayjs().format('M月D日 dddd')}</Text>
+        </div>
       </div>
 
-      {/* 统计卡片 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-        {statCards.map((s) => (
-          <Col xs={12} sm={6} key={s.title}>
-            <Card hoverable onClick={() => router.push(s.link)}
-              style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', cursor: 'pointer' }}
-              bodyStyle={{ padding: '18px 22px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic title={s.title} value={s.value} valueStyle={{ color: s.color, fontWeight: 600, fontSize: 30 }} />
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${s.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, fontSize: 18 }}>{s.icon}</div>
-              </div>
-            </Card>
-          </Col>
+      {/* 核心指标 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
+        {metrics.map((m) => (
+          <div
+            key={m.label}
+            onClick={() => router.push(m.link)}
+            style={{
+              cursor: 'pointer',
+              padding: '20px 22px',
+              borderRadius: 14,
+              background: '#fff',
+              boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)',
+              transition: 'box-shadow 0.2s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)'; }}
+          >
+            <div style={{ fontSize: 40, fontWeight: 300, color: '#1a1a1a', lineHeight: 1, marginBottom: 6 }}>{m.value}</div>
+            <div style={{ fontSize: 13, color: '#999' }}>{m.label}</div>
+          </div>
         ))}
-      </Row>
+      </div>
 
-      <Row gutter={[16, 16]}>
-        {/* 左栏：大师智囊团 + 最近公司 */}
-        <Col xs={24} md={8}>
-          <Card hoverable onClick={() => router.push('/hr-roundtable')}
-            style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', cursor: 'pointer',
-              borderLeft: '3px solid #8b7cf0', marginBottom: 16 }}
-            bodyStyle={{ padding: '18px 22px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: '#f0edff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏛️</div>
-              <div style={{ flex: 1 }}>
-                <Text strong style={{ fontSize: 15 }}>大师智囊团</Text>
-                <br /><Text type="secondary" style={{ fontSize: 12 }}>6 位 HR 大师 · 三轮追问 · 交锋与决议</Text>
+      {/* 最近公司 + 最近人脉 */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        {/* 最近公司 */}
+        <div style={{
+          padding: '22px 26px', borderRadius: 14, background: '#fff',
+          boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 500, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+            最近公司
+          </div>
+          {loading ? <Skeleton active paragraph={{ rows: 3 }} /> : recentCompanies.length > 0 ? (
+            recentCompanies.map((c: any) => (
+              <div key={c.id} onClick={() => router.push('/companies')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', cursor: 'pointer', borderBottom: '1px solid #f5f3f0' }}>
+                <Text style={{ fontSize: 13 }}>{c.name}</Text>
+                {c.industry && <Text style={{ fontSize: 12, color: '#bbb' }}>{c.industry}</Text>}
               </div>
-              <TrophyOutlined style={{ color: '#8b7cf0', fontSize: 16 }} />
-            </div>
-          </Card>
+            ))
+          ) : <Text style={{ color: '#ccc', fontSize: 13 }}>暂无公司</Text>}
+        </div>
 
-          {/* 最近公司 */}
-          <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-            bodyStyle={{ padding: '18px 22px' }}>
-            <Title level={5} style={{ margin: '0 0 10px', fontWeight: 600 }}>最近公司</Title>
-            {loading ? <Skeleton active paragraph={{ rows: 3 }} /> : recentCompanies.length > 0 ? (
-              recentCompanies.map((c: any) => (
-                <div key={c.id} onClick={() => router.push('/companies')}
-                  style={{ padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #f5f3f0' }}>
+        {/* 最近人脉 */}
+        <div style={{
+          padding: '22px 26px', borderRadius: 14, background: '#fff',
+          boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 500, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+            最近人脉
+          </div>
+          {loading ? <Skeleton active paragraph={{ rows: 3 }} /> : recentContacts.length > 0 ? (
+            recentContacts.map((c: any) => (
+              <div key={c.id} onClick={() => router.push('/contacts')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', cursor: 'pointer', borderBottom: '1px solid #f5f3f0' }}>
+                <div>
                   <Text style={{ fontSize: 13 }}>{c.name}</Text>
-                  {c.industry && <Tag style={{ marginLeft: 8, borderRadius: 8, fontSize: 11 }}>{c.industry}</Tag>}
+                  {c.position && <Text style={{ fontSize: 12, color: '#bbb', marginLeft: 8 }}>{c.position}</Text>}
                 </div>
-              ))
-            ) : <Text type="secondary" style={{ fontSize: 13 }}>暂无公司</Text>}
-          </Card>
-        </Col>
-
-        {/* 右栏：最近人脉 */}
-        <Col xs={24} md={16}>
-          <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-            bodyStyle={{ padding: '18px 22px' }}>
-            <Title level={5} style={{ margin: '0 0 14px', fontWeight: 600 }}>最近人脉</Title>
-            {loading ? <Skeleton active paragraph={{ rows: 6 }} /> : recentContacts.length > 0 ? (
-              <List dataSource={recentContacts} split={false}
-                renderItem={(c: any) => (
-                  <List.Item style={{ padding: '8px 0', cursor: 'pointer', borderBottom: '1px solid #f5f3f0' }}
-                    onClick={() => router.push('/contacts')}>
-                    <List.Item.Meta
-                      avatar={<Tag color={c.relationType === '猎头' ? 'blue' : c.relationType === 'HR同行' ? 'purple' : c.relationType === '前同事' ? 'green' : 'default'} style={{ borderRadius: 10, padding: '0 8px', fontSize: 12 }}>{c.relationType || '人脉'}</Tag>}
-                      title={<Text style={{ fontSize: 14 }}>{c.name}</Text>}
-                      description={<Text type="secondary" style={{ fontSize: 12 }}>{[c.company?.name, c.position, c.lastInteractionDate ? dayjs(c.lastInteractionDate).format('MM-DD') : ''].filter(Boolean).join(' · ')}</Text>}
-                    />
-                  </List.Item>
-                )} />
-            ) : <Empty description="暂无人脉" image={Empty.PRESENTED_IMAGE_SIMPLE} />}
-          </Card>
-        </Col>
-      </Row>
+                {c.relationType && <Text style={{ fontSize: 12, color: '#999' }}>{c.relationType}</Text>}
+              </div>
+            ))
+          ) : <Text style={{ color: '#ccc', fontSize: 13 }}>暂无人脉</Text>}
+        </div>
+      </div>
     </div>
   );
 }

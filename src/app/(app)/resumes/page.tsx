@@ -479,13 +479,13 @@ export default function ResumesPage() {
         <Text type="secondary">
           共 {resumes.length} 份简历，管理不同版本的简历以匹配不同岗位
         </Text>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateResume} style={{ borderRadius: 20 }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateResume} style={{ borderRadius: 8 }}>
           新增简历
         </Button>
       </div>
 
       {resumes.length === 0 ? (
-        <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center', padding: 40 }}>
+        <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', textAlign: 'center', padding: 40 }}>
           <Empty description="暂无简历，点击「新增简历」开始创建" />
         </Card>
       ) : (
@@ -494,7 +494,7 @@ export default function ResumesPage() {
             <Col xs={24} sm={12} lg={8} key={item.id}>
               <Card
                 hoverable
-                style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', height: '100%' }}
+                style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', height: '100%' }}
                 styles={{ body: { padding: '20px 20px 16px' } }}
                 actions={[
                   <Tooltip title="编辑" key="edit">
@@ -556,7 +556,7 @@ export default function ResumesPage() {
                 <Divider style={{ margin: '8px 0' }} />
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Tag color="blue" style={{ borderRadius: 14 }}>V{item.version}</Tag>
+                  <Tag color="blue" style={{ borderRadius: 8 }}>V{item.version}</Tag>
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {new Date(item.createdAt).toLocaleDateString('zh-CN')}
                   </Text>
@@ -579,13 +579,13 @@ export default function ResumesPage() {
         <Text type="secondary">
           共 {coverLetters.length} 封求职信，针对不同公司和岗位定制
         </Text>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateCl} style={{ borderRadius: 20 }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateCl} style={{ borderRadius: 8 }}>
           新增求职信
         </Button>
       </div>
 
       {coverLetters.length === 0 ? (
-        <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center', padding: 40 }}>
+        <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', textAlign: 'center', padding: 40 }}>
           <Empty description="暂无求职信，点击「新增求职信」开始创建" />
         </Card>
       ) : (
@@ -594,7 +594,7 @@ export default function ResumesPage() {
             <Col xs={24} sm={12} lg={8} key={item.id}>
               <Card
                 hoverable
-                style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', height: '100%' }}
+                style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', height: '100%' }}
                 styles={{ body: { padding: '20px 20px 16px' } }}
                 actions={[
                   <Tooltip title="编辑" key="edit">
@@ -677,13 +677,13 @@ export default function ResumesPage() {
           <Text type="secondary">
             共 {selfIntros.length} 条话术，按场景和时长分类管理
           </Text>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreateSi} style={{ borderRadius: 20 }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreateSi} style={{ borderRadius: 8 }}>
             新增话术
           </Button>
         </div>
 
         {selfIntros.length === 0 ? (
-          <Card style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center', padding: 40 }}>
+          <Card style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', textAlign: 'center', padding: 40 }}>
             <Empty description="暂无话术，点击「新增话术」开始创建" />
           </Card>
         ) : (
@@ -711,7 +711,7 @@ export default function ResumesPage() {
                     <Col xs={24} sm={12} lg={8} key={item.id}>
                       <Card
                         hoverable
-                        style={{ borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', height: '100%' }}
+                        style={{ borderRadius: 8, boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)', height: '100%' }}
                         styles={{ body: { padding: '20px 20px 16px' } }}
                         actions={[
                           <Tooltip title="编辑" key="edit">
@@ -739,12 +739,12 @@ export default function ResumesPage() {
                             <Tag
                               color={SCENARIO_COLOR_MAP[item.scenario] ?? 'default'}
                               icon={SCENARIO_ICON_MAP[item.scenario]}
-                              style={{ borderRadius: 14 }}
+                              style={{ borderRadius: 8 }}
                             >
                               {item.scenario}
                             </Tag>
                             {item.duration && (
-                              <Tag color={DURATION_COLOR_MAP[item.duration] ?? 'default'} style={{ borderRadius: 14 }}>
+                              <Tag color={DURATION_COLOR_MAP[item.duration] ?? 'default'} style={{ borderRadius: 8 }}>
                                 {item.duration}
                               </Tag>
                             )}
@@ -764,7 +764,7 @@ export default function ResumesPage() {
                         {item.tags.length > 0 && (
                           <div style={{ marginTop: 8 }}>
                             {item.tags.map((tag) => (
-                              <Tag key={tag} style={{ fontSize: 11, borderRadius: 14 }}>
+                              <Tag key={tag} style={{ fontSize: 11, borderRadius: 8 }}>
                                 {tag}
                               </Tag>
                             ))}
@@ -787,7 +787,7 @@ export default function ResumesPage() {
   // ════════════════════════════════════════════
 
   return (
-    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
+    <div style={{ padding: '40px 48px 24px', background: '#faf8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <Title level={3} style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>
@@ -861,18 +861,18 @@ export default function ResumesPage() {
             label="简历标题"
             rules={[{ required: true, message: '请输入简历标题' }]}
           >
-            <Input placeholder="如：高级前端工程师简历" style={{ borderRadius: 14 }} />
+            <Input placeholder="如：高级前端工程师简历" style={{ borderRadius: 8 }} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="targetPosition" label="目标岗位">
-                <Input placeholder="如：高级前端工程师" style={{ borderRadius: 14 }} />
+                <Input placeholder="如：高级前端工程师" style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="targetCompany" label="目标公司">
-                <Input placeholder="如：字节跳动" style={{ borderRadius: 14 }} />
+                <Input placeholder="如：字节跳动" style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
           </Row>
@@ -880,7 +880,7 @@ export default function ResumesPage() {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="version" label="版本号">
-                <Input type="number" min={1} placeholder="1" style={{ borderRadius: 14 }} />
+                <Input type="number" min={1} placeholder="1" style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -890,7 +890,7 @@ export default function ResumesPage() {
                     { label: '是', value: true },
                     { label: '否', value: false },
                   ]}
-                  style={{ borderRadius: 14 }}
+                  style={{ borderRadius: 8 }}
                 />
               </Form.Item>
             </Col>
@@ -906,7 +906,7 @@ export default function ResumesPage() {
               placeholder="粘贴或输入简历内容（支持 Markdown 格式）"
               maxLength={10000}
               showCount
-              style={{ borderRadius: 14 }}
+              style={{ borderRadius: 8 }}
             />
           </Form.Item>
         </Form>
@@ -963,12 +963,12 @@ export default function ResumesPage() {
           <div>
             <div style={{ marginBottom: 16 }}>
               <Space>
-                <Tag color="blue" style={{ borderRadius: 14 }}>V{previewResume.version}</Tag>
+                <Tag color="blue" style={{ borderRadius: 8 }}>V{previewResume.version}</Tag>
                 {previewResume.targetPosition && (
-                  <Tag color="cyan" style={{ borderRadius: 14 }}>{previewResume.targetPosition}</Tag>
+                  <Tag color="cyan" style={{ borderRadius: 8 }}>{previewResume.targetPosition}</Tag>
                 )}
                 {previewResume.targetCompany && (
-                  <Tag color="purple" style={{ borderRadius: 14 }}>{previewResume.targetCompany}</Tag>
+                  <Tag color="purple" style={{ borderRadius: 8 }}>{previewResume.targetCompany}</Tag>
                 )}
                 {previewResume.isDefault && (
                   <Badge count="默认" style={{ backgroundColor: '#faad14' }} />
@@ -1017,18 +1017,18 @@ export default function ResumesPage() {
             label="求职信标题"
             rules={[{ required: true, message: '请输入标题' }]}
           >
-            <Input placeholder="如：字节跳动-高级前端工程师求职信" style={{ borderRadius: 14 }} />
+            <Input placeholder="如：字节跳动-高级前端工程师求职信" style={{ borderRadius: 8 }} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="targetCompany" label="目标公司">
-                <Input placeholder="如：字节跳动" style={{ borderRadius: 14 }} />
+                <Input placeholder="如：字节跳动" style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="targetPosition" label="目标岗位">
-                <Input placeholder="如：高级前端工程师" style={{ borderRadius: 14 }} />
+                <Input placeholder="如：高级前端工程师" style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
           </Row>
@@ -1043,7 +1043,7 @@ export default function ResumesPage() {
               placeholder="撰写你的求职信内容..."
               maxLength={5000}
               showCount
-              style={{ borderRadius: 14 }}
+              style={{ borderRadius: 8 }}
             />
           </Form.Item>
         </Form>
@@ -1069,10 +1069,10 @@ export default function ResumesPage() {
             <div style={{ marginBottom: 16 }}>
               <Space>
                 {previewCl.targetCompany && (
-                  <Tag color="purple" style={{ borderRadius: 14 }}>{previewCl.targetCompany}</Tag>
+                  <Tag color="purple" style={{ borderRadius: 8 }}>{previewCl.targetCompany}</Tag>
                 )}
                 {previewCl.targetPosition && (
-                  <Tag color="blue" style={{ borderRadius: 14 }}>{previewCl.targetPosition}</Tag>
+                  <Tag color="blue" style={{ borderRadius: 8 }}>{previewCl.targetPosition}</Tag>
                 )}
               </Space>
             </div>
@@ -1123,7 +1123,7 @@ export default function ResumesPage() {
             label="话术标题"
             rules={[{ required: true, message: '请输入标题' }]}
           >
-            <Input placeholder="如：面试-1分钟标准自我介绍" style={{ borderRadius: 14 }} />
+            <Input placeholder="如：面试-1分钟标准自我介绍" style={{ borderRadius: 8 }} />
           </Form.Item>
 
           <Row gutter={16}>
@@ -1133,12 +1133,12 @@ export default function ResumesPage() {
                 label="使用场景"
                 rules={[{ required: true, message: '请选择场景' }]}
               >
-                <Select options={SCENARIO_OPTIONS} style={{ borderRadius: 14 }} />
+                <Select options={SCENARIO_OPTIONS} style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="duration" label="话术时长">
-                <Select options={DURATION_OPTIONS} placeholder="选择时长" allowClear style={{ borderRadius: 14 }} />
+                <Select options={DURATION_OPTIONS} placeholder="选择时长" allowClear style={{ borderRadius: 8 }} />
               </Form.Item>
             </Col>
           </Row>
@@ -1147,7 +1147,7 @@ export default function ResumesPage() {
             <Select
               mode="tags"
               placeholder="输入后回车添加标签"
-              style={{ width: '100%', borderRadius: 14 }}
+              style={{ width: '100%', borderRadius: 8 }}
             />
           </Form.Item>
 
@@ -1161,7 +1161,7 @@ export default function ResumesPage() {
               placeholder="输入自我介绍话术内容..."
               maxLength={3000}
               showCount
-              style={{ borderRadius: 14 }}
+              style={{ borderRadius: 8 }}
             />
           </Form.Item>
         </Form>

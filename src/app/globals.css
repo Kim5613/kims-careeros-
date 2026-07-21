@@ -6,48 +6,44 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   background: #faf8f6;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* 去掉 Ant Design Sider 默认白底 */
-.ant-layout-sider { background: #fcfbfa !important; }
-.ant-menu { background: transparent !important; }
+/* 页面切换淡入 */
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+main > * { animation: pageFadeIn 0.25s ease both; }
+
+/* 弹窗淡入 */
+@keyframes popoverIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Ant Design 全局覆盖 */
+.ant-layout-sider { background: transparent !important; }
+.ant-menu { background: transparent !important; border-inline-end: none !important; }
 .ant-menu-item { background: transparent !important; }
 .ant-menu-submenu-title { background: transparent !important; }
+.ant-card {
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02) !important;
+  transition: box-shadow 0.2s ease !important;
+}
+.ant-card:hover {
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04) !important;
+}
+.ant-btn { box-shadow: none !important; }
+.ant-tag { border: none !important; }
+.ant-empty-description { color: #bbb !important; }
+.ant-modal-body { padding: 20px 24px !important; }
 
-/* 滚动条 */
-::-webkit-scrollbar { width: 6px; }
+/* 滚动条 — 更细更淡 */
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #ccc; }
-
-/* 侧边栏卡片翻转动画 */
-.sidebar-stage .ant-menu-item,
-.sidebar-stage .ant-menu-submenu-title {
-  animation: cardFlipIn 1s ease both;
-  transform-origin: left center;
-}
-.sidebar-stage .ant-menu-item:nth-child(1),
-.sidebar-stage .ant-menu-submenu:nth-child(1) > .ant-menu-submenu-title { animation-delay: 0.04s; }
-.sidebar-stage .ant-menu-item:nth-child(2),
-.sidebar-stage .ant-menu-submenu:nth-child(2) > .ant-menu-submenu-title { animation-delay: 0.10s; }
-.sidebar-stage .ant-menu-item:nth-child(3),
-.sidebar-stage .ant-menu-submenu:nth-child(3) > .ant-menu-submenu-title { animation-delay: 0.16s; }
-.sidebar-stage .ant-menu-item:nth-child(4),
-.sidebar-stage .ant-menu-submenu:nth-child(4) > .ant-menu-submenu-title { animation-delay: 0.22s; }
-.sidebar-stage .ant-menu-item:nth-child(5),
-.sidebar-stage .ant-menu-submenu:nth-child(5) > .ant-menu-submenu-title { animation-delay: 0.28s; }
-.sidebar-stage .ant-menu-item:nth-child(6),
-.sidebar-stage .ant-menu-submenu:nth-child(6) > .ant-menu-submenu-title { animation-delay: 0.34s; }
-@keyframes cardFlipIn {
-  from {
-    opacity: 0;
-    transform: rotateY(-70deg) translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: rotateY(0deg) translateX(0);
-  }
-}
+::-webkit-scrollbar-thumb { background: #d8d4ce; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #c0bbb5; }
 
 /* ── View Transitions: 职业宇宙 ⇄ 引力透镜 空间连续过渡 ── */
 ::view-transition-old(root) {

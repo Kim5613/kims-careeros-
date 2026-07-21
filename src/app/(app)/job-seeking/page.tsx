@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useApiList } from '@/lib/hooks/useApi';
-import { Card, Row, Col, Button, Tag, Typography, Modal, Form, Input, Select, InputNumber, DatePicker, Space, Empty, message, Popconfirm } from 'antd';
+import { Button, Tag, Typography, Modal, Form, Input, Select, InputNumber, DatePicker, Row, Col, message, Popconfirm } from 'antd';
 import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -18,9 +18,9 @@ const INTERVIEW_TYPES = ['电话', '视频', '现场'];
 const INTERVIEW_ROUNDS = ['已沟通', '一面', '二面', '三面', '终面'];
 
 const COLUMN_CONFIG: Record<string, { color: string; bg: string }> = {
-  '已投递': { color: '#8b7cf0', bg: '#f6f3ff' },
-  '面试': { color: '#fa8c16', bg: '#fff7e6' },
-  'offer': { color: '#52c41a', bg: '#f6ffed' },
+  '已投递': { color: '#8b7cf0', bg: '#faf8fd' },
+  '面试': { color: '#e09840', bg: '#fdfaf6' },
+  'offer': { color: '#5ba85a', bg: '#f8fcf7' },
   '已结束': { color: '#999', bg: '#faf8f6' },
 };
 
@@ -40,18 +40,12 @@ interface JobApplication {
 
 function mapApp(item: any): JobApplication {
   return {
-    id: item.id,
-    companyName: item.company?.name || item.companyName || '',
-    industry: item.industry || '',
-    positionName: item.positionName || '',
-    salaryMin: item.salaryMin ?? null,
-    salaryMax: item.salaryMax ?? null,
-    currentStage: item.currentStage || '已投递',
-    stageDetail: item.stageDetail || null,
-    source: item.source || null,
-    appliedDate: item.appliedDate || null,
-    notes: item.notes || null,
-    createdAt: item.createdAt || '',
+    id: item.id, companyName: item.company?.name || item.companyName || '',
+    industry: item.industry || '', positionName: item.positionName || '',
+    salaryMin: item.salaryMin ?? null, salaryMax: item.salaryMax ?? null,
+    currentStage: item.currentStage || '已投递', stageDetail: item.stageDetail || null,
+    source: item.source || null, appliedDate: item.appliedDate || null,
+    notes: item.notes || null, createdAt: item.createdAt || '',
     interviews: (item.interviews || []).map((iv: any) => ({
       round: iv.round || '', interviewDate: iv.interviewDate || '', interviewType: iv.interviewType || '现场',
       interviewer: iv.interviewer || '', position: iv.position || '',
@@ -96,67 +90,75 @@ export default function JobSeekingPage() {
     finally { setModalLoading(false); }
   };
 
-  const stageLabel = (s: string, d: string | null) => d ? `${s}·${d}` : s;
   const columnsForStage = (stage: string) => filtered.filter((a) => a.currentStage === stage);
 
   return (
-    <div style={{ padding: '20px 32px 12px', background: '#faf8f6', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <Title level={3} style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>求职管理</Title>
-        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={openNew} style={{ borderRadius: 20 }}>新增记录</Button>
+    <div style={{ padding: '40px 48px 24px', background: '#faf8f6', minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <Text style={{ fontSize: 11, fontWeight: 500, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Job Seeking</Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
+          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500, color: '#1a1a1a', letterSpacing: '-0.02em' }}>求职看板</h1>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <Input prefix={<SearchOutlined />} placeholder="搜索公司或职位" value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 240, borderRadius: 10 }} />
+            <Button type="primary" icon={<PlusOutlined />} onClick={openNew} style={{ borderRadius: 10 }}>新增</Button>
+          </div>
+        </div>
       </div>
 
-      <Input prefix={<SearchOutlined />} placeholder="搜索公司或职位" value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 320, marginBottom: 20, borderRadius: 14 }} />
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      {/* 看板四列 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
         {MAIN_STAGES.map((stage) => {
           const config = COLUMN_CONFIG[stage] || { color: '#999', bg: '#fafafa' };
           const items = columnsForStage(stage);
           return (
-            <div key={stage} style={{ background: config.bg, borderRadius: 20, padding: 18, minHeight: 400, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div key={stage} style={{
+              background: config.bg, borderRadius: 8, padding: 16, minHeight: 420,
+              boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 5, background: config.color }} />
-                  <Text strong style={{ fontSize: 16, color: config.color }}>{stage}</Text>
+                  <span style={{ width: 7, height: 7, borderRadius: 3, background: config.color }} />
+                  <Text strong style={{ fontSize: 14, color: '#444' }}>{stage}</Text>
                 </div>
-                <Tag style={{ borderRadius: 14 }}>{items.length}</Tag>
+                <span style={{ fontSize: 12, color: '#bbb', fontWeight: 500 }}>{items.length}</span>
               </div>
 
               {items.length === 0 ? (
-                <Text type="secondary" style={{ fontSize: 13, textAlign: 'center', display: 'block', padding: 20 }}>暂无</Text>
+                <div style={{ textAlign: 'center', padding: '32px 0', color: '#ddd', fontSize: 13 }}>暂无</div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {items.map((app) => {
-                    const morandi = ['#c4b7c6','#a4b6c1','#b5c1b4','#c1b7a4','#b7b0c4','#a4c1b4'];
-                    return (
-                    <Card
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {items.map((app) => (
+                    <div
                       key={app.id}
-                      hoverable
-                      size="small"
-                      style={{ borderRadius: 14, borderLeft: `4px solid ${config.color}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-                      styles={{ body: { padding: '10px 14px' } }}
                       onClick={() => setViewApp(app)}
+                      style={{
+                        cursor: 'pointer', padding: '12px 14px', borderRadius: 10,
+                        background: '#fff',
+                        boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)',
+                        borderLeft: `3px solid ${config.color}`,
+                        transition: 'box-shadow 0.15s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)'; }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                          <Text strong style={{ fontSize: 14 }}>{app.companyName}</Text>
-                          {app.interviews.map((iv, i) => (
-                            <span key={i} style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: morandi[i % morandi.length], color: '#fff' }}>{i+1}面</span>
-                          ))}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Text strong style={{ fontSize: 13 }}>{app.companyName}</Text>
+                          <Text style={{ fontSize: 12, color: '#888', display: 'block', marginTop: 2 }}>
+                            {app.positionName}
+                            {(app.salaryMin || app.salaryMax) && <span> · {app.salaryMin ? `${(app.salaryMin/1000).toFixed(0)}K` : '?'}-{app.salaryMax ? `${(app.salaryMax/1000).toFixed(0)}K` : '?'}</span>}
+                          </Text>
                         </div>
-                        <div style={{ display: 'flex', gap: 2 }}>
-                          <Button type="text" size="small" icon={<EditOutlined style={{fontSize:12}}/>} onClick={(e) => { e.stopPropagation(); openEdit(app); }} />
+                        <div style={{ display: 'flex', gap: 1 }}>
+                          <Button type="text" size="small" icon={<EditOutlined style={{fontSize:11}}/>} onClick={(e) => { e.stopPropagation(); openEdit(app); }} />
                           <Popconfirm title="删除？" onConfirm={(e) => { e?.stopPropagation(); apiRemove(app.id); message.success('已删除'); }} okText="删" cancelText="否">
-                            <Button type="text" size="small" danger icon={<DeleteOutlined style={{fontSize:12}}/>} onClick={(e) => e.stopPropagation()} />
+                            <Button type="text" size="small" danger icon={<DeleteOutlined style={{fontSize:11}}/>} onClick={(e) => e.stopPropagation()} />
                           </Popconfirm>
                         </div>
                       </div>
-                      <Text style={{ fontSize: 12, color: '#555', display: 'block' }}>
-                        {app.positionName}
-                        {(app.salaryMin || app.salaryMax) && <span>，{app.salaryMin ? `${(app.salaryMin/1000).toFixed(0)}K` : '?'}-{app.salaryMax ? `${(app.salaryMax/1000).toFixed(0)}K` : '?'}</span>}
-                      </Text>
-                    </Card>
-                  )})}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -164,7 +166,7 @@ export default function JobSeekingPage() {
         })}
       </div>
 
-      {/* ── Add/Edit Modal ── */}
+      {/* ── Add/Edit Modal (unchanged) ── */}
       <Modal title={editing ? '编辑记录' : '新增记录'} open={modalOpen} onOk={handleSave} onCancel={() => setModalOpen(false)} confirmLoading={modalLoading} width={640} okText="保存" cancelText="取消">
         <Form form={form} layout="vertical" initialValues={{ currentStage: '已投递' }}>
           <Row gutter={16}>
@@ -186,7 +188,7 @@ export default function JobSeekingPage() {
         </Form>
       </Modal>
 
-      {/* ── Detail Modal ── */}
+      {/* ── Detail Modal (unchanged) ── */}
       <Modal title={viewApp ? `${viewApp.companyName} - ${viewApp.positionName}` : '详情'} open={!!viewApp} onCancel={() => { setViewApp(null); setShowIvForm(false); }} footer={null} width={640}>
         {viewApp && (
           <div>
@@ -198,7 +200,7 @@ export default function JobSeekingPage() {
               <Col span={8}><Text strong>行业：</Text>{viewApp.industry || '-'}</Col>
               <Col span={8}><Text strong>职位：</Text>{viewApp.positionName}</Col>
               <Col span={8}><Text strong>薪资：</Text>{viewApp.salaryMin ? `${viewApp.salaryMin}K` : '?'} - {viewApp.salaryMax ? `${viewApp.salaryMax}K` : '?'}</Col>
-              <Col span={8}><Text strong>节点：</Text><Tag color={COLUMN_CONFIG[viewApp.currentStage]?.color}>{stageLabel(viewApp.currentStage, viewApp.stageDetail)}</Tag></Col>
+              <Col span={8}><Text strong>节点：</Text><Tag color={COLUMN_CONFIG[viewApp.currentStage]?.color}>{viewApp.currentStage}{viewApp.stageDetail ? `·${viewApp.stageDetail}` : ''}</Tag></Col>
               <Col span={8}><Text strong>投递：</Text>{viewApp.appliedDate || '-'}</Col>
             </Row>
 
@@ -249,29 +251,29 @@ export default function JobSeekingPage() {
             {viewApp.interviews.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 {viewApp.interviews.map((iv, i) => (
-                  <Card key={iv.id || i} size="small" style={{ marginBottom: 8, borderRadius: 8 }}
-                    extra={
-                      <Button type="text" size="small" icon={<EditOutlined />} onClick={() => {
-                        setShowIvForm(true); setEditingIvId(iv.id || null);
-                        interviewForm.setFieldsValue({
-                          interviewDate: iv.interviewDate ? dayjs(iv.interviewDate) : null,
-                          interviewType: iv.interviewType, round: iv.round,
-                          interviewer: iv.interviewer, position: iv.position,
-                          title: iv.title, content: iv.content,
-                          result: iv.result, reviewNotes: iv.reviewNotes,
-                        });
-                      }} />
-                    }>
-                    <Row gutter={[12, 4]}>
-                      <Col span={4}><Text type="secondary">轮次</Text><br /><Tag color="blue">{iv.round || '-'}</Tag></Col>
-                      <Col span={6}><Text type="secondary">时间</Text><br /><Text>{iv.interviewDate}</Text></Col>
-                      <Col span={4}><Text type="secondary">形式</Text><br /><Tag>{iv.interviewType}</Tag></Col>
-                      <Col span={4}><Text type="secondary">面试官</Text><br /><Text>{iv.interviewer || '-'}</Text></Col>
-                      <Col span={3}><Text type="secondary">结果</Text><br /><Tag color={iv.result === '通过' ? 'green' : iv.result === '不通过' ? 'red' : 'default'}>{iv.result || '-'}</Tag></Col>
-                    </Row>
-                    {iv.content && <div style={{ marginTop: 8 }}><Text type="secondary">沟通内容：</Text><Text>{iv.content}</Text></div>}
-                    {iv.reviewNotes && <div style={{ marginTop: 8, background: '#fffbe6', padding: '8px 10px', borderRadius: 6 }}><Text type="secondary">复盘笔记：</Text><Text>{iv.reviewNotes}</Text></div>}
-                  </Card>
+                  <div key={iv.id || i} style={{ marginBottom: 8, padding: '12px 16px', borderRadius: 10, background: '#fafafa' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <Tag color="blue" style={{ margin: 0 }}>{iv.round || '-'}</Tag>
+                        <Text style={{ fontSize: 12, color: '#888' }}>{iv.interviewDate}</Text>
+                        <Text style={{ fontSize: 12, color: '#888' }}>{iv.interviewType}</Text>
+                        <Text style={{ fontSize: 12, color: '#888' }}>{iv.interviewer || '-'}</Text>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <Tag color={iv.result === '通过' ? 'green' : iv.result === '不通过' ? 'red' : 'default'} style={{ margin: 0 }}>{iv.result || '-'}</Tag>
+                        <Button type="text" size="small" icon={<EditOutlined />} onClick={() => {
+                          setShowIvForm(true); setEditingIvId(iv.id || null);
+                          interviewForm.setFieldsValue({ interviewDate: iv.interviewDate ? dayjs(iv.interviewDate) : null, interviewType: iv.interviewType, round: iv.round, interviewer: iv.interviewer, position: iv.position, title: iv.title, content: iv.content, result: iv.result, reviewNotes: iv.reviewNotes });
+                        }} />
+                      </div>
+                    </div>
+                    {iv.content && <Text style={{ fontSize: 13, color: '#666' }}>{iv.content}</Text>}
+                    {iv.reviewNotes && (
+                      <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 6, background: '#fffbe6' }}>
+                        <Text style={{ fontSize: 12, color: '#b8860b' }}>复盘：{iv.reviewNotes}</Text>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
