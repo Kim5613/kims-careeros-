@@ -1,19 +1,101 @@
-# Kim's CareerOS v1.2 — AI 桌宠助手"芝士" PRD
+# Kim's CareerOS v1.2 — AI 集成 PRD
 
-> 创建日期：2026-07-13 | 状态：✅ v1.2 核心功能交付，桌宠已在桌面运行
-> 最后更新：2026-07-14
-
----
-
-## 一、产品定位
-
-**一个悬浮在 Windows 桌面上的 AI 伙伴，名字叫"芝士"**。芝士 = 知识，是 Kim CareerOS 里所有数据的化身。像搜狗输入法图标一样永远在最上层，点击展开聊天面板，可以直接对话。AI 自动检索 CareerOS 数据库 + 实时联网搜索，能查数据、管日程、给建议、提供情绪价值。奶糕、奶棍、奶球是 Kim 的真实猫猫，芝士是 Kim 的电子猫猫。
+> 创建日期：2026-07-13 | 状态：🚧 进行中
+> 最后更新：2026-07-21
 
 ---
 
-## 二、功能清单
+## 一、v1.2 定位
 
-### Phase 1 — MVP（已完成代码，待环境配置）
+**将 AI 能力深度集成到 CareerOS 工作流中。** 不再是外挂一个聊天窗口，而是让 AI 直接参与求职诊断、HR 决策、数据聚合等核心场景。
+
+### 两条线
+
+| 线 | 内容 | 状态 |
+|----|------|:--:|
+| 🌐 Web AI 工具 | 岗位诊断 + 大师智囊团，嵌入 Web 应用 | ✅ 2026-07-21 交付 |
+| 🐱 桌面桌宠 | Tauri 悬浮窗口 AI 伙伴 "芝士" | ⏸️ 暂停（代码保留） |
+
+---
+
+## 二、Web AI 工具（✅ 已交付 2026-07-21）
+
+### 2.1 岗位诊断 (`/job-seeking/diagnosis`)
+
+**定位**：求职适配度一键诊断。JD + 简历 + 公司名 → AI 联网调研 → 红黄绿灯报告。
+
+| 功能 | 描述 |
+|------|------|
+| 结构化输入 | 公司名 / JD 粘贴 / 简历上传解析 / 关注重点 / 深度档位 |
+| 简历文件解析 | 拖拽上传 PDF/Word/图片/MD/TXT，自动 OCR/提取文字 |
+| 一键生成报告 | 联网搜索 + JD 四分类 + 五维人岗匹配 + 真实招聘意图 + CEO 独白 + 反向逼问 |
+| 流式输出 | 报告实时渲染 Markdown，支持表格、引用、代码块 |
+
+**入口**：侧边栏 个人 → 求职 → 岗位诊断；个人总览页卡片
+
+### 2.2 大师智囊团（嵌入 `/personal`）
+
+**定位**：6 位 HR 大师虚拟顾问团。三轮追问 → 共识与分歧 → CHO 佳宇最终结论。
+
+| 功能 | 描述 |
+|------|------|
+| 六位大师 | 查兰（战略）/ 尤里奇（人才）/ 沙因（文化）/ 鸿鹄（实战）/ 平克（激励）/ 桑德伯格（包容） |
+| 三轮追问 | 背景收集 → 痛点深挖 → 期望目标 |
+| 观点交锋 | 大师之间必须呈现分歧和不同立场 |
+| CHO 结论 | 佳宇综合大师观点给出最终行动建议 |
+| 数据串联 | 自动注入公司库、人脉库、市场洞察数据作为上下文 |
+
+**入口**：个人总览页（`/personal`）橙色卡片，点击原地展开聊天，可收起
+
+### 2.3 AI 基础设施
+
+| 组件 | 路径 | 说明 |
+|------|------|------|
+| 岗位诊断对话 | `/api/ai/job-diagnosis` | 流式对话接口 |
+| 一键报告生成 | `/api/ai/job-diagnosis/report` | 结构化输入 → 流式报告 |
+| 大师智囊团对话 | `/api/ai/hr-roundtable` | 流式对话接口 |
+| 简历解析 | `/api/parse/resume` | 文件上传 → 解析 → 返回文本 |
+| 搜索模块 | `src/lib/ai/search.ts` | DuckDuckGo（免费）+ Tavily（可选） |
+| AI 模型 | DeepSeek (`deepseek-chat`) | 通过 Vercel AI SDK v7 |
+
+### 2.4 页面架构调整
+
+新增页面和导航结构：
+
+```
+🏠 首页 (/)              ← 日历/待办（不变）
+👤 个人 (/personal)       ← 新增一级页：统计+本周重点+动态+AI工具
+  ├─ 求职
+  │   ├─ 概览
+  │   ├─ 投递
+  │   └─ 🔮 岗位诊断       ← 新增
+  ├─ 薪酬
+  ├─ 简历
+  └─ 档案
+👥 HR工作台 (/workbench)   ← 新增一级页：统计+公司+人脉
+  ├─ 公司库
+  ├─ 人脉库
+  └─ 市场洞察
+📚 知识库
+⚙️ 设置
+```
+
+### 2.5 数据串联设计
+
+AI 工具不只是独立对话，而是能实时读取 CareerOS 数据库：
+
+| 工具 | 串联数据 |
+|------|---------|
+| 岗位诊断 | 简历库（默认简历自动注入）、公司库（已有记录自动关联）、投递记录（避免重复投递） |
+| 大师智囊团 | 公司库、人脉库、市场洞察（自动注入为对话上下文） |
+
+---
+
+## 三、桌面桌宠（⏸️ 暂停 2026-07-16）
+
+Phase 1 代码已完成但保留在本地，未上线。待 Kim 重新理清思路后启动。
+
+### 已完成的代码
 
 | 功能 | 描述 | 状态 |
 |------|------|:--:|
@@ -33,134 +115,63 @@
 | 上下文感知 | 自动注入今日日程、面试、投递状态 | ✅ |
 | 语音输入 | Web Speech API，长按触发 | ✅ |
 | 多变人格 | 专业/温暖/毒舌三模式自动切换 | ✅ |
+| 联网搜索 | DuckDuckGo/Tavily 搜索 + 页面抓取 | ✅ |
 
-### Phase 2 — 联网搜索（✅ 已完成）
+### 待定事项
 
-| 功能 | 描述 | 状态 |
-|------|------|:--:|
-| 快速搜索 | 单轮搜索，几秒返回结果（DuckDuckGo/Tavily） | ✅ |
-| 页面抓取 | 抓取指定网页全文，用于深度分析 | ✅ |
-| 深度研究 | 模型自主编排：搜索→挑链接→抓取→交叉验证→带引用报告 | ✅ |
-| 搜索工具 | searchWeb + fetchPage 两个工具注册到 /api/chat | ✅ |
-
-### Phase 3 — 主动提醒 + 调参面板（待开发）
-
-| 功能 | 触发条件 |
-|------|---------|
-| 日程提醒 | 面试/会议前 30 分钟弹气泡 |
-| 待办积压 | 连续 3 天未清理待办 |
-| 每日早安 | 当天第一次互动 |
-| 每周复盘 | 周日晚自动生成周报 |
-| 数据变化 | 投递状态变更（如收到面试邀请） |
-| 情绪感知 | 检测到 Kim 话风变丧时切换温暖模式 |
-| 调参面板 | 所有主动提醒开关，实时生效 |
+| 事项 | 状态 |
+|------|------|
+| 桌宠名字 | ✅ **芝士** |
+| 桌宠形象 | 待 Kim 提供参考图 |
+| Anthropic API Key | 待填入 `.env` |
+| Rust 环境 | 待安装 |
+| 主动提醒系统 | 待开发 |
+| 调参面板 | 待开发 |
 
 ---
 
-## 三、技术架构
+## 四、技术架构（更新）
 
 ```
-Windows 桌面
-├─ 🐱 桌宠（Tauri 2.0 独立应用）
-│   ├─ Rust 后端：窗口管理、系统托盘、全局快捷键
-│   ├─ React 19 前端：精灵动画、聊天面板、语音输入
-│   └─ 通过 HTTP 调用 CareerOS API（localhost:3000）
-│
-└─ 🌐 CareerOS（Next.js 14 Web 应用）
-    ├─ POST /api/chat    ← AI 对话接口（Vercel AI SDK + Claude）
-    ├─ 10 个工具函数      ← 日程 CRUD + 数据查询（Prisma → PostgreSQL）
-    ├─ 系统提示词          ← 三模式人格 + 主动搭话规则
-    └─ 上下文构建器        ← 每次对话自动注入实时数据
+🌐 CareerOS Web（Next.js 14）
+  ├─ /api/chat                  ← AI 桌宠对话（DeepSeek + 14 tools）
+  ├─ /api/ai/job-diagnosis      ← 岗位诊断对话
+  ├─ /api/ai/job-diagnosis/report ← 一键报告生成
+  ├─ /api/ai/hr-roundtable      ← 大师智囊团对话
+  ├─ /api/parse/resume          ← 简历文件上传解析
+  ├─ src/lib/ai/search.ts       ← 搜索模块（DuckDuckGo/Tavily）
+  ├─ src/lib/ai/system-prompt.ts ← 系统提示词
+  └─ src/lib/ai/context.ts      ← 上下文构建器
+
+🐱 桌宠（Tauri 2.0 — 暂停）
+  └─ desktop-pet/               ← Phase 1 代码保留
 ```
 
 ### 技术选型
 
-| 层 | 选型 | 理由 |
-|----|------|------|
-| 桌面框架 | Tauri 2.0 | 5MB 安装包，30MB 内存，比 Electron 轻 95% |
-| 前端 | React 19 + TypeScript + Vite 6 | 与 CareerOS 同生态 |
-| AI SDK | Vercel AI SDK v7 | 流式输出，原生支持 tool calling |
-| AI 模型 | Claude Sonnet 4 | 工具调用能力强，中文流畅 |
-| 通信 | HTTP → CareerOS API | 桌宠是瘦客户端，智能逻辑全在 API |
-| 窗口 | frameless + always-on-top + transparent | 悬浮桌面不遮挡 |
-
-### 关键文件
-
-```
-kims-careeros/
-├── src/app/api/chat/route.ts          # AI 对话主接口
-├── src/lib/ai/system-prompt.ts        # 系统提示词（人格定义）
-├── src/lib/ai/context.ts              # 上下文构建器
-├── desktop-pet/                       # Tauri 桌宠应用
-│   ├── src/App.tsx                    # 主应用（收起/展开双模式）
-│   ├── src/components/Pet.tsx         # 精灵动画组件
-│   ├── src/components/ChatPanel.tsx   # 聊天面板
-│   ├── src/hooks/useChat.ts           # AI 对话 hook
-│   ├── src/hooks/useDrag.ts           # 窗口拖拽 hook
-│   └── src-tauri/                     # Rust 后端
-│       ├── tauri.conf.json            # 窗口配置
-│       ├── src/lib.rs                 # 窗口管理逻辑
-│       └── src/main.rs                # 入口
-```
-
----
-
-## 四、待定事项
-
-| 事项 | 状态 |
-|------|------|
-| 桌宠名字 | ✅ **芝士** （谐音"知识"，奶制品家族第四位成员） |
-| 桌宠形象 | 待 Kim 提供参考图 → AI 生成 8×3 精灵图 |
-| Anthropic API Key | 待填入 `.env` |
-| Rust 环境 | 待安装（rustup + VS C++ Build Tools） |
-| 应用图标 | 待生成（32x32 / 128x128 / ico） |
+| 层 | 选型 |
+|----|------|
+| Web 框架 | Next.js 14 (App Router) |
+| AI SDK | Vercel AI SDK v7 |
+| AI 模型 | DeepSeek (`deepseek-chat`) |
+| 搜索 | DuckDuckGo（免费）+ Tavily（可选） |
+| 文件解析 | pdfjs + mammoth + tesseract.js + sharp |
+| 桌面框架 | Tauri 2.0（暂停） |
 
 ---
 
 ## 五、启动命令
 
 ```bash
-# 终端 1：启动 CareerOS
+# Web 应用
 cd D:\AI\项目\kims-careeros
 npm run dev
+# → http://localhost:3456
 
-# 终端 2：启动桌宠（需要 Rust 环境）
-cd D:\AI\项目\kims-careeros\desktop-pet
-npm run tauri dev
+# 访问 AI 工具
+# 岗位诊断: http://localhost:3456/job-seeking/diagnosis
+# 大师智囊团: http://localhost:3456/personal（页面内展开）
+# 个人总览: http://localhost:3456/personal
+# HR工作台: http://localhost:3456/workbench
 ```
 
----
-
-## 六、交互示例
-
-```
-用户："我今天有什么安排？"
-桌宠：💬 "你今天有 3 件事：
-  1. 💼 上午10点 跟字节HR面试
-  2. 🐱 下午3点 更新简历
-  3. 📝 买猫粮
-  需要我帮你准备面试吗？"
-
-用户："帮我查一下投了哪些还在等反馈的"
-桌宠：🔄 查询中...
-  💬 "正在进行中的投递有 5 条：
-  1. 字节跳动 HRBP [已投递]
-  2. 阿里 组织发展 [面试-一面已过]
-  3. ..."
-
-用户："烦死了，今天什么都不想干"
-桌宠：💬 "今天不太顺？没关系，你已经做得很好了。
-  要不今天就只做一件事——把'更新简历'那个待办清了？
-  其他的我帮你记着，明天再说。"
-```
-
----
-
-## 七、参考项目
-
-| 项目 | 借鉴点 |
-|------|--------|
-| DebugDuck (Tauri 2 + React 19) | frameless 透明窗口、140帧动画、AI 对话架构 |
-| CodeWalkers (Tauri 2 + React) | 60fps 精灵动画、点击穿透方案 |
-| WindowPet (Tauri + React) | 45+ 宠物参考、自启动机制 |
-| CareerOS by Samir-Sahiti (Next.js + Claude) | Vercel AI SDK + Claude + Zod 结构化输出模式 |
