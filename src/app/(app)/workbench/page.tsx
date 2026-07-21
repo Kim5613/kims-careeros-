@@ -88,7 +88,7 @@ export default function WorkbenchPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏛️</div>
               <div style={{ flex: 1 }}>
                 <Text strong style={{ fontSize: 15 }}>大师智囊团</Text>
-                <br /><Text type="secondary" style={{ fontSize: 12 }}>6 位 HR 大师 · 三轮追问 · CHO 最终结论</Text>
+                <br /><Text type="secondary" style={{ fontSize: 12 }}>6 位 HR 大师 · 三轮追问 · 交锋与决议</Text>
               </div>
               <TrophyOutlined style={{ color: '#8b7cf0', fontSize: 16 }} />
             </div>
