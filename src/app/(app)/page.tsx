@@ -292,9 +292,20 @@ export default function DashboardPage() {
 
   const todayStr = nowShanghai().format('YYYY-MM-DD');
   const [dailyQuote, setDailyQuote] = useState<{ quote: string; movie: string; translation?: string } | null>(null);
+  const lastQuoteDateRef = useRef<string>('');
   useEffect(() => {
-    fetch(`/api/movie-quote?date=${todayStr}`).then(r => r.json()).then(setDailyQuote).catch(() => {});
-  }, [todayStr]);
+    const fetchQuote = () => {
+      const d = nowShanghai().format('YYYY-MM-DD');
+      // 同一天不重复拉取（避免浪费 API 调用）
+      if (d === lastQuoteDateRef.current) return;
+      lastQuoteDateRef.current = d;
+      fetch(`/api/movie-quote?date=${d}&_=${Date.now()}`).then(r => r.json()).then(setDailyQuote).catch(() => {});
+    };
+    fetchQuote();
+    // 每分钟检查一次是否跨天，跨天自动刷新台词
+    const timer = setInterval(fetchQuote, 60_000);
+    return () => clearInterval(timer);
+  }, []);
   const isTodayDetail = currentDate.isSame(nowShanghai(), 'day');
   const yearStr = currentDate.format('YYYY');
 

@@ -25,7 +25,7 @@ import { Theme, getStoredTheme, getRandomTheme, themes } from '@/lib/themes';
 import { FONT_STYLES, getStoredFontIdx } from '@/lib/font-styles';
 
 // 所有可导航的叶子路由
-const ROUTE_KEYS = new Set(['/', '/job-seeking', '/job-seeking/applications', '/salary-growth', '/resumes', '/growth', '/growth/skill-map', '/growth/career-sphere', '/companies', '/contacts', '/market', '/knowledge', '/settings']);
+const ROUTE_KEYS = new Set(['/', '/personal', '/workbench', '/job-seeking', '/job-seeking/applications', '/job-seeking/diagnosis', '/salary-growth', '/resumes', '/growth', '/growth/skill-map', '/growth/career-sphere', '/companies', '/contacts', '/market', '/knowledge', '/settings']);
 
 // tool: 给菜单项注入 onClick，不再依赖 Antd Menu 的全局 onClick（三层嵌套时不可靠）
 function navItem(key: string, icon: React.ReactNode, label: string, router: ReturnType<typeof useRouter>, children?: any[]): any {
@@ -33,15 +33,20 @@ function navItem(key: string, icon: React.ReactNode, label: string, router: Retu
 }
 
 function buildMenuItems(router: ReturnType<typeof useRouter>) {
+  const groupLabel = (text: string, path: string) => (
+    <span onClick={(e: React.MouseEvent) => { e.stopPropagation(); router.push(path); }}>{text}</span>
+  );
+
   return [
     navItem('/', <DashboardOutlined />, '首页', router),
     {
-      key: 'personal', icon: <UserOutlined />, label: '个人',
+      key: 'personal', icon: <UserOutlined />, label: groupLabel('个人', '/personal'),
       children: [
         { key: '/job-seeking', icon: <SearchOutlined />, label: '求职',
           children: [
             navItem('/job-seeking', <DashboardOutlined />, '概览', router),
             navItem('/job-seeking/applications', <SendOutlined />, '投递', router),
+            navItem('/job-seeking/diagnosis', <SearchOutlined />, '岗位诊断', router),
           ],
         },
         navItem('/salary-growth', <RiseOutlined />, '薪酬', router),
@@ -55,7 +60,7 @@ function buildMenuItems(router: ReturnType<typeof useRouter>) {
       ],
     },
     {
-      key: 'workbench', icon: <TeamOutlined />, label: 'HR工作台',
+      key: 'workbench', icon: <TeamOutlined />, label: groupLabel('HR工作台', '/workbench'),
       children: [
         navItem('/companies', <FundOutlined />, '公司库', router),
         navItem('/contacts', <TeamOutlined />, '人脉库', router),
@@ -107,10 +112,13 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
 
   const getSelectedKeys = () => {
     if (pathname === '/') return ['/'];
+    if (pathname === '/personal') return ['personal'];
+    if (pathname === '/workbench') return ['workbench'];
     // For nested routes like /job-seeking/applications, match the full sub-path
     if (pathname.startsWith('/job-seeking/')) {
       const sub = pathname.replace(/^\/job-seeking\//, '');
       if (sub === 'applications') return ['/job-seeking/applications'];
+      if (sub === 'diagnosis') return ['/job-seeking/diagnosis'];
       return ['/job-seeking'];
     }
     if (pathname === '/growth/skill-map') return ['/growth/skill-map'];
@@ -122,6 +130,8 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
 
   const getOpenKeys = () => {
     if (pathname === '/') return [];
+    if (pathname === '/personal') return ['personal'];
+    if (pathname === '/workbench') return ['workbench'];
     // Open both 'personal' and 'job-seeking' sub-menu when on job-seeking sub-pages
     if (pathname.startsWith('/job-seeking/')) return ['personal', '/job-seeking'];
     if (pathname === '/growth/skill-map' || pathname === '/growth/career-sphere') return ['personal', '/growth'];
@@ -130,6 +140,10 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
     if (['/companies', '/contacts', '/market', '/candidates'].includes(route)) return ['workbench'];
     return [];
   };
+
+  // 受控 openKeys：路由变化时自动展开，点击箭头手动切换
+  const [openKeys, setOpenKeys] = useState<string[]>(getOpenKeys());
+  useEffect(() => { setOpenKeys(getOpenKeys()); }, [pathname]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -173,7 +187,8 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          defaultOpenKeys={getOpenKeys()}
+          openKeys={openKeys}
+          onOpenChange={setOpenKeys}
           items={menuItems}
           style={{
             borderRight: 0,

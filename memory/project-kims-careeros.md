@@ -84,7 +84,7 @@ v1.0 无剩余待办。下一步进入 v1.1。
 | DNS + HTTPS | 📋 v1.0 | 备案已通过，下一步配置 |
 | 数据同步 | ✅ v1.0 | pg_dump + SQL 导入，21条待办已同步 |
 | 分享链接 | 📋 v1.0 | 待开发 |
-| AI 桌宠助手 | 🚧 v1.2 Phase 1 | 代码已完成，待 Rust 环境 + API Key + 精灵图。详见 `docs/PRD-v1.2.md` |
+| AI 桌宠助手 | ⏸️ 暂停 | 2026-07-16 决定暂停，重新理思路。Phase 1 代码已完成但不上线，详见 `docs/PRD-v1.2.md` |
 | AI 功能 | ⏳ v1.1 | 已并入 v1.2 AI 桌宠 |
 | 面试管理 | 📋 v1.1 | 待开发 |
 | Offer管理 | 📋 v1.1 | 待开发 |
@@ -283,6 +283,14 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 
 ## 技术坑点
 
+**2026-07-21 | [缓存] 电影台词 API 被 Next.js 静态缓存，上线后不更新**
+- 问题：已上线版本电影台词永远显示同一句，不随日期变化
+- 根因：Next.js App Router `GET` 路由默认 `dynamic = 'auto'`，无动态函数调用时被静态缓存，handler 内的 prisma 查询和 `used` 标记只执行一次。客户端 `todayStr` 在 render 时计算一次，`useEffect` 依赖 `[todayStr]` 无跨天刷新机制。
+- 解法：
+  1. API 路由加 `export const dynamic = 'force-dynamic'` + 响应头 `Cache-Control: no-store, max-age=0`
+  2. 客户端 effect 内部计算日期，用 `useRef` 防同天重复请求，`setInterval` 每分钟检查跨天自动刷新
+- **教训**：Next.js 生产环境中任何需要动态数据的 GET API 路由都必须显式声明 `force-dynamic`，否则会被缓存。不要依赖"query param 不同 URL 不同"的假设——缓存发生在路由级别。
+
 **2026-07-01 | [顺延待办] 月初跨月数据缺失**
 - 问题：7月1日看顺延待办，前一天(6/30)数据在上个月，API只查当月
 - 根因：数据拉取 `fetch(/api/todos?month=YYYY-MM)` 只覆盖单月
@@ -430,6 +438,11 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 - 桌宠名字（Kim 的猫叫 奶糕/奶棍/奶球）
 - 角色形象（Kim 提供参考图 → AI 生成精灵图）
 - Rust 环境安装（需 rustup + VS C++ Build Tools）
+
+**2026-07-16 | [决策] v1.2 AI 桌宠暂停，重新理思路**
+- Phase 1 代码（Tauri 桌宠 + /api/chat + FloatingPet）已完成但保留在本地，未上线
+- 桌宠相关文件暂不提交到 main 分支，待思路清晰后再启动
+- 用户原话："桌宠的项目先缓缓吧，我要重新理理思路"
 
 ## v1.1 规划
 

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// 禁用 Next.js 静态缓存 —— 电影台词每天更新，缓存会导致不刷新
+export const dynamic = 'force-dynamic';
+
 // 用日期做随机种子，同一天显示同一句
 function seededRandom(seed: number): number {
   let s = seed;
@@ -37,15 +40,17 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const headers = { 'Cache-Control': 'no-store, max-age=0' };
+
     if (!quote) {
-      return NextResponse.json({ quote: '生活就像一盒巧克力', movie: '《阿甘正传》' });
+      return NextResponse.json({ quote: '生活就像一盒巧克力', movie: '《阿甘正传》' }, { headers });
     }
 
     return NextResponse.json({
       quote: quote.quote,
       translation: quote.translation || undefined,
       movie: quote.movie,
-    });
+    }, { headers });
   } catch (error) {
     console.error('Movie quote error:', error);
     return NextResponse.json({ quote: '生活就像一盒巧克力', movie: '《阿甘正传》' });
