@@ -286,3 +286,27 @@ curl -N -X POST http://127.0.0.1:3000/api/ai/hr-roundtable \
 report 路由 JSON↔流式协议错配 / 桌宠文件未 git add 致 `/api/chat` 404）。
 修复 commit `002a630`，根因与教训详见 `memory/project-kims-careeros.md` 技术坑点。
 
+---
+
+## 九、v1.2 二轮迭代（2026-07-22，commit b60bb4f）
+
+| # | 改动 | 说明 |
+|---|------|------|
+| 1 | AI 接口鉴权 | `/api/ai/` 移出免登录白名单；`/api/chat` 加 `PET_TOKEN` 请求头校验（桌宠客户端已带头） |
+| 2 | focus 生效 | 诊断页"关注点"拼入 prompt（此前被丢弃） |
+| 3 | 桌宠设置持久化 | 存储移出代码目录至 `/data/careeros-uploads/`（`src/lib/pet-settings.ts`），pet GET 路由加 `force-dynamic` |
+| 4 | 诊断等待体验 | 文案说明 10-20s 调研耗时；拦截未登录 307 的登录页 HTML |
+| 5 | 深度版属实 | depth=deep 多搜竞对/舆情/薪酬三组 query |
+| 6 | 大师团历史 | localStorage 持久化 50 条 + 请求截断 20 条 + 清空按钮 |
+
+### 新增 env（服务器上线时配置）
+
+```bash
+PET_TOKEN=长随机串   # 配了之后桌面桌宠设置里也要填同一个串，否则桌宠聊天 401
+```
+
+### 技术盲点文档
+
+新增功能前必读 **`docs/TECH-PITFALLS.md`**——12 条踩过的坑 + 上线验收清单，
+涵盖 AI 流式协议、middleware 鉴权、Next 缓存、存储位置、env 同步五类。
+

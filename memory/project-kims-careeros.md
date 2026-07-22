@@ -335,6 +335,7 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 - ③ pet 的 GET 路由没加 `force-dynamic` → build 成 ○ 静态预渲染，设置改了读到旧值。与 2026-07-21 电影台词坑同源：**凡 GET API 先问"会被缓存吗"**
 - ④ middleware 未登录返回 307 → fetch 自动跟随拿到 200 登录页 HTML，前端当内容渲染。**教训：加鉴权后前端必须查 content-type 拦 text/html**
 - ⑤ 顺手修：诊断 focus 参数此前被丢弃、深度版只改标签不多搜、大师团历史不持久+全量重发 token 膨胀
+- 📌 以上教训已沉淀为 **`docs/TECH-PITFALLS.md`**（12 条盲点 + 上线验收清单），新增功能前必读
 
 **2026-07-22 | [AI 上线] 大师智囊团/岗位诊断线上全部静默失败（200 空响应）**
 - 问题：v1.2 上线后 AI skill 全部不可用——大师团不回复、岗位诊断报告为空、`/api/chat` 404，且无任何报错提示
