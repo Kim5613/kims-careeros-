@@ -329,6 +329,13 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 
 ## 技术坑点
 
+**2026-07-22 | [迭代] v1.2 二轮修复（commit b60bb4f）— 鉴权/存储/缓存三类暗坑**
+- ① middleware 免登录白名单里有 `/api/ai/` → 陌生人可裸调 AI 接口刷 DeepSeek 额度（用 curl 未登录实测证实）。**教训：花钱的 API 永远不要进白名单**；无登录态的客户端（桌宠）走路由内 token 校验（PET_TOKEN），不靠 middleware
+- ② 用户可写数据放代码目录 `src/data/pet-settings.json` → server-deploy.sh 的 `git checkout -- . && git clean -fd` 每次部署重置。**教训：用户数据只能写 /data/ 或数据库，代码目录是只读的**
+- ③ pet 的 GET 路由没加 `force-dynamic` → build 成 ○ 静态预渲染，设置改了读到旧值。与 2026-07-21 电影台词坑同源：**凡 GET API 先问"会被缓存吗"**
+- ④ middleware 未登录返回 307 → fetch 自动跟随拿到 200 登录页 HTML，前端当内容渲染。**教训：加鉴权后前端必须查 content-type 拦 text/html**
+- ⑤ 顺手修：诊断 focus 参数此前被丢弃、深度版只改标签不多搜、大师团历史不持久+全量重发 token 膨胀
+
 **2026-07-22 | [AI 上线] 大师智囊团/岗位诊断线上全部静默失败（200 空响应）**
 - 问题：v1.2 上线后 AI skill 全部不可用——大师团不回复、岗位诊断报告为空、`/api/chat` 404，且无任何报错提示
 - 根因（4 个叠加）：
