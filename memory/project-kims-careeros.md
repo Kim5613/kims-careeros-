@@ -416,6 +416,34 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 - 根因：Workbench 浏览器终端对多行 heredoc 支持有 bug，长命令还会被换行截断
 - 解法：用 `nano` 编辑器或 `echo` 逐行写入替代；base64 编码可避免截断但要注意换行
 
+**2026-07-22/23 | [待办] v1.2.1 遗留问题 — 交给 K3 明天继续**
+
+以下代码已写好、已推送 GitHub（commit `1cc5cc7`），但**线上构建验证未完成**：
+
+| 修复 | 文件 | 说明 |
+|------|------|------|
+| 岗位诊断报告截断 | `report/route.ts` | + `stopWhen: isStepCount(3)`（根因：v7 默认 stepCountIs(1)，report 路由之前没设 stopWhen，与 07-22 AI 全哑同一根因） |
+| 大师对话用户身份 | `hr-roundtable/route.ts` | 注入简历目标岗位 + 活跃投递到系统上下文，大师现在知道在跟谁对话 |
+| 对话历史回溯 | `AISkillPanel.tsx` | 新增会话存档（ChatSession 结构）+ 历史面板 UI + 清空自动存档 + 点击加载历史 |
+
+**本地已验证**：report API 用 `curl` + cookie 测试通过，流式输出完整报告（美团 HRBP 岗位）。
+
+**部署卡点**：
+1. `server-deploy.sh` git pull 后权限丢失（`Permission denied`），需手动 `chmod +x`
+2. 阿里云 Workbench 多行 heredoc 卡死，导致服务器端 curl 验证未完成
+3. `maxTokens` 参数在 ai-sdk v7 中不存在，已删除（`1cc5cc7`）
+
+**线上验证步骤**（明天 SSH 进去跑）：
+```bash
+ssh root@139.196.159.68
+cd /opt/hr-platform && git pull origin main
+chmod +x server-deploy.sh && ./server-deploy.sh
+# 部署后浏览器 https://www.kimstar.cn 验证：
+# 1. 岗位诊断 → 生成报告 → 确认完整不截断
+# 2. 大师智囊团 → 对话 → 确认知道用户身份
+# 3. 大师智囊团 → 点"历史" → 确认能看到存档对话
+```
+
 **2026-07-02 | [部署] Next.js standalone 模式导致静态资源 404**
 - 问题：Logo 不显示、页面异常
 - 根因：`output: 'standalone'` + `next start` 找不到 `.next/static` 和 `public/`
