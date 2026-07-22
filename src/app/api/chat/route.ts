@@ -354,6 +354,7 @@ export async function POST(req: Request) {
       messages,
       tools: TOOLS,
       stopWhen: isStepCount(10), // 最多 10 轮工具调用
+      onError: ({ error }) => console.error('[POST /api/chat] stream error:', error),
     });
 
     return result.toTextStreamResponse();

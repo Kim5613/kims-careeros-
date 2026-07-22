@@ -698,13 +698,24 @@ export default function DashboardPage() {
     );
     const groups: PosEv[][] = [];
     for (const ev of positioned) {
-      let placed = false;
-      for (const group of groups) {
-        if (group.some(g => ev.startMin < g.endMin && ev.endMin > g.startMin)) {
-          group.push(ev); placed = true; break;
+      // 找出当前事件重叠的所有组（而非只匹配第一个）
+      const matched: number[] = [];
+      for (let i = 0; i < groups.length; i++) {
+        if (groups[i].some(g => ev.startMin < g.endMin && ev.endMin > g.startMin)) {
+          matched.push(i);
         }
       }
-      if (!placed) groups.push([ev]);
+      if (matched.length === 0) {
+        groups.push([ev]);
+      } else {
+        groups[matched[0]].push(ev);
+        // 传递重叠：事件同时跨越多个组 → 合并，
+        // 否则跨组事件会被拆到不同列 → 视觉重叠
+        for (let i = matched.length - 1; i >= 1; i--) {
+          groups[matched[0]].push(...groups[matched[i]]);
+          groups.splice(matched[i], 1);
+        }
+      }
     }
     for (const group of groups) {
       const cols: number[] = [];
