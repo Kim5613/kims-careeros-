@@ -329,6 +329,13 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 
 ## 技术坑点
 
+**2026-07-22 | [架构决策] 芝士桌宠拆分为独立仓库**
+- 决策：桌宠是独立 agent 板块，不随 web 版本合并。desktop-pet/ 移出至 `D:\AI\项目\cheese-pet`（独立 git 仓库，v0.1.0）
+- 本仓库只保留服务端 API（/api/chat、/api/pet/*）；契约 = HTTP + PET_TOKEN 头
+- 目标架构：大脑搬上客户端（直连 DeepSeek），OB 知识库只能客户端做（D 盘本地文件，服务器够不着）；OB 暂为占位符
+- 同步改动：API_BASE 硬编码 localhost:3000 → ⚙️ 设置面板可配置（默认线上）
+- 详见 `docs/PRD-v1.2.md` 第十章
+
 **2026-07-22 | [迭代] v1.2 二轮修复（commit b60bb4f）— 鉴权/存储/缓存三类暗坑**
 - ① middleware 免登录白名单里有 `/api/ai/` → 陌生人可裸调 AI 接口刷 DeepSeek 额度（用 curl 未登录实测证实）。**教训：花钱的 API 永远不要进白名单**；无登录态的客户端（桌宠）走路由内 token 校验（PET_TOKEN），不靠 middleware
 - ② 用户可写数据放代码目录 `src/data/pet-settings.json` → server-deploy.sh 的 `git checkout -- . && git clean -fd` 每次部署重置。**教训：用户数据只能写 /data/ 或数据库，代码目录是只读的**

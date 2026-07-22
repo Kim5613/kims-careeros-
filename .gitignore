@@ -21,7 +21,4 @@ prisma/migrations/
 .DS_Store
 Thumbs.db
 
-# Tauri 桌宠
-desktop-pet/node_modules/
-desktop-pet/src-tauri/target/
-desktop-pet/dist/
+# Tauri 桌宠已拆分为独立仓库 D:\AI\项目\cheese-pet（2026-07-22）
