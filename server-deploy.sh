@@ -37,7 +37,10 @@ check "代码已更新到 $(git log -1 --oneline)"
 # —— 2. 环境 ——
 echo "[2] 检查 .env..."
 [ -f .env ] || fail ".env 文件不存在"
-check ".env 存在"
+grep -q "DEEPSEEK_API_KEY=sk-" .env || fail ".env 缺少有效 DEEPSEEK_API_KEY（AI 功能会静默返回空响应）"
+grep -q "JWT_SECRET=" .env || fail ".env 缺少 JWT_SECRET"
+grep -q "TAVILY_API_KEY=tvly-" .env || echo "  [警告] 未配置 TAVILY_API_KEY，联网搜索走 DuckDuckGo，国内服务器基本不可用"
+check ".env 存在且关键配置完整"
 
 # —— 3. 安装依赖 ——
 echo "[3] npm install..."

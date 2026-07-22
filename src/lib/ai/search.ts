@@ -72,7 +72,9 @@ async function searchWithDuckDuckGo(
 ): Promise<SearchResponse> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    // 国内服务器访问 DuckDuckGo 基本必超时，缩短到 5s 快速失败，
+    // 避免拖慢整体响应（正式上线建议配 TAVILY_API_KEY）
+    const timeout = setTimeout(() => controller.abort(), 5000);
 
     const formData = new URLSearchParams({ q: query });
     const url = `https://html.duckduckgo.com/html/`;

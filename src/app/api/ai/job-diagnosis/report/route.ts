@@ -168,11 +168,13 @@ ${depth === 'deep' ? '深度版' : '标准版'}
       model: deepseek('deepseek-chat'),
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: fullPrompt }],
+      onError: ({ error }) => console.error('[job-diagnosis/report] stream error:', error),
     });
 
-    let fullText = '';
-    for await (const chunk of result.textStream) { fullText += chunk; }
-    return new Response(JSON.stringify({ report: fullText }), { headers: { 'Content-Type': 'application/json' } });
+    // 流式返回纯文本，与前端 getReader 逐段渲染的协议匹配。
+    // 不要改回 JSON：前端会把 {"report":"..."} 整串当 markdown 渲染，
+    // 且非流式长生成会撞 Nginx 60s proxy_read_timeout。
+    return result.toTextStreamResponse();
   } catch (error: any) {
     console.error('[job-diagnosis/report] Error:', error);
     return new Response(JSON.stringify({ error: '报告生成失败，请稍后重试' }), {

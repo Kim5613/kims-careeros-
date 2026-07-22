@@ -107,6 +107,10 @@ export default function DiagnosisPage() {
         content += decoder.decode(value, { stream: true });
         setReport(content);
       }
+      if (!content.trim()) {
+        setReport('');
+        setError('没有收到报告内容（模型服务可能不可用），请稍后重试');
+      }
     } catch (e: any) {
       setError(e.message || '生成失败，请稍后重试');
     } finally {

@@ -1,0 +1,24 @@
+{
+  "notifications": {
+    "scheduleReminder": true,
+    "todoBacklog": true,
+    "dailyGreeting": true,
+    "weeklyReview": true,
+    "dataChange": true,
+    "emotionSense": true
+  },
+  "personality": {
+    "professionalRatio": 0.5,
+    "warmRatio": 0.35,
+    "sarcasticRatio": 0.15
+  },
+  "appearance": {
+    "spriteUrl": "",
+    "scale": 1.0,
+    "position": { "x": "right", "y": "bottom" }
+  },
+  "voice": {
+    "enabled": true,
+    "autoListen": false
+  }
+}

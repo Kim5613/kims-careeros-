@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { streamText, tool } from 'ai';
+import { streamText, tool, isStepCount } from 'ai';
 import { deepseek } from '@ai-sdk/deepseek';
 import { z } from 'zod';
 import { searchWeb, fetchPage } from '@/lib/ai/search';
@@ -61,6 +61,9 @@ export async function POST(req: NextRequest) {
       model: deepseek('deepseek-chat'),
       system: SYSTEM_PROMPT + contextNote,
       messages: (messages || []),
+      // 必须显式设置：v7 默认 stepCountIs(1)，模型第一步调搜索工具后循环即终止 → 空响应
+      stopWhen: isStepCount(6),
+      onError: ({ error }) => console.error('[job-diagnosis] stream error:', error),
       tools: {
         searchWeb: tool({
           description: '搜索互联网获取公司信息、行业数据、舆情',

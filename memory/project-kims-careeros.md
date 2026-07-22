@@ -329,6 +329,22 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 
 ## 技术坑点
 
+**2026-07-22 | [AI 上线] 大师智囊团/岗位诊断线上全部静默失败（200 空响应）**
+- 问题：v1.2 上线后 AI skill 全部不可用——大师团不回复、岗位诊断报告为空、`/api/chat` 404，且无任何报错提示
+- 根因（4 个叠加）：
+  1. 服务器 `.env` 缺 `DEEPSEEK_API_KEY`（.env 在 .gitignore，首次部署手工创建时还没有 AI 功能；`server-deploy.sh` 只检查文件存在不检查内容）。key 缺失时 `@ai-sdk/deepseek` 在请求时才抛错 → 错误进流被吞 → 200 空响应
+  2. ai SDK v7 `streamText` 默认 `stopWhen: stepCountIs(1)`：挂了 searchWeb/fetchPage 工具但不设 `stopWhen`，模型第一步调工具后循环即终止，永远走不到生成文字的第二步 → 空响应
+  3. `job-diagnosis/report` 路由返回一次性 JSON `{report}`，但前端按流式 getReader 逐段渲染 → 会把整串 JSON 当 markdown 显示；且非流式长生成会撞 Nginx 60s proxy_read_timeout
+  4. `/api/chat` + `/api/pet` + FloatingPet 等桌宠文件从未 `git add`（未追踪），线上 404
+  5. 附带：DuckDuckGo 在国内服务器被墙，联网搜索默认每次白等 8s 超时
+- 解法：
+  1. 服务器 `.env` 补 `DEEPSEEK_API_KEY`（+ 建议 `TAVILY_API_KEY`），`pm2 restart hr-platform`
+  2. 两个 skill 路由加 `stopWhen: isStepCount(8/6)` + `onError` 日志（参考 `api/chat/route.ts` 已有正确写法）
+  3. report 路由改回 `toTextStreamResponse()` 流式纯文本；前端加空内容兜底报错
+  4. 桌宠相关文件全部 `git add` 提交
+  5. DDG 超时 8s→5s 快速失败；`server-deploy.sh` 部署时强制校验 `DEEPSEEK_API_KEY`/`JWT_SECRET` 存在
+- **教训**：① ai SDK v7 挂工具必须显式 `stopWhen`，否则多步循环一步就死；② `textStream`/`toTextStreamResponse` 会静默吞掉 error 分片——AI 接口"200 空响应"第一反应查服务器 env 和模型 key，别查前端；③ 前后端流式协议必须成对验证（一边 JSON 一边 stream 不报错但内容全错）；④ 上线前反查 `git status` 未追踪文件（delivery-checklist 再现）
+
 **2026-07-21 | [缓存] 电影台词 API 被 Next.js 静态缓存，上线后不更新**
 - 问题：已上线版本电影台词永远显示同一句，不随日期变化
 - 根因：Next.js App Router `GET` 路由默认 `dynamic = 'auto'`，无动态函数调用时被静态缓存，handler 内的 prisma 查询和 `used` 标记只执行一次。客户端 `todayStr` 在 render 时计算一次，`useEffect` 依赖 `[todayStr]` 无跨天刷新机制。
