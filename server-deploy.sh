@@ -52,6 +52,15 @@ echo "[4] Prisma db push..."
 npx prisma db push || fail "prisma db push 失败"
 check "数据库 schema 同步完成"
 
+# —— 4.5. 种子数据（幂等：INSERT ON CONFLICT 自动跳过已有数据） ——
+echo "[4.5] 种子数据..."
+if [ -f scripts/seed-quotes.js ]; then
+  node scripts/seed-quotes.js || echo "  [警告] 种子脚本执行失败，继续部署"
+  check "种子数据检查完成"
+else
+  echo "  跳过（无种子脚本）"
+fi
+
 # —— 5. 构建 ——
 echo "[5] npm run build..."
 npm run build || fail "构建失败（可能是内存不足，先加 swap 再试）"
