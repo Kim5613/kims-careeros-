@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDataSync } from '@/lib/hooks/useDataSync';
+import PetSummon from '@/components/PetSummon';
 import { Card, Typography, Segmented, Button, Input, Checkbox, Switch, message, Popconfirm, Modal, DatePicker, TimePicker, Select, Tag, ColorPicker } from 'antd';
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, ScheduleOutlined, EnvironmentOutlined, ClockCircleOutlined, ExportOutlined, CopyOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
@@ -1404,6 +1405,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </Modal>
+
+      {/* 召唤芝士（桌面桌宠） */}
+      <PetSummon />
 
     </div>
   );

@@ -25,8 +25,10 @@ export default function PetSummon() {
   return (
     <div
       onClick={phase === 'idle' ? summon : undefined}
+      title="召唤芝士（桌面桌宠）"
       style={{
-        position: 'fixed', bottom: 8, right: 8, zIndex: 100,
+        // 左下角，避开右下角的大师智囊团悬浮按钮
+        position: 'fixed', bottom: 16, left: 16, zIndex: 100,
         width: 72, height: 72,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         cursor: phase === 'idle' ? 'pointer' : 'default',

@@ -9,6 +9,9 @@
 let summoned = false;
 let summonedAt = 0;
 
+// 召唤信号是实时状态，禁止静态缓存
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   summoned = true;
   summonedAt = Date.now();
