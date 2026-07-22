@@ -249,3 +249,40 @@ npm run dev
 # HR工作台: http://localhost:3456/workbench
 ```
 
+---
+
+## 八、线上 AI Skill 运维清单（2026-07-22，静默失败事故后补）
+
+### 架构说明：不需要独立的 agent 服务
+
+线上 skill **不是**由独立 agent 承接的——它们就是 Next.js 里的 API 路由
+（`/api/ai/hr-roundtable`、`/api/ai/job-diagnosis`、`/api/chat`），
+跟随主应用由 PM2 一起跑。所谓"agent 能力"= ai SDK 的**多步工具循环**
+（`stopWhen: isStepCount(N)`），模型自己在循环里决定"搜索→读结果→生成"，
+无需额外进程、无需 worker、无需队列。
+
+线上 skill 能跑起来的**三个前提**：
+
+| 前提 | 在哪配置 | 缺失后果 |
+|------|---------|---------|
+| ① `DEEPSEEK_API_KEY` | 服务器 `/opt/hr-platform/.env` | 接口 200 但空响应（错误被流静默吞掉） |
+| ② 路由显式 `stopWhen` | 代码（已修，勿回退） | 模型调一次搜索就停，永远不说话 |
+| ③ 可用的搜索源 | 服务器 `.env` 配 `TAVILY_API_KEY` | 联网调研静默无结果（DDG 国内被墙） |
+
+### 每次上线 AI 相关改动后的验收动作
+
+```bash
+# 部署后必跑：应看到流式文字输出，而不是空响应
+curl -N -X POST http://127.0.0.1:3000/api/ai/hr-roundtable \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"你好"}]}'
+
+# 还是空 → pm2 logs hr-platform（onError 已会把真实错误打进日志）
+```
+
+### 历史事故
+
+2026-07-22 线上 AI 全哑：4 因叠加（服务器 env 缺 key / 路由缺 stopWhen /
+report 路由 JSON↔流式协议错配 / 桌宠文件未 git add 致 `/api/chat` 404）。
+修复 commit `002a630`，根因与教训详见 `memory/project-kims-careeros.md` 技术坑点。
+
