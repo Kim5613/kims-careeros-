@@ -22,7 +22,10 @@ function useWebChat() {
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-pet-token': localStorage.getItem('pet-api-token') || '',
+        },
         body: JSON.stringify({ messages: [...messages, user].map((m) => ({ role: m.role, content: m.content })) }),
         signal: ctrl.signal,
       });

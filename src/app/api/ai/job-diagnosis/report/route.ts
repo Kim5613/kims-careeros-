@@ -134,8 +134,16 @@ export async function POST(req: NextRequest) {
     try {
       const queries = [
         `${company} 公司 融资 财报`,
-         `${company} 员工评价 工作体验`,
+        `${company} 员工评价 工作体验`,
       ];
+      // 深度版：真的多搜，不只是改个标签
+      if (depth === 'deep') {
+        queries.push(
+          `${company} 竞争对手 行业地位`,
+          `${company} 舆情 裁员 劳动纠纷`,
+          `${company} 薪酬 待遇 水平`,
+        );
+      }
       const results = await Promise.all(queries.map(q => searchWeb(q, 3)));
       searchContext = results.map((res:any) => (res.results||[]).map((r:any) => `- ${r.title||''}: ${r.snippet||''}`).join('\n')).join('\n');
     } catch (_) { searchContext = '(联网搜索暂不可用)'; }
@@ -158,6 +166,9 @@ ${resume}
 ## 联网调研结果
 ${searchContext}
 ${contextNote}
+
+## 用户特别关注
+${focus?.trim() ? `${focus}——请在报告中单独回应这些关注点` : '（未指定）'}
 
 ## 深度档位
 ${depth === 'deep' ? '深度版' : '标准版'}

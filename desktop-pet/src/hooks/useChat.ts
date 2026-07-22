@@ -60,7 +60,11 @@ export function useChat(): UseChatReturn {
 
       const response = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          // 服务端配了 PET_TOKEN 时用于鉴权；在桌宠设置里 localStorage 写入 pet-api-token
+          'x-pet-token': localStorage.getItem('pet-api-token') || '',
+        },
         body: JSON.stringify({ messages: apiMessages }),
         signal: controller.signal,
       });

@@ -331,6 +331,13 @@ const TOOLS = {
 
 export async function POST(req: Request) {
   try {
+    // 本接口在 middleware 白名单里（桌宠无登录态），陌生人可裸调。
+    // 配了 PET_TOKEN 就强制校验请求头，防止 DeepSeek 额度被刷。
+    const petToken = process.env.PET_TOKEN;
+    if (petToken && req.headers.get('x-pet-token') !== petToken) {
+      return Response.json({ error: '未授权' }, { status: 401 });
+    }
+
     const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {

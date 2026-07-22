@@ -7,19 +7,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import fs from 'fs';
-import path from 'path';
+import { readPetSettings } from '@/lib/pet-settings';
 
-const SETTINGS_PATH = path.join(process.cwd(), 'src/data/pet-settings.json');
+// 提醒依赖实时数据，禁止静态缓存
+export const dynamic = 'force-dynamic';
 
 interface PetSettings {
   notifications: Record<string, boolean>;
 }
 
 function getSettings(): PetSettings | null {
-  try {
-    return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-  } catch { return null; }
+  return readPetSettings() as PetSettings | null;
 }
 
 export async function GET(req: NextRequest) {

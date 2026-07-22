@@ -11,6 +11,10 @@ const { TextArea } = Input;
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; id: string; }
 
+const STORAGE_KEY = 'hr-roundtable-history';
+const MAX_KEEP = 50;   // localStorage 最多保留条数
+const MAX_SEND = 20;   // 每次请求最多带的历史条数（防 token 膨胀）
+
 // 全局事件：其他组件可以 dispatch 'open-ai-panel' 来唤起面板
 export const openAIPanel = () => window.dispatchEvent(new CustomEvent('open-ai-panel'));
 
@@ -22,7 +26,18 @@ export default function AISkillPanel() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    // 恢复上次对话（刷新不丢）
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setMessages(JSON.parse(saved));
+    } catch { /* 损坏即丢弃 */ }
+  }, []);
+  useEffect(() => {
+    if (!mounted) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-MAX_KEEP))); } catch { /* 超容量忽略 */ }
+  }, [messages, mounted]);
   useEffect(() => {
     const handler = () => setOpen(true);
     window.addEventListener('open-ai-panel', handler);
@@ -40,7 +55,7 @@ export default function AISkillPanel() {
       const res = await fetch('/api/ai/hr-roundtable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({ messages: [...messages, userMsg].slice(-MAX_SEND).map(m => ({ role: m.role, content: m.content })) }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const contentType = res.headers.get('content-type') || '';
@@ -116,8 +131,16 @@ export default function AISkillPanel() {
             <span style={{ fontSize: 22 }}>🏛️</span>
             <Text strong style={{ fontSize: 16 }}>大师智囊团</Text>
           </div>
-          <Button type="text" icon={<CloseOutlined />} onClick={() => setOpen(false)}
-            style={{ color: '#bbb' }} />
+          <div>
+            {messages.length > 0 && (
+              <Button type="text" size="small" style={{ color: '#bbb', fontSize: 12 }}
+                onClick={() => { setMessages([]); localStorage.removeItem(STORAGE_KEY); }}>
+                清空
+              </Button>
+            )}
+            <Button type="text" icon={<CloseOutlined />} onClick={() => setOpen(false)}
+              style={{ color: '#bbb' }} />
+          </div>
         </div>
 
         {/* Messages */}

@@ -4,26 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { readPetSettings, writePetSettings } from '@/lib/pet-settings';
 
-const SETTINGS_PATH = path.join(process.cwd(), 'src/data/pet-settings.json');
-
-function readSettings() {
-  try {
-    const raw = fs.readFileSync(SETTINGS_PATH, 'utf-8');
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-function writeSettings(data: unknown) {
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(data, null, 2), 'utf-8');
-}
+// 设置是用户可改的，禁止静态缓存
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const settings = readSettings();
+  const settings = readPetSettings();
   if (!settings) {
     return NextResponse.json({ error: '配置文件读取失败' }, { status: 500 });
   }
@@ -33,13 +20,13 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const current = readSettings();
+    const current = readPetSettings();
     if (!current) {
       return NextResponse.json({ error: '配置文件读取失败' }, { status: 500 });
     }
     // 深度合并
     const merged = deepMerge(current, body);
-    writeSettings(merged);
+    writePetSettings(merged);
     return NextResponse.json(merged);
   } catch {
     return NextResponse.json({ error: '更新失败' }, { status: 500 });

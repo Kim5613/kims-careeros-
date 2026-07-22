@@ -95,6 +95,9 @@ export default function DiagnosisPage() {
         const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
         throw new Error(err.error || `HTTP ${res.status}`);
       }
+      // middleware 未登录会 307 到 /login（fetch 自动跟随拿到 200 HTML），必须拦
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('text/html')) throw new Error('登录已过期，请刷新页面重新登录');
 
       const reader = res.body?.getReader();
       if (!reader) throw new Error('No stream');
@@ -336,7 +339,8 @@ AI 会提取：核心技能 / 项目成果 / 平均任期 / 学历
               ) : (
                 <div style={{ textAlign: 'center', padding: '40px 0' }}>
                   <LoadingOutlined style={{ fontSize: 32, color: '#8b7cf0', marginBottom: 16 }} />
-                  <br /><Text type="secondary">AI 正在联网调研并生成报告……</Text>
+                  <br /><Text type="secondary">🔍 正在联网调研「{company}」，约 10-20 秒后开始逐字生成……</Text>
+                  <br /><Text type="secondary" style={{ fontSize: 12 }}>报告生成中会持续流式输出，请勿关闭页面</Text>
                 </div>
               )}
             </Card>
