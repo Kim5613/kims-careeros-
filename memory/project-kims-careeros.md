@@ -330,7 +330,7 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 ## 技术坑点
 
 **2026-07-22 | [架构决策] 芝士桌宠拆分为独立仓库**
-- 决策：桌宠是独立 agent 板块，不随 web 版本合并。desktop-pet/ 移出至 `D:\AI\项目\cheese-pet`（独立 git 仓库，v0.1.0）
+- 决策：桌宠是独立 agent 板块，不随 web 版本合并。desktop-pet/ 移出至 `kims-careeros\桌宠-芝士\`（物理嵌套 + 逻辑独立的嵌套 git 仓库，v0.1.0，有自己的 PRD 和 memory）
 - 本仓库只保留服务端 API（/api/chat、/api/pet/*）；契约 = HTTP + PET_TOKEN 头
 - 目标架构：大脑搬上客户端（直连 DeepSeek），OB 知识库只能客户端做（D 盘本地文件，服务器够不着）；OB 暂为占位符
 - 同步改动：API_BASE 硬编码 localhost:3000 → ⚙️ 设置面板可配置（默认线上）

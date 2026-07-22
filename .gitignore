@@ -21,4 +21,5 @@ prisma/migrations/
 .DS_Store
 Thumbs.db
 
-# Tauri 桌宠已拆分为独立仓库 D:\AI\项目\cheese-pet（2026-07-22）
+# Tauri 桌宠：嵌套独立仓库（2026-07-22 拆分），不纳入本仓库追踪
+桌宠-芝士/
