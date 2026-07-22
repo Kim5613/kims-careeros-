@@ -180,7 +180,6 @@ ${depth === 'deep' ? '深度版' : '标准版'}
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: fullPrompt }],
       stopWhen: isStepCount(3),
-      maxTokens: 4096,
       onError: ({ error }) => console.error('[job-diagnosis/report] stream error:', error),
     });
 
