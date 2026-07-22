@@ -145,19 +145,28 @@ export async function POST(req: NextRequest) {
     // 注入数据上下文
     let contextNote = '';
     try {
-      const [companies, contacts, insights] = await Promise.all([
+      const [companies, contacts, insights, resumes, apps] = await Promise.all([
         prisma.company.findMany({ take: 10, orderBy: { updatedAt: 'desc' } }),
         prisma.contact.findMany({ take: 5, orderBy: { updatedAt: 'desc' } }),
         prisma.marketInsight.findMany({ take: 3, orderBy: { createdAt: 'desc' } }),
+        prisma.resume.findMany({ where: { isDefault: true }, take: 1 }),
+        prisma.jobApplication.findMany({ where: { currentStage: { not: '已结束' } }, take: 5, orderBy: { updatedAt: 'desc' } }),
       ]);
+      // 用户身份上下文 — 大师需要知道在跟谁对话
+      if (resumes.length > 0) {
+        contextNote += `\n[用户身份] HR 从业者。默认简历「${resumes[0].title}」，目标岗位：${resumes[0].targetPosition || '未指定'}。`;
+      }
+      if (apps.length > 0) {
+        contextNote += `\n[用户求职状态] 当前活跃投递：${apps.map(a => `${a.positionName}@${a.companyId}(${a.currentStage})`).join('、')}`;
+      }
       if (companies.length > 0) {
-        contextNote += `\n[系统上下文-公司库] 最近公司：${companies.map(c => `${c.name}(${c.industry || '未知行业'},${c.scale || '未知规模'})`).join('、')}`;
+        contextNote += `\n[公司库] 最近公司：${companies.map(c => `${c.name}(${c.industry || '未知行业'},${c.scale || '未知规模'})`).join('、')}`;
       }
       if (contacts.length > 0) {
-        contextNote += `\n[系统上下文-人脉] 最近联系人：${contacts.map(c => `${c.name}(${c.relationType})`).join('、')}`;
+        contextNote += `\n[人脉] 最近联系人：${contacts.map(c => `${c.name}(${c.relationType})`).join('、')}`;
       }
       if (insights.length > 0) {
-        contextNote += `\n[系统上下文-市场洞察] 最新报告：${insights.map(i => i.title).join('、')}`;
+        contextNote += `\n[市场洞察] 最新：${insights.map(i => i.title).join('、')}`;
       }
     } catch (_) { /* 数据库不可用时跳过 */ }
 

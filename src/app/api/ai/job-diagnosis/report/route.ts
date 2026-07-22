@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { streamText } from 'ai';
+import { streamText, isStepCount } from 'ai';
 import { deepseek } from '@ai-sdk/deepseek';
 import { searchWeb } from '@/lib/ai/search';
 import { prisma } from '@/lib/prisma';
@@ -179,6 +179,8 @@ ${depth === 'deep' ? '深度版' : '标准版'}
       model: deepseek('deepseek-chat'),
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: fullPrompt }],
+      stopWhen: isStepCount(3),
+      maxTokens: 4096,
       onError: ({ error }) => console.error('[job-diagnosis/report] stream error:', error),
     });
 

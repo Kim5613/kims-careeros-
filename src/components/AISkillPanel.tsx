@@ -11,11 +11,19 @@ const { TextArea } = Input;
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; id: string; }
 
-const STORAGE_KEY = 'hr-roundtable-history';
-const MAX_KEEP = 50;   // localStorage 最多保留条数
-const MAX_SEND = 20;   // 每次请求最多带的历史条数（防 token 膨胀）
+interface ChatSession {
+  id: string;
+  title: string;       // 第一条用户消息截取
+  date: string;        // ISO 字符串
+  messages: ChatMessage[];
+}
 
-// 全局事件：其他组件可以 dispatch 'open-ai-panel' 来唤起面板
+const STORAGE_KEY = 'hr-roundtable-history';
+const SESSIONS_KEY = 'hr-roundtable-sessions';
+const MAX_KEEP = 50;
+const MAX_SEND = 20;
+
+// 全局事件
 export const openAIPanel = () => window.dispatchEvent(new CustomEvent('open-ai-panel'));
 
 export default function AISkillPanel() {
@@ -25,10 +33,19 @@ export default function AISkillPanel() {
   const [streaming, setStreaming] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // 加载历史会话
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]');
+      if (Array.isArray(saved)) setSessions(saved);
+    } catch { /* 损坏即丢弃 */ }
+  }, []);
 
   useEffect(() => {
     setMounted(true);
-    // 恢复上次对话（刷新不丢）
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) setMessages(JSON.parse(saved));
@@ -82,6 +99,36 @@ export default function AISkillPanel() {
     }
   };
 
+  // 存档当前对话为会话
+  const archiveSession = (msgs: ChatMessage[]) => {
+    if (msgs.length === 0) return;
+    const firstUser = msgs.find(m => m.role === 'user');
+    const title = firstUser ? firstUser.content.slice(0, 40) + (firstUser.content.length > 40 ? '…' : '') : '空对话';
+    const session: ChatSession = {
+      id: Date.now().toString(),
+      title,
+      date: new Date().toISOString(),
+      messages: msgs,
+    };
+    const updated = [session, ...sessions].slice(0, 20); // 最多保留 20 个会话
+    setSessions(updated);
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
+  };
+
+  // 加载一个历史会话
+  const loadSession = (s: ChatSession) => {
+    setMessages(s.messages);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(s.messages));
+    setShowHistory(false);
+  };
+
+  // 清空当前对话（先存档）
+  const handleClear = () => {
+    if (messages.length > 0) archiveSession(messages);
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
   if (!mounted) return null;
 
   return createPortal(
@@ -132,23 +179,62 @@ export default function AISkillPanel() {
             <Text strong style={{ fontSize: 16 }}>大师智囊团</Text>
           </div>
           <div>
-            {messages.length > 0 && (
-              <Button type="text" size="small" style={{ color: '#bbb', fontSize: 12 }}
-                onClick={() => { setMessages([]); localStorage.removeItem(STORAGE_KEY); }}>
-                清空
-              </Button>
-            )}
-            <Button type="text" icon={<CloseOutlined />} onClick={() => setOpen(false)}
-              style={{ color: '#bbb' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+              {sessions.length > 0 && (
+                <Button type="text" size="small" style={{ color: '#999', fontSize: 12 }}
+                  onClick={() => setShowHistory(!showHistory)}>
+                  {showHistory ? '返回' : `历史(${sessions.length})`}
+                </Button>
+              )}
+              {messages.length > 0 && !showHistory && (
+                <Button type="text" size="small" style={{ color: '#bbb', fontSize: 12 }}
+                  onClick={handleClear}>
+                  清空
+                </Button>
+              )}
+              <Button type="text" icon={<CloseOutlined />} onClick={() => setOpen(false)}
+                style={{ color: '#bbb' }} />
+            </div>
           </div>
         </div>
 
-        {/* Messages */}
+        {/* Messages / History */}
         <div style={{ flex: 1, overflow: 'auto', padding: '14px 18px', background: '#faf8f6' }}>
-          {messages.length === 0 ? (
+          {showHistory ? (
+            <div>
+              <Text strong style={{ fontSize: 13, color: '#666', display: 'block', marginBottom: 12 }}>📜 历史对话</Text>
+              {sessions.length === 0 ? (
+                <Text type="secondary" style={{ fontSize: 12 }}>暂无历史对话</Text>
+              ) : (
+                sessions.map(s => (
+                  <div key={s.id} onClick={() => loadSession(s)}
+                    style={{
+                      cursor: 'pointer', padding: '12px 14px', marginBottom: 8, borderRadius: 10,
+                      background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                      transition: 'box-shadow 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.03)'; }}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: 500, display: 'block' }}>{s.title}</Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>
+                      {new Date(s.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · {s.messages.length} 条消息
+                    </Text>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : messages.length === 0 ? (
             <div style={{ textAlign: 'center', paddingTop: 60 }}>
               <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>🏛️</span>
               <Text type="secondary">六位大师 + 小七，会诊你的 HR 困惑</Text>
+              {sessions.length > 0 && (
+                <div style={{ marginTop: 20 }}>
+                  <Button type="link" size="small" onClick={() => setShowHistory(true)} style={{ fontSize: 12 }}>
+                    📜 查看历史对话 ({sessions.length})
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             messages.map(m => (
