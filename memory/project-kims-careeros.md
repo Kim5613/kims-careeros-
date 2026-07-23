@@ -4,7 +4,7 @@
 HR 从业者个人职业管理平台，涵盖「我的职业发展」和「HR 工作台」两大板块。
 
 ## 当前状态
-**v1.2.1 — 2026-07-22**
+**v1.2.1 — 2026-07-22 推送，2026-07-23 部署上线**
 
 | 交付项 | 状态 |
 |--------|------|
@@ -329,6 +329,17 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 
 ## 技术坑点
 
+**2026-07-23 | [部署] v1.2.1 上线完成 + "每次首发都要重启服务器"真凶找到**
+- ✅ 三修复（诊断截断/大师团身份/历史存档）已上线并通过验收：report API 200 完整报告（10KB、19章节到附录）；大师团身份注入代码正常（但数据库无默认简历+无活跃投递，无身份可注入，需 Kim 补数据再验）；历史存档待浏览器验证
+- **真凶：中断的构建留下残缺的 `.next`（无 BUILD_ID）→ `next start` 启动即崩 → PM2 无限重启（↺2445 次）→ CPU 200% 吃满 → 新构建抢不到资源"卡死" → 被迫重启服务器 → PM2 开机自启又拉起崩溃进程，死循环**
+- 连锁教训：
+  1. 构建中途被 kill/Ctrl+C/重启 → `.next` 被清空一半。此后网站必挂、SSH 必卡。**构建没走完五段（Compiled→Linting→Collecting page data→Generating static pages→Finalizing）就不算成功**，脚本输出的"构建成功"也可能骗人（本次 npm run build 显示成功但 BUILD_ID 缺失，疑似后期阶段被 OOM 杀）
+  2. 根治：加 swap（`fallocate -l 2G /swapfile`，已加并写入 fstab）。1.6G 内存的机器构建 Next.js 必须有 swap
+  3. 部署脚本"代码已是最新，跳过后续步骤"早退：代码已在 HEAD 但 `.next` 残缺时脚本不会重建。**线上异常时先 `cat .next/BUILD_ID` 确认产物完整，再决定是 rebuild 还是 redeploy**
+  4. `chmod +x` 之后若 `git reset --hard`，执行权限被抹掉，需重新 chmod
+  5. 排查时 `pm2 logs` 的 ↺ 计数暴涨 + 同一错误刷屏 = 崩溃循环，先 `pm2 stop` 止血再查因
+- 待办小项：① report 路由 `focus` 传数组会 500（`focus?.trim()`），加类型兼容；② 报告出现"目标公司名称缺失"（传了美团但模型按通用画像写），疑似联网搜索被墙上下文太弱，观察
+
 **2026-07-22 | [架构决策] 芝士桌宠拆分为独立仓库**
 - 决策：桌宠是独立 agent 板块，不随 web 版本合并。desktop-pet/ 移出至 `kims-careeros\桌宠-芝士\`（物理嵌套 + 逻辑独立的嵌套 git 仓库，v0.1.0，有自己的 PRD 和 memory）
 - 本仓库只保留服务端 API（/api/chat、/api/pet/*）；契约 = HTTP + PET_TOKEN 头
@@ -416,9 +427,9 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 - 根因：Workbench 浏览器终端对多行 heredoc 支持有 bug，长命令还会被换行截断
 - 解法：用 `nano` 编辑器或 `echo` 逐行写入替代；base64 编码可避免截断但要注意换行
 
-**2026-07-22/23 | [待办] v1.2.1 遗留问题 — 交给 K3 明天继续**
+**2026-07-22/23 | [已完成] v1.2.1 遗留问题 — 07-23 部署上线，验收通过**
 
-以下代码已写好、已推送 GitHub（commit `1cc5cc7`），但**线上构建验证未完成**：
+~~以下代码已写好、已推送 GitHub（commit `1cc5cc7`），但**线上构建验证未完成**~~ → **2026-07-23 已完成部署**，详见上方技术坑点（.next 残缺 + PM2 崩溃循环）。验收：①报告完整✅ ②身份注入代码✅（待 Kim 补默认简历+投递数据后复验）③历史存档待浏览器确认
 
 | 修复 | 文件 | 说明 |
 |------|------|------|
@@ -426,23 +437,7 @@ PATCH/DELETE 路由遵循相同结构：try/catch → prisma 操作 → NextResp
 | 大师对话用户身份 | `hr-roundtable/route.ts` | 注入简历目标岗位 + 活跃投递到系统上下文，大师现在知道在跟谁对话 |
 | 对话历史回溯 | `AISkillPanel.tsx` | 新增会话存档（ChatSession 结构）+ 历史面板 UI + 清空自动存档 + 点击加载历史 |
 
-**本地已验证**：report API 用 `curl` + cookie 测试通过，流式输出完整报告（美团 HRBP 岗位）。
-
-**部署卡点**：
-1. `server-deploy.sh` git pull 后权限丢失（`Permission denied`），需手动 `chmod +x`
-2. 阿里云 Workbench 多行 heredoc 卡死，导致服务器端 curl 验证未完成
-3. `maxTokens` 参数在 ai-sdk v7 中不存在，已删除（`1cc5cc7`）
-
-**线上验证步骤**（明天 SSH 进去跑）：
-```bash
-ssh root@139.196.159.68
-cd /opt/hr-platform && git pull origin main
-chmod +x server-deploy.sh && ./server-deploy.sh
-# 部署后浏览器 https://www.kimstar.cn 验证：
-# 1. 岗位诊断 → 生成报告 → 确认完整不截断
-# 2. 大师智囊团 → 对话 → 确认知道用户身份
-# 3. 大师智囊团 → 点"历史" → 确认能看到存档对话
-```
+**部署过程**：详见 2026-07-23 技术坑点（中断构建 → .next 残缺 → PM2 崩溃循环 ↺2445 → CPU 吃满；加 2G swap 后前台 `npm run build` 走完五段，`pm2 restart` 恢复）。
 
 **2026-07-02 | [部署] Next.js standalone 模式导致静态资源 404**
 - 问题：Logo 不显示、页面异常
