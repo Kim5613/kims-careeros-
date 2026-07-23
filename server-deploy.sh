@@ -61,10 +61,27 @@ else
   echo "  跳过（无种子脚本）"
 fi
 
-# —— 5. 构建 ——
-echo "[5] npm run build..."
-npm run build || fail "构建失败（可能是内存不足，先加 swap 再试）"
-check "构建成功"
+# —— 5. 先停 PM2 释放内存再构建 ——
+echo "[5] 停止 PM2（释放内存）..."
+pm2 stop hr-platform 2>/dev/null || true
+sleep 2
+check "PM2 已停止"
+
+# —— 5.1. 检查 swap ——
+SWAP_TOTAL=$(free | grep Swap | awk '{print $2}')
+if [ "$SWAP_TOTAL" = "0" ]; then
+  echo "  [警告] 无 swap，构建可能 OOM。正在创建 2G swap..."
+  fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+  echo "/swapfile none swap sw 0 0" >> /etc/fstab
+  check "swap 已创建并持久化"
+fi
+
+# —— 5.2. 构建 ——
+echo "[5.2] npm run build..."
+rm -rf .next  # 清除可能残缺的旧构建产物
+npm run build || fail "构建失败（内存不足？检查 free -h）"
+[ -f .next/BUILD_ID ] || fail "BUILD_ID 缺失——构建未完成，.next 残缺"
+check "构建成功（BUILD_ID 验证通过）"
 
 # —— 6. PM2 启动 ——
 echo "[6] PM2 启动..."
