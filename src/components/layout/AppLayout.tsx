@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import SidebarContent from './Sidebar';
 import AISkillPanel from '@/components/AISkillPanel';
 
-const DARK_ROUTES = ['/growth/career-sphere', '/growth/domain/'];
+const DARK_ROUTES = ['/career-sphere', '/growth/career-sphere', '/growth/domain/'];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(true);
@@ -15,7 +15,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <div style={{ display: 'flex', minHeight: '100vh' }}>
-        {/* 侧边栏 — 收起显示图标列 (60px)，hover 展开 (220px) */}
+        {/* 侧边栏 — 收起显示图标列 (60px)，hover 展开 (240px) */}
         <aside
           onMouseEnter={() => setCollapsed(false)}
           onMouseLeave={() => setCollapsed(true)}
@@ -24,13 +24,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             left: 0,
             top: 0,
             bottom: 0,
-            width: collapsed ? 60 : 220,
-            overflow: 'hidden',
+            width: collapsed ? 60 : 240,
+            overflowX: 'hidden',
+            overflowY: 'auto',
             height: '100vh',
             zIndex: 10,
             background: isDark
               ? 'rgba(13,13,13,0.92)'
-              : 'rgba(252,250,248,0.90)',
+              : '#faf8f6',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             borderRight: isDark
@@ -48,7 +49,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main
           style={{
             flex: 1,
-            marginLeft: collapsed ? 60 : 220,
+            marginLeft: collapsed ? 60 : 240,
             transition: 'margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
             minHeight: '100vh',
           }}

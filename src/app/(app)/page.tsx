@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useDataSync } from '@/lib/hooks/useDataSync';
-import PetSummon from '@/components/PetSummon';
 import { Card, Typography, Segmented, Button, Input, Checkbox, Switch, message, Popconfirm, Modal, DatePicker, TimePicker, Select, Tag, ColorPicker } from 'antd';
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, ScheduleOutlined, EnvironmentOutlined, ClockCircleOutlined, ExportOutlined, CopyOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
@@ -216,9 +214,7 @@ export default function DashboardPage() {
   const [weeklyPersonal, setWeeklyPersonal] = useState('');
   const [wfModalOpen, setWfModalOpen] = useState(false);
 
-  // 桌宠数据同步：当芝士通过 /api/chat 修改数据后，自动重新拉取
-  const [dataVersion, setDataVersion] = useState(0);
-  useDataSync(() => setDataVersion((v) => v + 1));
+
 
   const weekMonday = useMemo(() => {
     const d = currentDate.toDate();
@@ -350,7 +346,7 @@ export default function DashboardPage() {
       }
       setTodos(merged);
     }).catch(() => {});
-  }, [view, currentDate, dataVersion]);
+  }, [view, currentDate]);
 
   const todosByDate = useMemo(() => {
     const map: Record<string, Todo[]> = {};
@@ -1416,9 +1412,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </Modal>
-
-      {/* 召唤芝士（桌面桌宠） */}
-      <PetSummon />
 
     </div>
   );

@@ -8,8 +8,7 @@ const PUBLIC_PATHS = ['/login', '/api/auth/login'];
 
 // 静态资源和部分 API 不需要拦截
 // 注意：/api/ai/ 不在此列——AI 接口烧 DeepSeek 额度，必须登录才能调
-// /api/chat 保留（桌宠无登录态），由路由内 PET_TOKEN 校验兜底
-const SKIP_PREFIXES = ['/_next', '/favicon.ico', '/api/auth/', '/logos/', '/api/chat', '/api/pet/', '/api/parse/', '/api/movie-quote'];
+const SKIP_PREFIXES = ['/_next', '/favicon.ico', '/api/auth/', '/logos/', '/api/parse/', '/api/movie-quote'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

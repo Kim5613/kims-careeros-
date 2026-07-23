@@ -21,6 +21,7 @@ model Company {
   city        String?
   website     String?
   description String?
+  background  String?  @db.Text          // 公司背景：阶段+核心问题+加入原因
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -31,6 +32,7 @@ model Company {
   salaryChanges   SalaryChange[]
   contactLinks    ContactCompany[]
   positionKnowledge PositionKnowledge[]
+  battleProjects  BattleProject[]
 
   @@map("companies")
 }
@@ -443,6 +445,55 @@ model WeeklyFocus {
   updatedAt       DateTime @updatedAt
 
   @@map("weekly_focus")
+}
+
+// ========================================
+// 内部战役 — 项目经历记录
+// ========================================
+
+model BattleProject {
+  id          String   @id @default(cuid())
+  companyId   String                     // 关联公司库
+  projectName String                     // 项目名称
+  role        String                     // 项目岗位
+  startDate   String                     // 开始时间 YYYY-MM-DD
+  endDate     String?                    // 结束时间（进行中则为空）
+  origin      String?  @db.Text          // 缘由
+  goal        String?  @db.Text          // 目标 — 量化成功标准
+  reportTo    String?                    // 向谁汇报
+  teamSize    Int?                       // 团队规模
+  departments String?                    // 涉及部门
+  duration    String?                    // 周期（可自动计算或手动填）
+  phase1      String?  @db.Text          // 调研/规划阶段
+  phase2      String?  @db.Text          // 执行阶段
+  phase3      String?  @db.Text          // 收尾阶段
+  results     String?  @db.Text          // 量化成果
+  shortcomings String? @db.Text          // 不足与反思
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company               @relation(fields: [companyId], references: [id])
+  skills      BattleProjectSkill[]
+
+  @@index([companyId])
+  @@map("battle_projects")
+}
+
+model BattleProjectSkill {
+  id          String   @id @default(cuid())
+  projectId   String
+  skillId     String                     // 对应 domain-tracks.ts 里的 skill.id
+  skillName   String                     // 冗余存储，方便展示
+  category    String   @default("hard")  // hard / soft / domain / tool
+  level       Int      @default(3)       // 当前等级 1-4
+  description String?                    // 一句话描述你能做什么
+  targetLevel Int?                       // 目标等级
+  createdAt   DateTime @default(now())
+
+  project     BattleProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("battle_project_skills")
 }
 
 // AI 桌宠记忆 — 芝士的长期记忆库

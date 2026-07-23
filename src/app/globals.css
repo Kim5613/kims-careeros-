@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+html { background: #faf8f6; }
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -70,45 +72,4 @@ main > * { animation: pageFadeIn 0.25s ease both; }
   }
 }
 
-/* ===== 芝士召唤动画 ===== */
-@keyframes summonFoodDrop {
-  0%   { transform: translateY(-120px) rotate(0deg); opacity: 0; }
-  60%  { opacity: 1; }
-  100% { transform: translateY(0) rotate(360deg); opacity: 0.9; }
-}
 
-@keyframes summonFoodPile {
-  0%   { transform: scale(0); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes summonCatBounce {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-
-@keyframes summonFadeIn {
-  0%   { opacity: 0; transform: scale(0.8); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-/* ===== 浮动宠物动画 ===== */
-@keyframes slideUp {
-  0%   { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes petIdle {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
-}
-
-@keyframes spin {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes bubblePop {
-  0%   { opacity: 0; transform: translateY(10px) scale(0.9); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
