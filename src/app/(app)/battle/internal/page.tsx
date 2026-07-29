@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, Tag, Button, Input, Form, Select, DatePicker, Row, Col, message, Popconfirm, InputNumber } from 'antd';
-import { PlusOutlined, DeleteOutlined, BoldOutlined, HighlightOutlined, UnderlineOutlined, OrderedListOutlined, UnorderedListOutlined, ExpandOutlined, CompressOutlined } from '@ant-design/icons';
+import { Typography, Tag, Button, Input, Form, Select, DatePicker, Row, Col, message, Popconfirm, InputNumber, Modal, Spin, Empty, Tooltip } from 'antd';
+import { PlusOutlined, DeleteOutlined, BoldOutlined, HighlightOutlined, UnderlineOutlined, OrderedListOutlined, UnorderedListOutlined, ExpandOutlined, CompressOutlined, SwapOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 dayjs.extend(utc); dayjs.extend(timezone);
 const now = () => dayjs().tz('Asia/Shanghai');
+
+import { downloadTemplate, parseTemplateMarkdown } from '@/lib/parse-template';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -207,6 +209,7 @@ interface BattleProject {
   phase3: string | null;
   results: string | null;
   shortcomings: string | null;
+  tags: string[];
   skills: SkillEntry[];
   createdAt: string;
   updatedAt: string;
@@ -227,6 +230,7 @@ const MOCK: BattleProject[] = [
     phase2: '核心决策：是否要统一技术栈到 React 18？最终决定分步走——先统一运行时再统一框架。最大困难是直播线的老代码迁移，通过灰度切流+双栈运行期解决（6周并行期）。执行期4个月',
     phase3: '交付物：微前端底座（npm包）、3条业务线迁移完成、编码规范文档、Code Review 流程。验收标准：全部通过性能基线和自动化回归测试。交接给架构组 ongoing 维护',
     results: '首屏加载从 2.8s 降到 1.1s（↓60%）；跨线组件复用率从 15% 升至 62%；新业务启动人力从 4 人周降到 2 人周',
+    tags: ['微前端架构', '性能优化', '跨团队协作'],
     shortcomings: '双栈运行期的监控做得不够，前期有两次线上故障没及时发现。迁移文档应该更早开始写，而不是收尾时补',
     skills: [
       { skillId: 'ta9', skillName: '沟通影响力', category: 'soft', level: 4, description: '与 CTO 及各业务线负责人紧密协作，推动架构决策落地', targetLevel: 4 },
@@ -256,6 +260,7 @@ function mapProject(raw: any): BattleProject {
     phase3: raw.phase3 || null,
     results: raw.results || null,
     shortcomings: raw.shortcomings || null,
+    tags: raw.tags || [],
     skills: raw.skills || [],
     createdAt: raw.createdAt || '',
     updatedAt: raw.updatedAt || '',
@@ -278,6 +283,14 @@ export default function BattleInternalPage() {
   const [editProj, setEditProj] = useState<BattleProject | null>(null);
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+
+  // ── 同步到简历 ──
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [syncProjectId, setSyncProjectId] = useState<string | null>(null);
+  const [syncResumeId, setSyncResumeId] = useState<string | undefined>(undefined);
+  const [resumes, setResumes] = useState<{ id: string; title: string; version: number }[]>([]);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [resumesLoading, setResumesLoading] = useState(false);
 
   // 公司选择器
   const [companies, setCompanies] = useState<CompanyInfo[]>([]);
@@ -307,8 +320,9 @@ export default function BattleInternalPage() {
       const res = await fetch('/api/battle-projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!res.ok) throw new Error('Create failed');
       const created = await res.json();
-      setData(prev => [mapProject(created), ...prev]);
-      // Refresh company list in case background was updated
+      const mapped = mapProject(created);
+      setData(prev => [mapped, ...prev]);
+      autoTagProject(created.id);
       const coRes = await fetch('/api/companies');
       if (coRes.ok) setCompanies(await coRes.json());
       return created;
@@ -318,6 +332,7 @@ export default function BattleInternalPage() {
       if (!res.ok) throw new Error('Update failed');
       const updated = await res.json();
       setData(prev => prev.map(p => p.id === id ? mapProject(updated) : p));
+      autoTagProject(id);
       const coRes = await fetch('/api/companies');
       if (coRes.ok) setCompanies(await coRes.json());
       return updated;
@@ -368,6 +383,66 @@ export default function BattleInternalPage() {
     setPanel('form');
   };
 
+  // ── 模板上传解析 ──
+  const handleUploadTemplate = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = parseTemplateMarkdown(text);
+
+      // 填入表单
+      const formValues: any = {};
+      if (parsed.projectName) formValues.projectName = parsed.projectName;
+      if (parsed.role) formValues.role = parsed.role;
+      if (parsed.startDate) formValues.startDate = dayjs(parsed.startDate);
+      if (parsed.endDate) formValues.endDate = dayjs(parsed.endDate);
+      if (parsed.origin) formValues.origin = parsed.origin;
+      if (parsed.goal) formValues.goal = parsed.goal;
+      if (parsed.phase1) formValues.phase1 = parsed.phase1;
+      if (parsed.phase2) formValues.phase2 = parsed.phase2;
+      if (parsed.phase3) formValues.phase3 = parsed.phase3;
+      if (parsed.results) formValues.results = parsed.results;
+      if (parsed.shortcomings) formValues.shortcomings = parsed.shortcomings;
+      if (parsed.duration) formValues.duration = parsed.duration;
+      if (parsed.reportTo) formValues.reportTo = parsed.reportTo;
+      if (parsed.teamSize) formValues.teamSize = parsed.teamSize;
+      if (parsed.departments) formValues.departments = parsed.departments;
+
+      // 公司信息：按名称查找，找不到则让用户手动选
+      if (parsed.companyName) {
+        const co = companies.find((c) => c.name === parsed.companyName);
+        if (co) {
+          formValues.companyId = co.id;
+          formValues.company_industry = parsed.industry || co.industry || '';
+          formValues.company_scale = parsed.scale || co.scale || '';
+          formValues.company_background = parsed.background || co.background || '';
+          setSelectedCo(co);
+        }
+      }
+
+      form.setFieldsValue(formValues);
+
+      // 技能列表
+      if (parsed.skills.length > 0) {
+        setEditSkills(parsed.skills.map((s) => ({
+          skillId: '',
+          skillName: s.skillName,
+          category: s.category || 'hard',
+          level: s.level || 3,
+          description: s.description || null,
+          targetLevel: s.targetLevel || null,
+        })));
+      }
+
+      message.success(`已解析模板：${parsed.projectName || '未命名项目'}（${parsed.skills.length} 项能力）`);
+    } catch {
+      message.error('模板解析失败，请检查文件格式');
+    }
+    // 重置 input 以便重复上传同一文件
+    e.target.value = '';
+  };
+
   const handleSave = async () => {
     try {
       const v = await form.validateFields();
@@ -406,6 +481,77 @@ export default function BattleInternalPage() {
     setPanel(null); setDetail(null);
   };
 
+  // ── 同步到简历 ──
+  const openSyncModal = async (projectId: string) => {
+    setSyncProjectId(projectId);
+    setSyncResumeId(undefined);
+    setSyncModalOpen(true);
+    // 拉取简历列表
+    setResumesLoading(true);
+    try {
+      const res = await fetch('/api/resumes');
+      if (res.ok) setResumes(await res.json());
+    } catch { /* 静默降级 */ }
+    finally { setResumesLoading(false); }
+  };
+
+  // ── AI 自动生成标签（后台调用，静默）──
+  const autoTagProject = async (projectId: string) => {
+    try {
+      const res = await fetch('/api/ai/generate-tags', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId }),
+      });
+      const json = await res.json();
+      if (res.ok && json.tags?.length > 0) {
+        setData((prev) => prev.map((p) => (p.id === projectId ? { ...p, tags: json.tags } : p)));
+        if (detail?.id === projectId) setDetail((prev) => prev ? { ...prev, tags: json.tags } : null);
+      }
+    } catch { /* 后台静默失败不打扰用户 */ }
+  };
+
+  // ── 手动重新生成标签 ──
+  const handleGenerateTags = async (projectId: string) => {
+    message.loading({ content: 'AI 分析中…', key: 'genTags', duration: 0 });
+    try {
+      const res = await fetch('/api/ai/generate-tags', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId }),
+      });
+      const json = await res.json();
+      if (res.ok && json.tags?.length > 0) {
+        setData((prev) => prev.map((p) => (p.id === projectId ? { ...p, tags: json.tags } : p)));
+        if (detail?.id === projectId) setDetail((prev) => prev ? { ...prev, tags: json.tags } : null);
+        message.success({ content: `标签：${json.tags.join('、')}`, key: 'genTags' });
+      } else {
+        message.warning({ content: json.error || '生成失败', key: 'genTags' });
+      }
+    } catch {
+      message.error({ content: '网络错误，请重试', key: 'genTags' });
+    }
+  };
+
+  const handleSyncToResume = async () => {
+    if (!syncProjectId || !syncResumeId) return;
+    setSyncLoading(true);
+    try {
+      const res = await fetch(`/api/battle-projects/${syncProjectId}/sync-to-resume`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeId: syncResumeId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        message.warning(data.error || '同步失败');
+        return;
+      }
+      message.success(`已同步到简历「${resumes.find((r) => r.id === syncResumeId)?.title || ''}」`);
+      setSyncModalOpen(false);
+    } catch {
+      message.error('同步失败，请检查网络后重试');
+    } finally { setSyncLoading(false); }
+  };
+
   // ── 技能编辑 ──
   const updateSkill = (i: number, field: string, value: any) => {
     setEditSkills(prev => prev.map((s, j) => j === i ? { ...s, [field]: value } : s));
@@ -431,11 +577,18 @@ export default function BattleInternalPage() {
           <Text style={{ fontSize: 12, color: '#bbb' }}>· {proj.role}</Text>
         </div>
         <Text style={{ fontSize: 12, color: '#bbb' }}>{dateStr}</Text>
-        {proj.goal && (
+        {/* ── AI 标签 ── */}
+        {proj.tags.length > 0 ? (
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {proj.tags.map((t, i) => (
+              <Tag key={i} style={{ borderRadius: 8, margin: 0, fontSize: 11, color: '#8b7cf0', background: '#f5f0ff', border: 'none' }}>{t}</Tag>
+            ))}
+          </div>
+        ) : proj.goal ? (
           <Text style={{ fontSize: 11, color: '#bbb', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-            {proj.goal}
+            {proj.goal.replace(/<[^>]*>/g, '')}
           </Text>
-        )}
+        ) : null}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: 8 }}>
             {proj.teamSize && <Text style={{ fontSize: 11, color: '#bbb' }}>👥 {proj.teamSize}人</Text>}
@@ -443,6 +596,16 @@ export default function BattleInternalPage() {
             {proj.results && <Text style={{ fontSize: 11, color: '#4cb840' }}>✓ 有成果</Text>}
           </div>
           {!proj.phase1 && !proj.results && <Tag style={{ borderRadius: 8, margin: 0, fontSize: 11, color: '#ccc', background: '#fafafa', border: 'none' }}>待完善</Tag>}
+          {proj.tags.length === 0 && (
+            <Button size="small" type="default"
+              style={{ borderRadius: 8, fontSize: 11, padding: '0 8px', height: 24 }}
+              onClick={e => { e.stopPropagation(); handleGenerateTags(proj.id); }}
+            >🏷️ 生成标签</Button>
+          )}
+          <Tooltip title="同步到简历">
+            <Button type="text" size="small" icon={<SwapOutlined />} style={{ color: '#8b7cf0', fontSize: 13, padding: '0 4px' }}
+              onClick={e => { e.stopPropagation(); openSyncModal(proj.id); }} />
+          </Tooltip>
         </div>
       </div>
     );
@@ -559,6 +722,18 @@ export default function BattleInternalPage() {
           </div>
         )}
 
+        {/* AI 标签 */}
+        {proj.tags.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={secHead}>🏷️ 项目标签</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {proj.tags.map((t, i) => (
+                <Tag key={i} style={{ borderRadius: 8, margin: 0, fontSize: 12, color: '#8b7cf0', background: '#f5f0ff', border: '1px solid #d9c8ff' }}>{t}</Tag>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 能力沉淀 */}
         {proj.skills.length > 0 && (
           <div style={{ marginBottom: 24 }}>
@@ -587,6 +762,8 @@ export default function BattleInternalPage() {
         {/* Actions */}
         <div style={{ display: 'flex', gap: 8, borderTop: '1px solid #f0ece8', paddingTop: 16 }}>
           <Button size="small" onClick={() => openForm(proj)} style={{ borderRadius: 8 }}>编辑</Button>
+          <Button size="small" icon={<SwapOutlined />} onClick={() => openSyncModal(proj.id)} style={{ borderRadius: 8 }}>同步到简历</Button>
+          <div style={{ flex: 1 }} />
           <Popconfirm title="确认删除此项目？" onConfirm={() => handleDelete(proj)} okText="删除" cancelText="取消" okButtonProps={{ danger: true }}>
             <Button size="small" danger style={{ borderRadius: 8 }}>删除</Button>
           </Popconfirm>
@@ -607,6 +784,31 @@ export default function BattleInternalPage() {
         <Text strong style={{ fontSize: 18 }}>{editProj ? '编辑项目' : '新建项目'}</Text>
         <span onClick={() => { setPanel(null); setEditProj(null); }} style={{ fontSize: 22, color: '#bbb', cursor: 'pointer', lineHeight: 1 }}>×</span>
       </div>
+
+      {/* ── 模板工具（仅新建时显示）── */}
+      {!editProj && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 24, alignItems: 'center' }}>
+          <Button icon={<DownloadOutlined />} onClick={downloadTemplate} style={{ borderRadius: 8 }}>
+            下载模板
+          </Button>
+          <label style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '5px 16px', borderRadius: 8, cursor: 'pointer',
+            border: '1px solid #d9d9d9', background: '#fff', fontSize: 14, color: '#333',
+            transition: 'all 0.15s', margin: 0, fontWeight: 400, lineHeight: 1.5,
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8b7cf0'; e.currentTarget.style.color = '#8b7cf0'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d9d9d9'; e.currentTarget.style.color = '#333'; }}
+          >
+            <UploadOutlined /> 上传模板填充
+            <input type="file" accept=".md,.txt,.docx,.doc" onChange={handleUploadTemplate}
+              style={{ display: 'none' }} />
+          </label>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            下载模板 → 填写 → 上传，自动填入表单
+          </Text>
+        </div>
+      )}
 
       <Form form={form} layout="vertical" size="middle">
 
@@ -824,6 +1026,42 @@ export default function BattleInternalPage() {
           </div>
         )}
       </div>
+
+      {/* ── 同步到简历 Modal ── */}
+      <Modal
+        title="同步到简历"
+        open={syncModalOpen}
+        onCancel={() => setSyncModalOpen(false)}
+        onOk={handleSyncToResume}
+        confirmLoading={syncLoading}
+        okText="确认同步"
+        cancelText="取消"
+        okButtonProps={{ disabled: !syncResumeId }}
+        width={420}
+      >
+        <div style={{ marginTop: 8 }}>
+          <Text style={{ fontSize: 14, display: 'block', marginBottom: 16 }}>
+            将该项目经历同步到目标简历版本的项目经历中。
+          </Text>
+          <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>选择目标简历版本</Text>
+          {resumesLoading ? (
+            <div style={{ textAlign: 'center', padding: 24 }}><Spin /></div>
+          ) : resumes.length === 0 ? (
+            <Empty description="暂无简历，请先在「身份名牌」中创建" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          ) : (
+            <Select
+              value={syncResumeId}
+              onChange={setSyncResumeId}
+              placeholder="请选择简历版本..."
+              style={{ width: '100%', borderRadius: 8 }}
+              options={resumes.map((r) => ({
+                label: `${r.title}（V${r.version}）`,
+                value: r.id,
+              }))}
+            />
+          )}
+        </div>
+      </Modal>
 
       {panel && (<>
         <div onClick={() => { setPanel(null); setDetail(null); setEditProj(null); }}

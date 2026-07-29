@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { applicationId, interviewDate, interviewType, interviewer, position, title, content, result } = body;
+    const { applicationId, interviewDate, interviewType, interviewer, position, title, content, result, reviewNotes, resumeSuggestions } = body;
 
     if (!applicationId || !interviewDate || !interviewType) {
       return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
@@ -21,6 +21,8 @@ export async function POST(req: NextRequest) {
         title: title || null,
         content: content || null,
         result: result || null,
+        reviewNotes: reviewNotes || null,
+        resumeSuggestions: resumeSuggestions || null,
       },
     });
 

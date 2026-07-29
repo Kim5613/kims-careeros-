@@ -9,7 +9,7 @@ export async function GET(
   try {
     const app = await prisma.jobApplication.findUnique({
       where: { id: params.id },
-      include: { company: true, interviews: { orderBy: { interviewDate: 'desc' } }, negotiations: true },
+      include: { company: true, resume: { select: { id: true, title: true, version: true } }, interviews: { orderBy: { interviewDate: 'desc' } }, negotiations: true },
     });
     if (!app) return NextResponse.json({ error: '求职记录不存在' }, { status: 404 });
     return NextResponse.json(app);

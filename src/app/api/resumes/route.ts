@@ -49,13 +49,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    if (!body.content || !body.content.trim()) {
-      return NextResponse.json(
-        { error: '简历内容不能为空' },
-        { status: 400 }
-      );
-    }
+    // v1.3 起 content（旧版备注）不再必填，结构化经历为主
 
     // ── If setting as default, unset other defaults ──
     if (body.isDefault) {
@@ -69,7 +63,7 @@ export async function POST(request: NextRequest) {
     const resume = await prisma.resume.create({
       data: {
         title: body.title.trim(),
-        content: body.content.trim(),
+        content: body.content?.trim() || '',
         targetPosition: body.targetPosition?.trim() || null,
         targetCompany: body.targetCompany?.trim() || null,
         version: body.version ?? 1,

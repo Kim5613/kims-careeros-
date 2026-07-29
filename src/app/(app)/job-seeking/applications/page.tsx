@@ -68,6 +68,8 @@ export default function ApplicationsPage() {
 
   // Apply modal
   const [applyApp, setApplyApp] = useState<JobApplication | null>(null);
+  const [resumeOptions, setResumeOptions] = useState<{ label: string; value: string }[]>([]);
+  const [resumeMap, setResumeMap] = useState<Map<string, { id: string; title: string; version: number }>>(new Map());
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyLoading, setApplyLoading] = useState(false);
   const [applyForm] = Form.useForm();
@@ -128,8 +130,22 @@ export default function ApplicationsPage() {
     message.success('已加入意向池');
   };
 
+  const fetchResumes = async () => {
+    try {
+      const res = await fetch('/api/resumes');
+      if (res.ok) {
+        const list = await res.json();
+        setResumeOptions(list.map((r: any) => ({ label: `${r.title}（V${r.version}）`, value: r.id })));
+        const map = new Map<string, { id: string; title: string; version: number }>();
+        list.forEach((r: any) => map.set(r.id, r));
+        setResumeMap(map);
+      }
+    } catch { /* 静默 */ }
+  };
+
   // ─── Edit ───
   const openEdit = (app: JobApplication) => {
+    fetchResumes();
     setEditing(app);
     form.setFieldsValue({
       companyName: app.companyName,
@@ -145,6 +161,7 @@ export default function ApplicationsPage() {
       appliedDate: app.appliedDate ? dayjs(app.appliedDate) : null,
       jdLink: app.jdLink,
       jdText: app.jdText,
+      resumeId: (app as any).resumeId || null,
       resumeVersion: app.resumeVersion,
       notes: app.notes,
     });
@@ -163,6 +180,7 @@ export default function ApplicationsPage() {
         source: vals.source || null,
         appliedDate: vals.appliedDate ? vals.appliedDate.toISOString() : null,
         jdLink: vals.jdLink || null, jdText: vals.jdText || null,
+        resumeId: vals.resumeId || null,
         resumeVersion: vals.resumeVersion || null, notes: vals.notes || null,
       };
       if (editing) { await update(editing.id, payload); message.success('已更新'); }
@@ -176,7 +194,7 @@ export default function ApplicationsPage() {
   const handleApply = async () => {
     try {
       const vals = await applyForm.validateFields(); setApplyLoading(true);
-      await update(applyApp!.id, { currentStage: '已投递', source: vals.source || null, location: vals.location || null, appliedDate: vals.appliedDate ? vals.appliedDate.toISOString() : new Date().toISOString(), jdText: vals.jdText || null, resumeVersion: vals.resumeVersion || null } as any);
+      await update(applyApp!.id, { currentStage: '已投递', source: vals.source || null, location: vals.location || null, appliedDate: vals.appliedDate ? vals.appliedDate.toISOString() : new Date().toISOString(), jdText: vals.jdText || null, resumeId: vals.resumeId || null, resumeVersion: vals.resumeVersion || null } as any);
       message.success('已投递！'); setApplyOpen(false); setApplyApp(null);
     } catch { }
     finally { setApplyLoading(false); }
@@ -412,7 +430,8 @@ export default function ApplicationsPage() {
             <Col span={8}><Form.Item name="salaryMax" label="薪资上限(K)"><InputNumber style={{ width: '100%' }} placeholder="60" /></Form.Item></Col>
             <Col span={8}><Form.Item name="appliedDate" label="投递日期"><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
           </Row>
-          <Form.Item name="resumeVersion" label="使用简历版本"><Input placeholder="如：通用版 / 前端专家版" /></Form.Item>
+          <Form.Item name="resumeId" label="使用简历版本"><Select placeholder="选择已有简历..." options={resumeOptions} allowClear /></Form.Item>
+          <Form.Item name="resumeVersion" hidden><Input /></Form.Item>
 
           <Text strong style={{ display: 'block', margin: '12px 0 8px', fontSize: 13, color: '#52c41a' }}>JD 与备注</Text>
           <Form.Item name="jdLink" label="JD 链接"><Input prefix={<LinkOutlined />} placeholder="https://..." /></Form.Item>
@@ -431,7 +450,8 @@ export default function ApplicationsPage() {
             <Col span={12}><Form.Item name="location" label="Base地"><Input placeholder="城市" /></Form.Item></Col>
           </Row>
           <Form.Item name="appliedDate" label="投递日期" rules={[{ required: true, message: '必填' }]}><DatePicker style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="resumeVersion" label="简历版本"><Input placeholder="通用版 / 前端专家版" /></Form.Item>
+          <Form.Item name="resumeId" label="简历版本"><Select placeholder="选择已有简历..." options={resumeOptions} allowClear /></Form.Item>
+          <Form.Item name="resumeVersion" hidden><Input /></Form.Item>
           <Form.Item name="jdText" label="JD 摘要"><TextArea rows={2} placeholder="简单记一下 JD 关键要求..." /></Form.Item>
         </Form>
       </Modal>

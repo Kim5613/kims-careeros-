@@ -29,6 +29,9 @@ export async function POST(request: NextRequest) {
     if (!body.role?.trim()) return NextResponse.json({ error: '项目岗位不能为空' }, { status: 400 });
     if (!body.startDate) return NextResponse.json({ error: '开始时间不能为空' }, { status: 400 });
 
+    // ── 处理 workExperienceId ──
+    const workExperienceId = body.workExperienceId || null;
+
     // Sync company editable fields (industry, scale, background)
     const coUpdates: any = {};
     if (body.company_industry !== undefined) coUpdates.industry = body.company_industry || null;
@@ -43,6 +46,7 @@ export async function POST(request: NextRequest) {
     const project = await prisma.battleProject.create({
       data: {
         companyId: body.companyId,
+        workExperienceId,
         projectName: body.projectName.trim(),
         role: body.role.trim(),
         startDate: body.startDate,

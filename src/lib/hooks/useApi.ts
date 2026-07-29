@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseApiOptions<T> {
   /** 创建时 POST 到此端点 */
@@ -34,10 +34,23 @@ export function useApiList<T extends { id: string }>(
 ): UseApiReturn<T> {
   const { endpoint, mockData, fetchOnMount = true } = options;
 
+  // 写操作（POST/PATCH/DELETE）必须用不带查询参数的基础地址，
+  // 否则 `${endpoint}/${id}` 会把 id 拼进查询串里，打到集合路由上导致 405
+  // （坑点记录：memory/project-kims-careeros.md，2026-07-27）
+  const baseEndpoint = endpoint.split('?')[0];
+
   const [data, setData] = useState<T[]>(mockData);
   const [loading, setLoading] = useState(fetchOnMount);
   const [error, setError] = useState<string | null>(null);
   const [apiAvailable, setApiAvailable] = useState(false);
+
+  // mockData 常是调用方内联生成的数组（每次渲染都是新引用），
+  // 若放进依赖数组会导致 refetch 身份每轮渲染都变 → 无限重拉（页面闪动）
+  // 用 ref 读最新值，依赖只保留 endpoint
+  const mockDataRef = useRef(mockData);
+  useEffect(() => {
+    mockDataRef.current = mockData;
+  }, [mockData]);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -51,12 +64,12 @@ export function useApiList<T extends { id: string }>(
         setApiAvailable(true);
       }
     } catch {
-      setData(mockData);
+      setData(mockDataRef.current);
       setApiAvailable(false);
     } finally {
       setLoading(false);
     }
-  }, [endpoint, mockData]);
+  }, [endpoint]);
 
   useEffect(() => {
     if (fetchOnMount) refetch();
@@ -65,7 +78,7 @@ export function useApiList<T extends { id: string }>(
   const create = useCallback(
     async (item: Partial<T>): Promise<T | null> => {
       try {
-        const res = await fetch(endpoint, {
+        const res = await fetch(baseEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(item),
@@ -87,7 +100,7 @@ export function useApiList<T extends { id: string }>(
   const update = useCallback(
     async (id: string, changes: Partial<T>): Promise<T | null> => {
       try {
-        const res = await fetch(`${endpoint}/${id}`, {
+        const res = await fetch(`${baseEndpoint}/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(changes),
@@ -110,7 +123,7 @@ export function useApiList<T extends { id: string }>(
   const remove = useCallback(
     async (id: string): Promise<boolean> => {
       try {
-        const res = await fetch(`${endpoint}/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${baseEndpoint}/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error('删除失败');
         setData((prev) => prev.filter((item) => item.id !== id));
         return true;

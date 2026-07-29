@@ -13,6 +13,7 @@ export async function GET() {
         company: {
           select: { id: true, name: true, industry: true, scale: true, city: true },
         },
+        resume: { select: { id: true, title: true, version: true } },
         interviews: { orderBy: { interviewDate: 'desc' } },
       },
       orderBy: { createdAt: 'desc' },
@@ -48,6 +49,7 @@ interface CreateApplicationBody {
   jdLink?: string | null;
   jdText?: string | null;
   resumeVersion?: string | null;
+  resumeId?: string | null;
   endReason?: string | null;
   notes?: string | null;
 }
@@ -100,6 +102,7 @@ export async function POST(request: NextRequest) {
         jdLink: body.jdLink ?? null,
         jdText: body.jdText ?? null,
         resumeVersion: body.resumeVersion ?? null,
+        resumeId: body.resumeId ?? null,
         endReason: body.endReason ?? null,
         notes: body.notes ?? null,
       },
@@ -113,6 +116,7 @@ export async function POST(request: NextRequest) {
             city: true,
           },
         },
+        resume: { select: { id: true, title: true, version: true } },
       },
     });
 

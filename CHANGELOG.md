@@ -4,6 +4,85 @@ Kim's CareerOS 版本记录。每个版本对应一个 Git tag，GitHub 上可�
 
 ---
 
+## v1.3 — 封版（2026-07-30）
+
+**定位**：结构化简历 + AI 标签 + 数据互联 + 内部战役模板。详见 PRD §14。
+
+### 数据互联（5 FK）
+- WorkExperience ↔ Company、JobApplication ↔ Resume、BattleProjectSkill ↔ Career Sphere、BattleProject ↔ WorkExperience、InterviewRecord 加 resumeSuggestions
+
+### AI 标签
+- 内部战役项目自动生成标签（DeepSeek），同步到简历展示
+
+### 模板
+- 下载/上传解析 Markdown 模板，自动填入表单
+
+### 身份名牌 × 内部战役
+- 统一项目列表，勾选导入/取消移除，一键同步
+- 新增简历看板式卡片网格
+
+### 修复
+- useApiList 写操作 endpoint 截断、mockData 无限重拉、新增简历去版本号/默认字段
+
+---
+
+## v1.3-dev — 身份铭牌 · 结构化简历 + 一键导出（2026-07-27）
+
+**定位**：将简历从单一 Markdown 文本域升级为结构化数据模型，支持工作/项目经历的无限新增，一键导出 HTML/Markdown 标准格式简历。
+
+### 个人信息模板（默认版块）
+- **PersonalInfo 单例模型**：name / phone / email / school / major，全版本共享
+- **UI**：页面顶部卡片展示，Modal 编辑表单（5 字段）
+- **API**：`/api/personal-info` GET 获取 + POST upsert
+
+### 结构化经历
+- **工作经历**：companyName / baseLocation / position / startDate / endDate / coreWork（编号要点），按 sortOrder 排序，无限新增
+- **项目经历**：projectName / companyName / position / startDate / endDate / process（要点）/ results（要点），无限新增
+- **UI**：选中简历后，Tab 切换「工作经历」/「项目经历」，每条以 Card 展示，Modal 编辑表单
+- **数据模型**：`work_experiences` + `project_experiences` 两张新表，关联 Resume（Cascade 删除）
+- **API**：完整 CRUD（`?resumeId=` 筛选），遵循现有 API 模式
+
+### 一键导出
+- **HTML 导出**：完整 HTML 文档（内联 CSS + @media print），新窗口打开，可直接 Ctrl+P 打印为 PDF
+- **Markdown 导出**：格式化 MD 文件下载（`简历-{姓名}-V{版本}.md`）
+- **排版格式**：姓名/电话/邮箱/学校/专业居中 → 工作经历（左对齐，岗位+任职时间同行，编号要点）→ 项目纪要（项目名+公司名同行，过程+成果要点）
+- **导出工具**：`src/lib/export-resume.ts` 纯客户端（`generateExportHTML` / `generateExportMD` / `exportAsHTML` / `exportAsMD`）
+
+### identity 页面重写
+- 页面分为 3 区域：个人信息卡片（上）→ 简历版本卡片网格（中，点击选中）→ 经历编辑面板（下，选中简历后显示）
+- 简历版本管理复用现有 CRUD 全部功能（编辑/复制/默认/删除/文件解析）
+- 选中简历高亮显示，切换简历时经历列表自动刷新
+- 导出按钮在经历面板标题栏
+
+### 新增文件
+- `src/lib/hooks/useApiSingle.ts` — 单例 API hook（对标 useApiList）
+- `src/lib/export-resume.ts` — 纯客户端 HTML/MD 导出
+- `src/app/api/personal-info/route.ts`
+- `src/app/api/work-experiences/route.ts` + `[id]/route.ts`
+- `src/app/api/project-experiences/route.ts` + `[id]/route.ts`
+
+### v1.3 反查修订（2026-07-27 同日，Kim 反查后迭代，本地验证通过待部署）
+
+**严重修复**
+- **经历编辑/删除"假保存"根治**：`useApiList` 带 `?resumeId=` 查询参数的 endpoint 导致 PATCH/DELETE 拼出错误地址（405）被 Mock 降级吞掉，界面显示已改但刷新即丢。修复为写操作统一走 `endpoint.split('?')[0]`，全站生效
+- **弹窗闪动/加载不出根治**：`useApiList`/`useApiSingle` 的 mockData 依赖调用方内联数组（每轮渲染新引用）→ refetch 身份漂移 → 无限重拉死循环。修复为 ref 读取 mockData，依赖只留 endpoint
+
+**交互定稿（Kim 逐轮确认）**
+- **新增简历**：单弹窗三板块（简历版本 + 工作经历 + 项目经历 Form.List 无限新增），保存先建简历再逐条提交经历，空行过滤/半填报错/失败汇总
+- **编辑经历**：点击简历卡片弹窗编辑（页面下方大面板移除），弹窗内两板块同页（无 Tab），↑↓ 排序 + 底部添加按钮
+- **导出简历**：页面右上角主入口 → 导出弹窗（左 iframe 实时预览 + 右个人信息摘要/简历版本单选），底部 导出HTML（主）/ MD；卡片 📤 与「导出此版本」同入口
+- **简历卡片**：紧凑 4 列，目标岗位@公司合并单行
+- **简历预览**：iframe 渲染导出 HTML（所见即所得）
+- **复制简历**：连带复制全部工作/项目经历
+- **导出内容**：新增「求职意向：岗位@公司」行 + 旧备注作「补充说明」附末尾；条目间分隔线改明显实线；日期月份去前导零
+- **备注字段**：表单移除「简历备注（旧版兼容）」，API 解除 content 必填（旧数据保留）
+- 个人信息保存失败增加错误提示；导出按钮色板对齐；AntD `destroyOnClose` → `destroyOnHidden`
+
+**待确认需求（已记 PRD §14.6）**
+- 导出时"选择个人信息的版本"——当前 PersonalInfo 单例，多份需改数据模型
+
+---
+
 ## v1.2.2 — 内部战役 + 大师团增强 + 部署健壮性（2026-07-23 ~ 07-24）
 
 **定位**：建设项目经历结构化记录池，补完大师团体验，修复线上部署问题

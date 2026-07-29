@@ -1,5 +1,5 @@
 ## 活跃项目
-[Kim's CareerOS] HR 从业者个人职业管理平台 | Next.js 14 + Ant Design + Prisma + PostgreSQL | v1.0 开发中
+[Kim's CareerOS] HR 从业者个人职业管理平台 | Next.js 14 + Ant Design + Prisma + PostgreSQL | v1.3
 → 项目文档: memory/project-kims-careeros.md
 → 产品文档: ../docs/PRODUCT.md
 → 交接笔记: memory/交接笔记-2026-06-25.md

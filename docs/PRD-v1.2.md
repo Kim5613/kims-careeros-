@@ -1,7 +1,7 @@
-# Kim's CareerOS v1.2 — AI 集成 + UX 重构 PRD
+# Kim's CareerOS v1.2 → v1.3 — AI 集成 + UX 重构 + 结构化简历
 
-> 创建日期：2026-07-13 | 状态：✅ v1.2.2 封版
-> 最后更新：2026-07-24 | 当前版本：v1.2.2
+> 创建日期：2026-07-13 | 状态：✅ v1.3 封版
+> 最后更新：2026-07-27 | 当前版本：v1.3.0
 
 ---
 
@@ -556,3 +556,96 @@ curl -N -X POST http://127.0.0.1:3000/api/ai/hr-roundtable \
 - P2：手动打标 + AI 推荐 → 职业宇宙联动（`/growth/career-sphere`）
 - P3：简历编辑器内勾选项目 → AI 生成工作经历段落
 
+---
+
+## 十四、v1.3 — 身份铭牌 · 结构化简历 + 一键导出（2026-07-27）
+
+### 14.1 定位
+
+将简历从单一 Markdown 文本域升级为**结构化数据模型**，支撑格式化导出和后续 AI 生成。
+
+### 14.2 数据模型
+
+新增 3 张表：
+
+| 表 | 关键字段 | 说明 |
+|----|---------|------|
+| `PersonalInfo` | name / phone / email / school / major | 单例，全版本共享 |
+| `WorkExperience` | resumeId(FK)、companyName、baseLocation、position、startDate/endDate、coreWork(@db.Text)、sortOrder | 多对一 Resume，Cascade 删除 |
+| `ProjectExperience` | resumeId(FK)、projectName、companyName、position、startDate/endDate、process(@db.Text)、results(@db.Text)、sortOrder | 多对一 Resume，Cascade 删除 |
+
+### 14.3 功能
+
+- **个人信息模板**（默认版块）：页面顶部卡片展示，Modal 表单编辑，单例全版本共享
+- **工作经历**：无限新增，公司/岗位/Base地/任职时间/核心工作（编号要点）
+- **项目经历**：无限新增，项目名/公司/岗位/项目周期/过程/成果
+- **一键导出**：HTML（新窗口，可打印 PDF）+ Markdown（下载 .md）
+- **导出排版**：姓名电话邮箱学校专业居中 → 分隔实线 → 求职意向（岗位@公司）→ 工作经历左对齐（公司名一行、岗位+时间同行、条目间实线分隔）→ 项目纪要左对齐（项目名+公司名同行、岗位+周期同行、过程+成果编号要点）→ 补充说明（旧备注，非空才输出）
+
+### 14.3.1 交互定稿（2026-07-27 反查迭代，Kim 逐项确认）
+
+| 交互 | 定稿方案 |
+|------|---------|
+| 新增简历 | 单弹窗三板块：简历版本 + 工作经历 Form.List + 项目经历 Form.List，经历当场无限新增；保存先建简历再逐条 POST 经历，空行自动过滤、半填行指明第几条报错、部分失败汇总提示 |
+| 编辑经历 | **点击简历卡片弹窗**（非页面下方区域），工作经历/项目经历上下两板块同页（与新增同格式，无 Tab），卡片支持编辑/删除/↑↓ 排序，底部虚线按钮添加 |
+| 导出简历 | 页面右上角主入口 + 卡片 📤 + 经历弹窗内「导出此版本」，三处均打开同一**导出弹窗**：左侧 iframe 实时预览，右侧个人信息摘要（可跳转编辑）+ 简历版本单选列表，底部 导出HTML（主）/ 导出Markdown |
+| 简历卡片 | 紧凑 4 列（lg=6），目标岗位@公司合并单行，点击卡片=打开经历编辑弹窗 |
+| 简历预览 | 👁 图标弹窗，iframe 渲染导出 HTML（所见即所得） |
+| 复制简历 | 连带复制全部工作/项目经历 |
+| 简历备注 | 表单已移除（旧数据保留，导出时作为「补充说明」附末尾）；API 不再强制 content 必填 |
+
+### 14.4 API
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `/api/personal-info` | GET / POST | 单例 upsert |
+| `/api/work-experiences` | GET(?resumeId=) / POST | 按简历筛选 + 新建 |
+| `/api/work-experiences/[id]` | PATCH / DELETE | 更新 / 删除 |
+| `/api/project-experiences` | GET(?resumeId=) / POST | 按简历筛选 + 新建 |
+| `/api/project-experiences/[id]` | PATCH / DELETE | 更新 / 删除 |
+
+### 14.5 新增文件
+
+| 文件 | 说明 |
+|------|------|
+| `src/lib/hooks/useApiSingle.ts` | 单例 API hook（对标 useApiList） |
+| `src/lib/export-resume.ts` | HTML/MD 生成 + 导出（纯客户端） |
+| `src/app/(app)/identity/page.tsx` | 完全重写（197→530 行） |
+
+### 14.6 待后续（P2/P3）
+
+- P2：AI 从结构化数据自动生成简历描述段落
+- P3：导出 PDF 格式（无需手动打印）
+- 待确认：**多份个人信息版本**（Kim 在导出弹窗提出"选择个人信息的版本"，当前 PersonalInfo 为单例；如需中文/英文或多求职方向各一份，需改数据模型）
+- ~~待部署：v1.3 + 07-27 反查修复批次本地已验证，尚未部署线上~~ ✅ 2026-07-30 上线
+
+### 14.7 v1.3 封版增补（2026-07-30）
+
+**数据互联（5 项 FK 打通）**
+- WorkExperience.companyId → Company FK：简历工作经历关联公司库，改名自动同步
+- JobApplication.resumeId → Resume FK：投递记录关联简历版本，改为 Select 选择而非自由文本
+- BattleProjectSkill ↔ Career Sphere：技能沉淀引用 domain-tracks.ts 技能 ID，为职业宇宙联动做准备
+- BattleProject.workExperienceId → WorkExperience FK：内部项目关联工作经历，简历导出时自动归组
+- InterviewRecord.resumeSuggestions：面试复盘可填写简历改进建议
+
+**AI 标签系统**
+- BattleProject 新增 `tags String[]`：创建/编辑项目后自动调用 DeepSeek 分析内容生成 3-5 个标签
+- ProjectExperience 新增 `tags String[]`：同步时自动带入，身份名牌展示
+- 标签在内部战役卡片、身份名牌导入列表、简历项目经历中统一展示
+
+**内部战役模板**
+- 下载模板：结构化 Markdown 模板，包含所有字段
+- 上传解析：选择 .md/.txt 文件 → 客户端解析 → 自动填入表单（含能力沉淀表格解析）
+- 解析器：`src/lib/parse-template.ts`
+
+**身份名牌 × 内部战役联动**
+- 新增简历：项目经历改为内部战役看板（卡片网格），勾选即导入
+- 编辑弹窗：合并为统一列表，每条一目了然（项目名/公司·岗位/标签/概要），点击切换导入/移除
+- 同步 API：`POST /api/battle-projects/[id]/sync-to-resume`，HTML→纯文本格式化
+- 批量导入 + 快速新增项目到内部战役
+
+**其他**
+- 身份名牌新增简历去掉版本号/默认字段
+- useApiList 写操作 endpoint 截断修复（`?resumeId=` 导致的 405）
+- useApiList mockData 依赖优化（ref 读取，防无限重拉）
+- 新增 `useApiSingle` hook（单例资源 upsert）

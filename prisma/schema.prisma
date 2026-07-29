@@ -33,6 +33,7 @@ model Company {
   contactLinks    ContactCompany[]
   positionKnowledge PositionKnowledge[]
   battleProjects  BattleProject[]
+  workExperiences WorkExperience[]
 
   @@map("companies")
 }
@@ -108,16 +109,19 @@ model JobApplication {
   appliedDate    DateTime?
   jdLink         String?                     // JD 链接
   jdText         String?  @db.Text           // JD 原文/描述
-  resumeVersion  String?                     // 关联简历版本
+  resumeId       String?                     // FK → Resume（v1.3 互联）
+  resumeVersion  String?                     // 冗余展示用（兼容旧数据）
   endReason      String?                     // 结束原因：简历挂/面试挂/ghost/自己放弃/已入职
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   company        Company              @relation(fields: [companyId], references: [id])
+  resume         Resume?              @relation(fields: [resumeId], references: [id], onDelete: SetNull)
   interviews     InterviewRecord[]
   negotiations   SalaryNegotiation[]
 
+  @@index([resumeId])
   @@map("job_applications")
 }
 
@@ -133,6 +137,7 @@ model InterviewRecord {
   result          String?                   // 面试结果
   notes           String?
   reviewNotes     String?  @db.Text         // 复盘笔记：面试官风格/关键问题/回答反思/团队判断
+  resumeSuggestions String? @db.Text        // 简历改进建议（v1.3 互联）
   createdAt       DateTime @default(now())
 
   application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
@@ -253,10 +258,73 @@ model Resume {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  attachments     Attachment[]
-  coverLetters    CoverLetter[]
+  attachments        Attachment[]
+  coverLetters       CoverLetter[]
+  workExperiences    WorkExperience[]
+  projectExperiences ProjectExperience[]
+  applications       JobApplication[]
 
   @@map("resumes")
+}
+
+// ── 个人信息（单例，全版本共享）──
+model PersonalInfo {
+  id        String   @id @default(cuid())
+  name      String   @default("")
+  phone     String   @default("")
+  email     String   @default("")
+  school    String   @default("")
+  major     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("personal_infos")
+}
+
+// ── 工作经历（多对一 Resume）──
+model WorkExperience {
+  id           String   @id @default(cuid())
+  resumeId     String
+  companyId    String?
+  companyName  String
+  baseLocation String?
+  position     String
+  startDate    String
+  endDate      String
+  coreWork     String   @db.Text
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  resume       Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  company      Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  battleProjects BattleProject[]
+
+  @@index([resumeId])
+  @@index([companyId])
+  @@map("work_experiences")
+}
+
+// ── 项目经历（多对一 Resume）──
+model ProjectExperience {
+  id          String   @id @default(cuid())
+  resumeId    String
+  projectName String
+  companyName String
+  position    String?
+  startDate   String
+  endDate     String
+  process     String   @db.Text
+  results     String   @db.Text
+  tags        String[]                 // 来自内部战役的标签
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  resume      Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId])
+  @@map("project_experiences")
 }
 
 model CoverLetter {
@@ -454,6 +522,7 @@ model WeeklyFocus {
 model BattleProject {
   id          String   @id @default(cuid())
   companyId   String                     // 关联公司库
+  workExperienceId String?               // FK → WorkExperience（v1.3 互联）
   projectName String                     // 项目名称
   role        String                     // 项目岗位
   startDate   String                     // 开始时间 YYYY-MM-DD
@@ -469,13 +538,16 @@ model BattleProject {
   phase3      String?  @db.Text          // 收尾阶段
   results     String?  @db.Text          // 量化成果
   shortcomings String? @db.Text          // 不足与反思
+  tags        String[]                   // AI 生成标签（v1.3）
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   company     Company               @relation(fields: [companyId], references: [id])
+  workExperience WorkExperience?    @relation(fields: [workExperienceId], references: [id], onDelete: SetNull)
   skills      BattleProjectSkill[]
 
   @@index([companyId])
+  @@index([workExperienceId])
   @@map("battle_projects")
 }
 
