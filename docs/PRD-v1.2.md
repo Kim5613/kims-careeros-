@@ -649,3 +649,10 @@ curl -N -X POST http://127.0.0.1:3000/api/ai/hr-roundtable \
 - useApiList 写操作 endpoint 截断修复（`?resumeId=` 导致的 405）
 - useApiList mockData 依赖优化（ref 读取，防无限重拉）
 - 新增 `useApiSingle` hook（单例资源 upsert）
+
+### 14.8 部署状态
+
+- 2026-07-30 晚：代码已完整推送到 GitHub（3 commits），服务器 `prisma db push` 已执行
+- 构建阶段 SSH 断连，部署未完成
+- 待续：`ssh root@139.196.159.68` → `pm2 status`，若 stopped 则 `bash server-deploy.sh` 重跑
+- 构建正常需 3-8 分钟，期间勿关终端
