@@ -23,3 +23,7 @@ Thumbs.db
 
 # Tauri 桌宠：嵌套独立仓库（2026-07-22 拆分），不纳入本仓库追踪
 桌宠-芝士/
+
+# 部署产物 + 日志
+deploy.zip
+server.log
