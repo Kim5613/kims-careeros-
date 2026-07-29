@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // ────────────────────────────────────────────
 // GET /api/personal-info
 // 获取个人信息（单例），无记录时返回空对象

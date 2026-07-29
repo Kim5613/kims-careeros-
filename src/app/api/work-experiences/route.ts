@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // ────────────────────────────────────────────
 // GET /api/work-experiences?resumeId=xxx
 // 按简历 ID 获取工作经历列表
