@@ -80,20 +80,19 @@ export function useApiSingle<T extends { id?: string }>(
         setData(saved);
         return saved;
       } catch (err) {
-        // 本地降级
+        // 服务端校验失败（HTTP 错误）：不碰本地状态，直接抛出让调用方提示
+        if (err instanceof Error && err.message !== 'Failed to fetch') {
+          throw err;
+        }
+        // 真网络错误：本地降级 + 明确告知未入库；返回 null 让调用方知道不是"已保存"
         const fallback = {
           ...data,
           ...item,
           id: data?.id || `local-${Date.now()}`,
         } as T;
         setData(fallback);
-        // 如果是服务端校验失败（非网络错误），重新抛出让调用方处理
-        if (err instanceof Error && err.message !== 'Failed to fetch') {
-          throw err;
-        }
-        // 网络失败走了本地降级：数据没入库，必须让用户知道
         message.warning('网络异常，数据仅保存在本地，未同步到服务器');
-        return fallback;
+        return null;
       }
     },
     [endpoint, data]

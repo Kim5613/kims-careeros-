@@ -23,6 +23,8 @@ interface JobApplication {
   salaryMin: number | null; salaryMax: number | null; location: string | null;
   currentStage: string; source: string | null; appliedDate: string | null;
   jdLink: string | null; jdText: string | null;
+  resumeId: string | null;
+  resume: { id: string; title: string; version: number } | null;
   resumeVersion: string | null; endReason: string | null;
   notes: string | null; createdAt: string;
   company?: { name: string; industry?: string; scale?: string; city?: string; website?: string };
@@ -42,6 +44,8 @@ function mapApp(item: any): JobApplication {
     appliedDate: item.appliedDate || null,
     jdLink: item.jdLink || null,
     jdText: item.jdText || null,
+    resumeId: item.resumeId || null,
+    resume: item.resume || null,
     resumeVersion: item.resumeVersion || null,
     endReason: item.endReason || null,
     notes: item.notes || null,
@@ -161,7 +165,7 @@ export default function ApplicationsPage() {
       appliedDate: app.appliedDate ? dayjs(app.appliedDate) : null,
       jdLink: app.jdLink,
       jdText: app.jdText,
-      resumeId: (app as any).resumeId || null,
+      resumeId: app.resumeId,
       resumeVersion: app.resumeVersion,
       notes: app.notes,
     });
@@ -190,7 +194,7 @@ export default function ApplicationsPage() {
   };
 
   // ─── Apply ───
-  const openApply = (app: JobApplication) => { setApplyApp(app); applyForm.resetFields(); applyForm.setFieldsValue({ appliedDate: dayjs() }); setApplyOpen(true); };
+  const openApply = (app: JobApplication) => { fetchResumes(); setApplyApp(app); applyForm.resetFields(); applyForm.setFieldsValue({ appliedDate: dayjs(), resumeId: app.resumeId }); setApplyOpen(true); };
   const handleApply = async () => {
     try {
       const vals = await applyForm.validateFields(); setApplyLoading(true);
@@ -352,7 +356,7 @@ export default function ApplicationsPage() {
                   ['投递渠道', detail.source],
                   ['投递日期', detail.appliedDate ? dayjs(detail.appliedDate).format('YYYY-MM-DD') : null],
                   ['投递天数', daysAgo(detail.appliedDate)],
-                  ['简历版本', detail.resumeVersion],
+                  ['简历版本', detail.resume ? `${detail.resume.title}（V${detail.resume.version}）` : detail.resumeVersion],
                 ].filter(([, v]) => v).map(([label, val]) => (
                   <Col span={12} key={label}>
                     <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>{label}</Text>

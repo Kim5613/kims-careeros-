@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { message } from 'antd';
 
 interface UseApiOptions<T> {
   /** 创建时 POST 到此端点 */
@@ -52,22 +53,32 @@ export function useApiList<T extends { id: string }>(
     mockDataRef.current = mockData;
   }, [mockData]);
 
+  // 竞态守卫：只让最后一次 refetch 生效（快速切换简历版本时，旧响应不会覆盖新数据）
+  const reqIdRef = useRef(0);
+  // 首次成功加载前才允许 mock 降级；已有真实数据时失败不覆盖，只记 error
+  const loadedRef = useRef(false);
+
   const refetch = useCallback(async () => {
+    const reqId = ++reqIdRef.current;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(endpoint);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
+      if (reqId !== reqIdRef.current) return; // 已有更新的请求在飞，丢弃旧响应
       if (Array.isArray(json)) {
-        setData(json.length > 0 ? json : []);
+        setData(json);
         setApiAvailable(true);
+        loadedRef.current = true;
       }
     } catch {
-      setData(mockDataRef.current);
+      if (reqId !== reqIdRef.current) return;
       setApiAvailable(false);
+      setError('加载失败，请刷新重试');
+      if (!loadedRef.current) setData(mockDataRef.current);
     } finally {
-      setLoading(false);
+      if (reqId === reqIdRef.current) setLoading(false);
     }
   }, [endpoint]);
 
@@ -87,10 +98,15 @@ export function useApiList<T extends { id: string }>(
         const created = await res.json();
         setData((prev) => [created, ...prev]);
         return created;
-      } catch {
+      } catch (err) {
         // 本地降级
         const fallback = { ...item, id: `local-${Date.now()}`, createdAt: new Date().toISOString() } as unknown as T;
         setData((prev) => [fallback, ...prev]);
+        // 数据没入库必须让用户知道（否则刷新后"消失"）
+        const isNetwork = err instanceof Error && err.message === 'Failed to fetch';
+        message.warning(isNetwork
+          ? '网络异常，数据仅本地暂存，未同步到服务器'
+          : `服务器保存失败（${err instanceof Error ? err.message : '未知错误'}），数据仅本地暂存`);
         return fallback;
       }
     },
@@ -109,11 +125,15 @@ export function useApiList<T extends { id: string }>(
         const updated = await res.json();
         setData((prev) => prev.map((item) => (item.id === id ? { ...item, ...updated } : item)));
         return updated;
-      } catch {
+      } catch (err) {
         // 本地降级
         setData((prev) =>
           prev.map((item) => (item.id === id ? { ...item, ...changes } : item))
         );
+        const isNetwork = err instanceof Error && err.message === 'Failed to fetch';
+        message.warning(isNetwork
+          ? '网络异常，修改仅本地暂存，未同步到服务器'
+          : `服务器更新失败（${err instanceof Error ? err.message : '未知错误'}），修改仅本地暂存`);
         return { id, ...changes } as unknown as T;
       }
     },
@@ -127,9 +147,13 @@ export function useApiList<T extends { id: string }>(
         if (!res.ok) throw new Error('删除失败');
         setData((prev) => prev.filter((item) => item.id !== id));
         return true;
-      } catch {
+      } catch (err) {
         // 本地降级
         setData((prev) => prev.filter((item) => item.id !== id));
+        const isNetwork = err instanceof Error && err.message === 'Failed to fetch';
+        message.warning(isNetwork
+          ? '网络异常，删除仅本地生效，未同步到服务器'
+          : `服务器删除失败（${err instanceof Error ? err.message : '未知错误'}），删除仅本地生效`);
         return true;
       }
     },

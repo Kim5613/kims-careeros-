@@ -15,6 +15,19 @@ Kim's CareerOS 版本记录。每个版本对应一个 Git tag，GitHub 上可�
 - useApiSingle 网络失败本地降级时提示「未同步到服务器」
 - tsconfig.tsbuildinfo 移出 git 跟踪；清理 git 历史中的 deploy.zip（103MB）
 
+### 终检深审修复（2026-07-30，两轮子代理审查 + 运行时冒烟验证）
+- 🔴 身份名牌页「个人信息编辑」Modal 被未闭合 JSX 注释吞掉（功能完全失效）→ 恢复
+- 🔴 模板解析器两个正则 bug 实锤：正文区块（缘由/目标/过程/结果/不足）永远解析为空；字段留空时后续值全部错位 → 修复并实测通过
+- 🔴 投递记录 mapApp 丢 resumeId：编辑保存会静默解除简历关联 → 修复，详情页改显示关联简历
+- 🔴 战役项目 POST 不落库 skills：新建/模板导入丢全部能力沉淀 → 修复
+- useApiList 竞态守卫（快速切换简历旧响应不覆盖新数据）+ refetch 失败不再清空已有数据
+- useApiList/useApiSingle 所有本地降级路径加用户提示；useApiSingle 校验失败不再污染本地状态
+- 新建简历：经历全部提交完再选中新简历（修自动 refetch 拉到空数据）
+- 投递弹窗首次打开简历下拉为空 → openApply 补 fetchResumes
+- PATCH /api/applications/[id] 响应补 include resume（编辑后详情立即显示正确）
+- 战役模板上传：空文件报 warning 而非成功；公司匹配不到时保留模板行业/规模/背景；accept 去掉不支持的 docx
+- 导出弹窗切换简历版本加竞态守卫；同步弹窗拉取失败清空过期列表
+
 ### 数据互联（5 FK）
 - WorkExperience ↔ Company、JobApplication ↔ Resume、BattleProjectSkill ↔ Career Sphere、BattleProject ↔ WorkExperience、InterviewRecord 加 resumeSuggestions
 

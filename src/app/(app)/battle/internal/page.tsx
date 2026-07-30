@@ -413,7 +413,7 @@ export default function BattleInternalPage() {
       if (parsed.teamSize) formValues.teamSize = parsed.teamSize;
       if (parsed.departments) formValues.departments = parsed.departments;
 
-      // 公司信息：按名称查找，找不到则让用户手动选
+      // 公司信息：按名称查找，找不到则保留模板里的行业/规模/背景，公司让用户手动选
       if (parsed.companyName) {
         const co = companies.find((c) => c.name === parsed.companyName);
         if (co) {
@@ -422,6 +422,10 @@ export default function BattleInternalPage() {
           formValues.company_scale = parsed.scale || co.scale || '';
           formValues.company_background = parsed.background || co.background || '';
           setSelectedCo(co);
+        } else {
+          if (parsed.industry) formValues.company_industry = parsed.industry;
+          if (parsed.scale) formValues.company_scale = parsed.scale;
+          if (parsed.background) formValues.company_background = parsed.background;
         }
       }
 
@@ -439,7 +443,14 @@ export default function BattleInternalPage() {
         })));
       }
 
-      message.success(`已解析模板：${parsed.projectName || '未命名项目'}（${parsed.skills.length} 项能力）`);
+      // 完全没解析出内容（空文件/格式不符）时不报成功，避免误导
+      const parsedAny = parsed.projectName || parsed.role || parsed.origin || parsed.goal
+        || parsed.phase1 || parsed.phase2 || parsed.phase3 || parsed.results || parsed.skills.length > 0;
+      if (!parsedAny) {
+        message.warning('未识别到有效内容，请确认使用的是下载的模板格式');
+      } else {
+        message.success(`已解析模板：${parsed.projectName || '未命名项目'}（${parsed.skills.length} 项能力）`);
+      }
     } catch {
       message.error('模板解析失败，请检查文件格式');
     }
@@ -495,7 +506,8 @@ export default function BattleInternalPage() {
     try {
       const res = await fetch('/api/resumes');
       if (res.ok) setResumes(await res.json());
-    } catch { /* 静默降级 */ }
+      else setResumes([]); // 失败不留过期列表
+    } catch { setResumes([]); }
     finally { setResumesLoading(false); }
   };
 
@@ -805,7 +817,7 @@ export default function BattleInternalPage() {
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d9d9d9'; e.currentTarget.style.color = '#333'; }}
           >
             <UploadOutlined /> 上传模板填充
-            <input type="file" accept=".md,.txt,.docx,.doc" onChange={handleUploadTemplate}
+            <input type="file" accept=".md,.txt" onChange={handleUploadTemplate}
               style={{ display: 'none' }} />
           </label>
           <Text type="secondary" style={{ fontSize: 12 }}>

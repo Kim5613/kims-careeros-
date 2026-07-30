@@ -63,13 +63,33 @@ export async function POST(request: NextRequest) {
         results: body.results ?? null,
         shortcomings: body.shortcomings ?? null,
       },
+    });
+
+    // ── 能力沉淀技能落库（与 PATCH 同款逻辑；原来解构出来却没写库，新建丢技能）──
+    if (Array.isArray(skillsData) && skillsData.length > 0) {
+      await prisma.battleProjectSkill.createMany({
+        data: skillsData.map((s: any) => ({
+          projectId: project.id,
+          skillId: s.skillId,
+          skillName: s.skillName,
+          category: s.category ?? 'hard',
+          level: s.level ?? 3,
+          description: s.description ?? null,
+          targetLevel: s.targetLevel ?? null,
+        })),
+      });
+    }
+
+    // 重新查询以带上 skills 返回
+    const created = await prisma.battleProject.findUnique({
+      where: { id: project.id },
       include: {
         company: { select: { id: true, name: true, industry: true, scale: true, background: true } },
         skills: true,
       },
     });
 
-    return NextResponse.json(project, { status: 201 });
+    return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error('[POST /api/battle-projects]', error);
     return NextResponse.json({ error: '创建项目失败' }, { status: 500 });

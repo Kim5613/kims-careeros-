@@ -26,9 +26,10 @@ export interface ParsedBattleTemplate {
 }
 
 // ── 辅助：提取 ## 标题下的文本块 ──
+// heading 按正则处理：调用方既传字面标题（'公司信息'），也传模式（'缘由.*' 吃掉括号后缀）
 function extractSection(md: string, heading: string): string {
   const regex = new RegExp(
-    `##\\s+${escapeRegex(heading)}[^\\n]*\\n+([\\s\\S]*?)(?=\\n##\\s|$)`,
+    `##\\s+(?:${heading})[^\\n]*\\n+([\\s\\S]*?)(?=\\n##\\s|$)`,
     'i'
   );
   const m = md.match(regex);
@@ -40,8 +41,10 @@ function escapeRegex(s: string): string {
 }
 
 // ── 辅助：提取列表项 ──
+// 注意：`[：:]` 后不能用 `\s*`（\s 匹配换行，字段留空时会吞掉换行把下一行当值），
+// 只允许行内空白，值不跨行
 function extractListItem(md: string, label: string): string {
-  const regex = new RegExp(`-\\s*${escapeRegex(label)}[：:]\\s*(.+)`, 'i');
+  const regex = new RegExp(`-\\s*${escapeRegex(label)}[：:][ \\t]*([^\\n]*)`, 'i');
   const m = md.match(regex);
   return m ? m[1].trim() : '';
 }
@@ -49,7 +52,7 @@ function extractListItem(md: string, label: string): string {
 // ── 辅助：提取 ### 子标题下的内容 ──
 function extractSubSection(md: string, heading: string): string {
   const regex = new RegExp(
-    `###\\s+${escapeRegex(heading)}[^\\n]*\\n+([\\s\\S]*?)(?=\\n###\\s|\\n##\\s|$)`,
+    `###\\s+(?:${heading})[^\\n]*\\n+([\\s\\S]*?)(?=\\n###\\s|\\n##\\s|$)`,
     'i'
   );
   const m = md.match(regex);

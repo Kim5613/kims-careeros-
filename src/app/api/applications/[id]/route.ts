@@ -53,7 +53,7 @@ export async function PATCH(
     const app = await prisma.jobApplication.update({
       where: { id: params.id },
       data,
-      include: { company: true, interviews: { orderBy: { interviewDate: 'desc' } } },
+      include: { company: true, resume: { select: { id: true, title: true, version: true } }, interviews: { orderBy: { interviewDate: 'desc' } } },
     });
     return NextResponse.json(app);
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Card, Button, Modal, Form, Input, Select, Tag, Typography,
   Space, message, Empty, Badge, Tooltip, Popconfirm, Row, Col, Divider,
@@ -280,13 +280,16 @@ export default function IdentityPage() {
     try {
       const values = await piForm.validateFields();
       setPiModalLoading(true);
-      await piSave(values);
-      message.success('个人信息已保存');
-      setPiModalOpen(false);
+      const saved = await piSave(values);
+      if (saved) {
+        message.success('个人信息已保存');
+        setPiModalOpen(false);
+      }
+      // saved 为 null = 网络失败本地降级，hook 已弹 warning，弹窗保持打开供重试
     } catch (err) {
       // 表单校验失败时 AntD 已标红；其余为服务器错误，必须提示
       if (err && typeof err === 'object' && 'errorFields' in err) return;
-      message.error('保存失败，请检查网络后重试');
+      message.error(err instanceof Error ? err.message : '保存失败，请检查网络后重试');
     }
     finally { setPiModalLoading(false); }
   };
@@ -343,7 +346,6 @@ export default function IdentityPage() {
 
         const created = await resumeCreate(payload);
         if (created) {
-          setSelectedResumeId(created.id);
           // ── 逐条提交经历（本地降级 id 跳过，避免打到不存在的接口）──
           let failCount = 0;
           let battleSyncCount = 0;
@@ -377,7 +379,8 @@ export default function IdentityPage() {
               } catch { /* 单个失败不阻塞 */ }
             }
           }
-          // 新建后自动选中该简历 → 经历编辑弹窗自动打开
+          // 经历全部提交完再选中简历——否则选中触发的自动 refetch 会拉到空/部分数据
+          setSelectedResumeId(created.id);
           if (failCount > 0) {
             message.warning(`简历已创建，但有 ${failCount} 条经历保存失败，请在弹窗中补录`);
           } else {
@@ -589,21 +592,25 @@ export default function IdentityPage() {
   };
 
   // ── 导出弹窗：加载指定简历的预览数据 ──
+  const exportReqRef = useRef(0); // 竞态守卫：快速切换简历版本时旧响应不覆盖新选择
   const loadExport = async (resumeId: string) => {
     const resume = resumes.find((r) => r.id === resumeId);
     if (!resume) return;
+    const reqId = ++exportReqRef.current;
     setExportResumeId(resumeId);
     setExportLoading(true);
     try {
       const [wes, pes] = await fetchExperiences(resumeId);
+      if (reqId !== exportReqRef.current) return;
       const data = buildExportData(resume, wes, pes);
       setExportData(data);
       setExportHtml(generateExportHTML(data));
     } catch {
+      if (reqId !== exportReqRef.current) return;
       setExportData(null);
       setExportHtml(null);
     } finally {
-      setExportLoading(false);
+      if (reqId === exportReqRef.current) setExportLoading(false);
     }
   };
 
@@ -879,7 +886,6 @@ export default function IdentityPage() {
                         {battleProjects.map((bp, i) => {
                           const pe = projExpsHook.data?.find((p) => p.projectName === bp.projectName);
                           const imported = !!pe;
-                          const overview = bp.tags.length > 0 ? '' : (bp.projectName || '');
                           return (
                             <div key={bp.id}
                               onClick={async () => {
@@ -887,7 +893,8 @@ export default function IdentityPage() {
                                   // 已导入 → 移除
                                   if (!pe) return;
                                   try {
-                                    await fetch(`/api/project-experiences/${pe.id}`, { method: 'DELETE' });
+                                    const r = await fetch(`/api/project-experiences/${pe.id}`, { method: 'DELETE' });
+                                    if (!r.ok) { message.error('移除失败，请重试'); return; }
                                     projExpsHook.refetch();
                                     message.success(`已移除「${bp.projectName}」`);
                                   } catch { message.error('移除失败'); }
@@ -948,6 +955,8 @@ export default function IdentityPage() {
 
       {/* ════════════════════════════════════
           Modal: 个人信息编辑
+          ════════════════════════════════════ */}
+      <Modal
         title={<Space><IdcardOutlined /><span>编辑个人信息</span></Space>}
         open={piModalOpen}
         onOk={handlePiSave}
