@@ -332,7 +332,8 @@ export default function BattleInternalPage() {
       if (!res.ok) throw new Error('Update failed');
       const updated = await res.json();
       setData(prev => prev.map(p => p.id === id ? mapProject(updated) : p));
-      autoTagProject(id);
+      // 编辑不再自动重新打标（避免覆盖手动生成的标签 + 节省 AI 调用），
+      // 需要时用户可在卡片上手动点「生成标签」
       const coRes = await fetch('/api/companies');
       if (coRes.ok) setCompanies(await coRes.json());
       return updated;
@@ -395,8 +396,11 @@ export default function BattleInternalPage() {
       const formValues: any = {};
       if (parsed.projectName) formValues.projectName = parsed.projectName;
       if (parsed.role) formValues.role = parsed.role;
-      if (parsed.startDate) formValues.startDate = dayjs(parsed.startDate);
-      if (parsed.endDate) formValues.endDate = dayjs(parsed.endDate);
+      // 非法日期字符串会产生 Invalid Date，喂给 DatePicker 会渲染报错，先校验再填
+      const parsedStart = parsed.startDate ? dayjs(parsed.startDate) : null;
+      const parsedEnd = parsed.endDate ? dayjs(parsed.endDate) : null;
+      if (parsedStart?.isValid()) formValues.startDate = parsedStart;
+      if (parsedEnd?.isValid()) formValues.endDate = parsedEnd;
       if (parsed.origin) formValues.origin = parsed.origin;
       if (parsed.goal) formValues.goal = parsed.goal;
       if (parsed.phase1) formValues.phase1 = parsed.phase1;

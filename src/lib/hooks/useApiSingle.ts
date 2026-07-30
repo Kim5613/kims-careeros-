@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { message } from 'antd';
 
 interface UseApiSingleOptions<T> {
   /** API 端点 */
@@ -90,6 +91,8 @@ export function useApiSingle<T extends { id?: string }>(
         if (err instanceof Error && err.message !== 'Failed to fetch') {
           throw err;
         }
+        // 网络失败走了本地降级：数据没入库，必须让用户知道
+        message.warning('网络异常，数据仅保存在本地，未同步到服务器');
         return fallback;
       }
     },

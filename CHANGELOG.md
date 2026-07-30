@@ -8,6 +8,13 @@ Kim's CareerOS 版本记录。每个版本对应一个 Git tag，GitHub 上可�
 
 **定位**：结构化简历 + AI 标签 + 数据互联 + 内部战役模板。详见 PRD §14。
 
+### 上线前审查修复（2026-07-30）
+- 编辑战役项目不再自动重新打标（避免覆盖手动标签 + 节省 AI 调用），仅新建时自动打标
+- work/project-experiences 的 PATCH/DELETE：字段白名单校验 + P2025 返回 404
+- 战役模板上传：非法日期字符串不再填入 DatePicker（防渲染报错）
+- useApiSingle 网络失败本地降级时提示「未同步到服务器」
+- tsconfig.tsbuildinfo 移出 git 跟踪；清理 git 历史中的 deploy.zip（103MB）
+
 ### 数据互联（5 FK）
 - WorkExperience ↔ Company、JobApplication ↔ Resume、BattleProjectSkill ↔ Career Sphere、BattleProject ↔ WorkExperience、InterviewRecord 加 resumeSuggestions
 

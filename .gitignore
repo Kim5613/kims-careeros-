@@ -27,3 +27,4 @@ Thumbs.db
 # 部署产物 + 日志
 deploy.zip
 server.log
+tsconfig.tsbuildinfo
