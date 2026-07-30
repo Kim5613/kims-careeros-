@@ -629,7 +629,7 @@ curl -N -X POST http://127.0.0.1:3000/api/ai/hr-roundtable \
 - InterviewRecord.resumeSuggestions：面试复盘可填写简历改进建议
 
 **AI 标签系统**
-- BattleProject 新增 `tags String[]`：创建/编辑项目后自动调用 DeepSeek 分析内容生成 3-5 个标签
+- BattleProject 新增 `tags String[]`：**新建**项目后自动调用 DeepSeek 分析内容生成 3-5 个标签；编辑不自动重打（避免覆盖手动结果 + 节省调用），卡片上可手动点「生成标签」（2026-07-30 审查修正）
 - ProjectExperience 新增 `tags String[]`：同步时自动带入，身份名牌展示
 - 标签在内部战役卡片、身份名牌导入列表、简历项目经历中统一展示
 
@@ -654,5 +654,10 @@ curl -N -X POST http://127.0.0.1:3000/api/ai/hr-roundtable \
 
 - 2026-07-30 晚：代码已完整推送到 GitHub（3 commits），服务器 `prisma db push` 已执行
 - 构建阶段 SSH 断连，部署未完成
+- 2026-07-30：**上线前两轮代码审查**（主审 + 两个子代理深审），共修复 6 个严重 bug + 10+ 中轻问题，分两批提交：
+  - 批一 `f058cd6`：autoTag 仅新建触发 / PATCH 字段白名单+404 / 模板日期防护 / 离线降级提示 / git 历史清除 deploy.zip（103MB→10.55MB，**历史已重写 force push**）
+  - 批二 `2206fe2`：个人信息 Modal 被未闭合 JSX 注释吞掉 / 模板解析器 2 个正则 bug（正文区块全丢+留空错位）/ 投递记录丢 resumeId 静默解关联 / 战役 POST 丢 skills / hooks 竞态守卫与降级提示
+  - 验证：本地 build exit 0 + 解析器 node 实测 + 带登录态运行时冒烟（9 端点 200、400/404 校验正确）
+- ⚠️ **服务器部署前必须**：`cd /opt/hr-platform && git fetch origin && git reset --hard origin/main`（本地仓库是重写前的旧历史，git pull 会 diverged）
 - 待续：`ssh root@139.196.159.68` → `pm2 status`，若 stopped 则 `bash server-deploy.sh` 重跑
 - 构建正常需 3-8 分钟，期间勿关终端
