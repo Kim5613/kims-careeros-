@@ -4,9 +4,9 @@
 HR 从业者个人职业管理平台，涵盖「我的职业发展」和「HR 工作台」两大板块。
 
 ## 当前状态
-**v1.3 封版 + 两轮上线前审查修复 — 2026-07-30，已推 GitHub，待部署线上**
+**v1.3 已上线 — 2026-07-30，www.kimstar.cn HTTP 200，PM2 稳定运行**
 
-> ⚠️ 部署注意：git 历史已重写（清除 103MB deploy.zip）并 force push，服务器 `/opt/hr-platform` 是旧历史，部署前必须 `git fetch origin && git reset --hard origin/main`，再跑 `server-deploy.sh`
+> 发版 SOP：`screen -S deploy` 挂后台再跑 `bash server-deploy.sh`（防 SSH 断连杀构建，本次 502 的根因）
 
 | 交付项 | 状态 |
 |--------|------|
