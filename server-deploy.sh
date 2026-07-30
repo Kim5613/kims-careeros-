@@ -29,8 +29,11 @@ echo "  前: $EXPECTED_SHA"
 echo "  后: $ACTUAL_SHA"
 
 if [ "$EXPECTED_SHA" = "$ACTUAL_SHA" ]; then
-    echo "  代码已是最新，跳过后续步骤"
-    exit 0
+    if [ -f .next/BUILD_ID ]; then
+        echo "  代码已是最新且构建产物完整，跳过后续步骤"
+        exit 0
+    fi
+    echo "  代码未变但 .next 残缺（BUILD_ID 缺失），继续执行重建"
 fi
 check "代码已更新到 $(git log -1 --oneline)"
 
